@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<!--
+  DESIGN SOURCE, NOT THE APPLICATION.
+
+  This is the reviewed mockup that the working panel's stylesheet was lifted from
+  (src/web/public/app.css, everything above the "interactive panel additions"
+  marker). It is kept so the design decisions stay readable and so the two cannot
+  drift apart silently. Note that it predates the final scope changes: its
+  "assistente" section still describes a conversational assistant, which was
+  removed — see docs/PROPOSAL.md section 8.
+
+  The application itself is `vnfin web` -> src/web/public/, which renders live data
+  from the deterministic core. The figures in this file are a fixed demo dataset.
+-->
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="vn-finance — painel de contabilidade pessoal local-first para trabalhadores independentes (recibos verdes, CIRS categoria B).">
+<title>vn-finance · Painel 2026</title>
+<style>
+/* ============================================================
+   vn-finance — folha de estilo única. Sem recursos externos.
+   Tema claro por omissão; tema escuro via prefers-color-scheme.
+   ============================================================ */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+
+  --bg:#F7F8FA;
+  --surface:#FFFFFF;
+  --surface-2:#FBFCFD;
+  --surface-3:#F1F5F9;
+
+  --border:#E2E8F0;
+  --border-2:#CBD5E1;
+
+  --text:#0F172A;
+  --text-2:#334155;
+  --text-3:#64748B;
+  --text-4:#8A97A8;
+
+  --accent:#1D4ED8;
+  --accent-2:#1E40AF;
+  --accent-fg:#FFFFFF;
+  --accent-bg:#EFF4FF;
+  --accent-border:#C7D7FE;
+
+  --ok:#15803D;      --ok-bg:#F0FDF4;      --ok-border:#BBF7D0;
+  --warn:#B45309;    --warn-bg:#FFFBEB;    --warn-border:#FDE68A;
+  --danger:#B91C1C;  --danger-bg:#FEF2F2;  --danger-border:#FECACA;
+  --slate:#475569;   --slate-bg:#F1F5F9;   --slate-border:#E2E8F0;
+
+  --radius:3px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0B1220;
+    --surface:#111A2B;
+    --surface-2:#0F1826;
+    --surface-3:#16223A;
+
+    --border:#1E293B;
+    --border-2:#334155;
+
+    --text:#E6EDF7;
+    --text-2:#C2CEDF;
+    --text-3:#94A6BE;
+    --text-4:#75879F;
+
+    --accent:#7BA2FF;
+    --accent-2:#A8C0FF;
+    --accent-fg:#0B1220;
+    --accent-bg:#16233F;
+    --accent-border:#2C4168;
+
+    --ok:#6EE7A8;      --ok-bg:#0E2A1E;      --ok-border:#1D5136;
+    --warn:#F5C86B;    --warn-bg:#2A2109;    --warn-border:#5A431A;
+    --danger:#F79A9A;  --danger-bg:#2C1414;  --danger-border:#5E2525;
+    --slate:#A9B7C9;   --slate-bg:#16223A;   --slate-border:#243149;
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.45}
+h1,h2,h3,h4,p,ul,ol,dl,dt,dd,figure{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;color:inherit}
+svg{display:block}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-size:.93em}
+small{font-size:11px;color:var(--text-3);font-weight:400}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.print-only{display:none}
+
+/* ---------------- estrutura ---------------- */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.shell{min-width:0;display:flex;flex-direction:column}
+.content{width:100%;max-width:1440px;margin:0 auto;padding:14px 20px 44px}
+
+/* ---------------- barra lateral ---------------- */
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.brand .mark{color:var(--accent);flex:none}
+.brand .mark svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linejoin:round;stroke-linecap:round}
+.brand strong{display:block;font-size:14px;font-weight:650;letter-spacing:-.01em}
+.brand em{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-4)}
+.nav{padding:8px 0 4px;flex:1 1 auto}
+.nav-g{padding:9px 14px 3px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-4);font-weight:700}
+.nav-i{display:flex;align-items:center;gap:8px;padding:5px 14px;color:var(--text-2);font-size:12.5px;border-left:2px solid transparent}
+.nav-i:hover{background:var(--surface-2);text-decoration:none;color:var(--text)}
+.nav-i.on{background:var(--accent-bg);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.nav-i .ico{flex:none;color:var(--text-4)}
+.nav-i.on .ico{color:var(--accent)}
+.nav-i .ico svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round}
+.nav-i .lbl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{margin-left:auto;font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-3);background:var(--surface-3);border:1px solid var(--border);border-radius:9px;padding:0 5px;line-height:14px}
+.cnt.due{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+.cnt.soon{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+.cnt.off{color:var(--text-4);background:transparent;border-color:var(--border);letter-spacing:.02em}
+.side-foot{border-top:1px solid var(--border);padding:10px 14px 12px;font-size:10.5px;color:var(--text-3)}
+.side-foot .lockline{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:11px;margin-bottom:5px}
+.side-foot .lockline svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.4}
+.side-foot p{line-height:1.5}
+
+/* ---------------- barra superior ---------------- */
+.topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.tb-in{max-width:1440px;margin:0 auto;padding:0 20px}
+.tb-main{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 0 8px;min-height:46px}
+.tb-title{display:flex;align-items:baseline;gap:9px;min-width:0}
+.tb-title h1{font-size:15px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.tb-sub{font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-ctl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-left:auto}
+.ctl{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)}
+.ctl-k{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-4);font-weight:700}
+.sel{position:relative;display:inline-flex;align-items:center}
+.sel select{appearance:none;-webkit-appearance:none;border:1px solid var(--border-2);background:var(--surface);color:var(--text);border-radius:var(--radius);font:inherit;font-size:12px;font-variant-numeric:tabular-nums;padding:3px 22px 3px 8px;cursor:pointer;height:26px}
+.sel svg{position:absolute;right:6px;width:10px;height:10px;fill:none;stroke:var(--text-3);stroke-width:1.7;pointer-events:none}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);border-radius:var(--radius);font-size:11.5px;padding:3px 8px;height:26px;white-space:nowrap}
+.profile{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-left:2px solid var(--accent);background:var(--surface-2);border-radius:var(--radius);padding:3px 4px 3px 8px;height:26px}
+.nif{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--text);white-space:nowrap}
+.nif.is-revealed{color:var(--accent);font-weight:600}
+.eye{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;color:var(--accent);font-size:10.5px;cursor:pointer;padding:2px 5px;border-radius:2px}
+.eye:hover{background:var(--accent-bg)}
+.eye svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.4}
+.lockchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ok-border);background:var(--ok-bg);color:var(--ok);border-radius:var(--radius);font-size:11.5px;padding:3px 9px;height:26px;white-space:nowrap}
+.lockchip strong{font-weight:650}
+.lockchip svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5}
+.tb-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border);padding:4px 0 5px;font-size:10.5px;color:var(--text-3)}
+.rules{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:2px;padding:0 6px;line-height:16px;color:var(--text-2)}
+.rules .mono{color:var(--text)}
+.rules svg{width:11px;height:11px;fill:none;stroke:var(--text-3);stroke-width:1.5}
+.strip-r{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
+.today-tag{color:var(--accent);font-weight:650}
+
+/* ---------------- blocos ---------------- */
+.block{margin:0 0 20px}
+.block-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.block-head h2{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--text-2)}
+.block-head .hint{margin-left:auto;font-size:10.5px;color:var(--text-4);text-align:right}
+.subhead{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-4);font-weight:700;margin:0 0 5px}
+
+/* ---------------- botões ---------------- */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;line-height:1.3}
+.btn:hover{border-color:var(--text-3);color:var(--text)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+.btn-primary:hover{background:var(--accent-2);border-color:var(--accent-2);color:var(--accent-fg)}
+.btn-tertiary{border-color:transparent;background:transparent;color:var(--text-3);text-decoration:underline;text-decoration-color:var(--border-2);text-underline-offset:2px}
+.btn-tertiary:hover{color:var(--text);background:transparent}
+.btn-sm{padding:2px 7px;font-size:11px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------------- selos / etiquetas ---------------- */
+.badge{display:inline-block;padding:0 4px;border:1px solid var(--border);border-radius:2px;background:var(--surface-2);color:var(--text-3);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;vertical-align:1px;white-space:nowrap}
+.badge.est{color:var(--warn);border-color:var(--warn-border);background:var(--warn-bg)}
+.badge.ver{color:var(--accent);border-color:var(--accent-border);background:var(--accent-bg)}
+.badge.miss{color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg)}
+.badge.local{color:var(--ok);border-color:var(--ok-border);background:var(--ok-bg)}
+.badge.src{font-family:var(--mono);text-transform:none;letter-spacing:0;font-size:9.5px;background:transparent;border-color:transparent;color:var(--text-4);padding:0}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border:1px solid;border-radius:2px;font-size:10.5px;font-weight:600;line-height:1.55;white-space:nowrap}
+.pill .g{font-size:9px;line-height:1}
+.p-ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-border)}
+.p-warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+.p-danger{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+.p-future{color:var(--slate);background:var(--slate-bg);border-color:var(--slate-border)}
+.p-na{color:var(--text-4);background:transparent;border-color:var(--border-2);border-style:dashed}
+.sev{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border:1px solid;border-radius:2px;white-space:nowrap;justify-self:start}
+.sev .g{font-size:9px}
+.sev-alta{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+.sev-media{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-border)}
+.sev-info{color:var(--slate);background:var(--slate-bg);border-color:var(--slate-border)}
+
+/* ---------------- 1. faixa de alerta ---------------- */
+.alertbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--danger-border);border-left:3px solid var(--danger);background:var(--danger-bg);border-radius:var(--radius);padding:9px 12px}
+.ab-body{min-width:0;flex:1 1 340px}
+.ab-title{font-size:13.5px;font-weight:650;color:var(--text)}
+.ab-meta{margin-top:2px;font-size:11px;color:var(--text-2);display:flex;gap:12px;flex-wrap:wrap}
+.ab-meta .dot{color:var(--text-4)}
+.ab-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+/* ---------------- 2. indicadores ---------------- */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.kpi{padding:10px 12px 9px;border-right:1px solid var(--border);min-width:0}
+.kpi:last-child{border-right:0}
+.kpi-k{display:block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-v{display:block;margin:6px 0 2px;font-size:21px;line-height:1.08;font-weight:600;letter-spacing:-.015em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi-s{display:block;font-size:11px;color:var(--text-3);line-height:1.35}
+.kpi-f{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px;padding-top:5px;border-top:1px dotted var(--border-2);font-size:9.5px;color:var(--text-4)}
+.kpi-f .mono{font-size:9.5px}
+
+/* ---------------- 3. alertas fiscais ---------------- */
+.alerts{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.alert{display:grid;grid-template-columns:112px minmax(0,1fr) 74px;gap:12px;align-items:start;padding:9px 12px;border-bottom:1px solid var(--border)}
+.alert:last-child{border-bottom:0}
+.a-t{font-size:12.5px;font-weight:650;color:var(--text)}
+.a-d{margin-top:2px;font-size:12px;color:var(--text-2);max-width:104ch}
+.a-src{margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:9.5px;color:var(--text-4)}
+.why{font-size:11px;font-weight:600;white-space:nowrap;text-align:right}
+
+/* ---------------- painéis ---------------- */
+.panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+
+/* ---------------- 4. agenda fiscal ---------------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.seg{display:inline-flex;border:1px solid var(--border-2);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.seg span{padding:3px 9px;font-size:11.5px;color:var(--text-2);border-right:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums}
+.seg span:last-child{border-right:0}
+.seg span.on{background:var(--accent-bg);color:var(--accent);font-weight:650}
+.legend{margin-left:auto;display:flex;align-items:center;gap:11px;flex-wrap:wrap;font-size:10.5px;color:var(--text-3)}
+.legend i{font-style:normal}
+
+table{width:100%;border-collapse:collapse}
+.tbl{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow-x:auto;overflow-y:hidden}
+thead th{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:700;text-align:left;padding:6px 10px;background:var(--surface-2);border-bottom:1px solid var(--border-2);white-space:nowrap}
+tbody td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:top;font-size:12.5px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.d{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--text-2)}
+.ob{display:block;font-weight:500;color:var(--text)}
+.ob-note{display:block;font-size:10.5px;color:var(--text-4);margin-top:1px}
+.ob-src{display:block;font-family:var(--mono);font-size:9.5px;color:var(--text-4);margin-top:2px}
+.tipo{display:inline-block;font-size:10.5px;color:var(--text-2);border:1px solid var(--border);background:var(--surface-2);border-radius:2px;padding:0 5px;white-space:nowrap}
+tr.na td{color:var(--text-3)}
+tr.na .ob{color:var(--text-3);font-weight:500}
+.act{white-space:nowrap;font-size:11.5px}
+tr.today td{background:var(--accent-bg);color:var(--accent);border-top:1px solid var(--accent-border);border-bottom:1px solid var(--accent-border);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:3px 10px}
+.tnote{margin-top:7px;font-size:10.5px;color:var(--text-4)}
+
+/* ---------------- 5. enquadramento ---------------- */
+.defs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 34px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px 0}
+.def{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px dotted var(--border)}
+.def:last-child{border-bottom:0}
+.def dt{font-size:11.5px;color:var(--text-3)}
+.def dd{font-size:12.5px;color:var(--text)}
+.def dd small{display:block;margin-top:2px}
+.disc{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;align-items:start;margin-top:12px;padding:9px 12px;border:1px solid var(--warn-border);border-left:3px solid var(--warn);background:var(--warn-bg);border-radius:var(--radius)}
+.disc.pos{border-color:var(--ok-border);border-left-color:var(--ok);background:var(--ok-bg)}
+
+/* ---------------- 6. recibos ---------------- */
+.tool{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.search{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-2);background:var(--surface);border-radius:var(--radius);padding:0 8px;height:28px;min-width:270px}
+.search svg{width:12px;height:12px;fill:none;stroke:var(--text-4);stroke-width:1.6;flex:none}
+.search input{border:0;background:transparent;font:inherit;font-size:12px;color:var(--text);outline:none;width:100%;padding:0}
+.search input::placeholder{color:var(--text-4)}
+.tool-r{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+td.cust .nm{display:block;color:var(--text);font-weight:500}
+td.cust .nf{display:block;font-family:var(--mono);font-size:10.5px;color:var(--text-4);margin-top:1px}
+td.cust .eu{display:inline-block;margin-top:2px}
+.sub{display:block;font-size:10px;color:var(--text-4);margin-top:1px}
+tr.tot td{border-top:1px solid var(--border-2);background:var(--surface-2);font-weight:650;color:var(--text)}
+.miss-tag{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:10px;color:var(--danger)}
+.tfoot{margin-top:7px;display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--text-4)}
+
+/* ---------------- 7. segurança social ---------------- */
+.ss{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.chain{border-top:1px solid var(--border)}
+.calc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)}
+.calc-k{font-size:12.5px;color:var(--text-2)}
+.calc-v{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.calc-s{grid-column:1/-1;font-size:10.5px;color:var(--text-4)}
+.calc.sum .calc-v{font-weight:600;color:var(--text)}
+.calc.total{background:var(--accent-bg);border-bottom-color:var(--accent-border);padding-left:8px;padding-right:8px}
+.calc.total .calc-k{color:var(--accent);font-weight:650}
+.calc.total .calc-v{color:var(--accent);font-size:16px}
+.calc-op{display:flex;align-items:center;gap:9px;padding:3px 0 3px 2px;font-size:10.5px;color:var(--text-4)}
+.opb{font-family:var(--mono);font-size:10.5px;color:var(--text-2);border:1px solid var(--border);background:var(--surface-2);border-radius:2px;padding:0 5px;white-space:nowrap}
+.inst{margin-top:12px}
+.inst-bar{display:flex;gap:2px;margin:5px 0 4px}
+.inst-bar i{flex:1 1 0;height:7px;background:var(--accent);opacity:.82;border-radius:1px}
+.inst-bar i:last-child{opacity:.5}
+.inst-row{display:flex;font-size:10.5px;color:var(--text-3)}
+.inst-row span{flex:1 1 0;font-variant-numeric:tabular-nums}
+.inst-row span:last-child,.inst-row span:nth-child(2){text-align:center}
+.inst-row span:last-child{text-align:right}
+.ss-side{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);padding:10px 12px}
+.ss-side h3{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);font-weight:700;margin-bottom:7px}
+.ss-side dl{font-size:11.5px}
+.ss-side dt{color:var(--text-3);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;margin-top:8px}
+.ss-side dt:first-child{margin-top:0}
+.ss-side dd{color:var(--text);margin-top:1px}
+.ss-side dd.first{margin-top:0}
+
+/* ---------------- 8. cofre ---------------- */
+.vault-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.vault-sum{margin-left:auto;display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--text-3)}
+.cb{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid var(--border-2);border-radius:2px;background:var(--surface);font-size:10px;line-height:1;color:transparent}
+.cb svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cb.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.cb.miss{border-color:var(--danger-border);border-style:dashed;background:var(--danger-bg);color:transparent}
+tr.grp td{background:var(--surface-2);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);font-weight:700;padding:4px 10px;border-bottom:1px solid var(--border-2)}
+td.vc{width:30px}
+
+/* ---------------- 9. assistente IA ---------------- */
+.ia{display:grid;grid-template-columns:minmax(0,368px) minmax(0,1fr);gap:18px;align-items:start}
+.ia-cfg{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.ia-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.ia-row:last-child{border-bottom:0}
+.ia-row .txt{min-width:0}
+.state{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:650}
+.state.off{color:var(--text-3)}
+.state.on{color:var(--ok)}
+.state-note{display:block;font-size:10.5px;color:var(--text-4)}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;flex:none}
+.switch input{position:absolute;opacity:0;width:36px;height:18px;margin:0;cursor:pointer}
+.track{position:relative;width:36px;height:18px;border-radius:9px;background:var(--surface-3);border:1px solid var(--border-2);transition:background .12s,border-color .12s;flex:none}
+.knob{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-3);transition:transform .12s,background .12s}
+.switch input:checked ~ .track{background:var(--accent-bg);border-color:var(--accent)}
+.switch input:checked ~ .track .knob{transform:translateX(18px);background:var(--accent)}
+.switch input:focus-visible ~ .track{outline:2px solid var(--accent);outline-offset:2px}
+.kv{padding:2px 12px 8px}
+.kv>div{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px dotted var(--border)}
+.kv>div:last-child{border-bottom:0}
+.kv dt{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-4);font-weight:700;padding-top:2px}
+.kv dd{font-size:12px;color:var(--text-2)}
+.kv dd small{display:block;margin-top:2px;line-height:1.4}
+.keyfield{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.keyfield .badge{white-space:normal}
+.keyfield .mono{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;letter-spacing:.02em;border:1px solid var(--border);background:var(--surface-2);border-radius:2px;padding:1px 6px;color:var(--text-2)}
+.meter{padding:9px 12px 11px;border-top:1px solid var(--border);background:var(--surface-2)}
+.meter-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:10.5px;color:var(--text-3)}
+.meter-val{margin-left:auto;font-size:12px;font-weight:650;color:var(--text);font-variant-numeric:tabular-nums}
+.meter-bar{height:5px;background:var(--surface-3);border:1px solid var(--border);border-radius:2px;margin:6px 0 4px;overflow:hidden}
+.meter-bar i{display:block;height:100%;width:8%;background:var(--accent)}
+.meter-foot{font-size:9.5px;color:var(--text-4)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--border)}
+.chip-p{border:1px dashed var(--border-2);background:var(--surface-2);color:var(--text-2);font-size:11.5px;padding:3px 8px;border-radius:var(--radius);cursor:pointer;text-align:left}
+.chip-p:hover{border-style:solid;border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.ia-notes{border-top:1px solid var(--border);padding:10px 12px}
+.ia-notes p{display:flex;gap:7px;font-size:11px;color:var(--text-2);line-height:1.45}
+.ia-notes p+p{margin-top:6px}
+.ia-notes .g{flex:none;font-size:10px;line-height:1.5;color:var(--accent)}
+.ia-notes .g.lock{color:var(--ok)}
+
+.redact{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.redact-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.redact-head h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--text-2)}
+.redact-head .badge{margin-left:auto}
+.diff{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr);gap:0;align-items:stretch}
+.diff-col{padding:10px 12px}
+.diff-col.after{background:var(--accent-bg)}
+.diff-k{display:block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--text-4);margin-bottom:5px}
+.diff-col.after .diff-k{color:var(--accent)}
+.diff p{font-size:11.5px;line-height:1.6;color:var(--text-2)}
+.diff .mono{font-family:var(--mono);font-size:11px;color:var(--text-2)}
+.diff mark{background:var(--danger-bg);color:var(--danger);border-bottom:1px solid var(--danger-border);padding:0 1px;border-radius:2px}
+.diff b{font-family:var(--mono);font-size:10.5px;font-weight:650;color:var(--accent);background:var(--surface);border:1px solid var(--accent-border);border-radius:2px;padding:0 3px}
+.diff-arrow{display:flex;align-items:center;justify-content:center;color:var(--text-4);font-size:14px;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.map{width:100%;border-collapse:collapse;border-top:1px solid var(--border)}
+.map caption{text-align:left;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--text-4);padding:8px 12px 4px}
+.map th{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-4);font-weight:700;text-align:left;padding:2px 12px;border-bottom:1px solid var(--border)}
+.map td{padding:3px 12px;border-bottom:1px dotted var(--border);font-family:var(--mono);font-size:11px;color:var(--text-2)}
+.map td.ph{color:var(--accent);font-weight:650;white-space:nowrap;text-align:right}
+.map tr:last-child td{border-bottom:0}
+.redact-note{display:flex;align-items:center;gap:7px;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-2)}
+.redact-note .g{color:var(--ok);font-size:10px}
+.redact-act{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface-2)}
+.redact-act .cta-note{margin-left:auto;font-size:10px;color:var(--text-4);max-width:34ch;text-align:right}
+
+/* ---------------- rodapé ---------------- */
+.foot{border-top:1px solid var(--border);margin-top:6px;padding-top:12px;font-size:10.5px;color:var(--text-4)}
+.foot p+p{margin-top:5px}
+.foot .rule{color:var(--text-3);font-family:var(--mono);font-size:10.5px}
+.foot .warn{color:var(--text-2);font-size:11px}
+.foot .local{display:flex;align-items:center;gap:6px;color:var(--text-3)}
+.foot .local svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.5}
+
+/* ---------------- responsivo ---------------- */
+@media (max-width:1240px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kpi{border-bottom:1px solid var(--border)}
+  .kpi:nth-child(3n){border-right:0}
+  .kpi:last-child{border-bottom:0}
+  .ia{grid-template-columns:minmax(0,1fr)}
+  .ss{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:1040px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .sidebar{display:none}
+  .content,.tb-in{padding-left:14px;padding-right:14px}
+  .diff{grid-template-columns:minmax(0,1fr)}
+  .diff-arrow{border:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:3px 0}
+}
+@media (max-width:960px){
+  .defs{grid-template-columns:minmax(0,1fr)}
+  .alert{grid-template-columns:108px minmax(0,1fr)}
+  .alert .why{grid-column:2;text-align:left}
+}
+@media (max-width:700px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi:nth-child(3n){border-right:1px solid var(--border)}
+  .kpi:nth-child(2n){border-right:0}
+}
+
+/* ---------------- impressão A4 ---------------- */
+@page{size:A4;margin:12mm}
+@media print{
+  :root{
+    --bg:#FFFFFF;--surface:#FFFFFF;--surface-2:#FFFFFF;--surface-3:#FFFFFF;
+    --border:#BBBBBB;--border-2:#8A8A8A;
+    --text:#000000;--text-2:#1A1A1A;--text-3:#444444;--text-4:#555555;
+    --accent:#000000;--accent-2:#000000;--accent-fg:#FFFFFF;--accent-bg:#FFFFFF;--accent-border:#999999;
+    --ok:#14602F;--ok-bg:#FFFFFF;--ok-border:#999999;
+    --warn:#7A4508;--warn-bg:#FFFFFF;--warn-border:#999999;
+    --danger:#8C1414;--danger-bg:#FFFFFF;--danger-border:#999999;
+    --slate:#333333;--slate-bg:#FFFFFF;--slate-border:#999999;
+  }
+  body{font-size:10.5px;background:#fff}
+  .app{display:block}
+  .sidebar,.tb-ctl,.ab-actions,.tool,.toolbar .seg,.eye,.chip-p,.redact-act,.noprint{display:none !important}
+  .print-only{display:block;font-size:9.5px;color:#444;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:10px;letter-spacing:.04em}
+  .topbar{position:static;border-bottom:1px solid #999}
+  .tb-strip{border-top:0;padding-top:0}
+  .content{max-width:none;padding:0}
+  .block{margin-bottom:11px;break-inside:avoid}
+  .kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .kpi-v{font-size:15px}
+  .tbl{overflow:visible}
+  table,tbody td,td.d{font-size:8.5px}
+  thead{display:table-header-group}
+  thead th{padding:2px 4px;font-size:8px}
+  tbody td{padding:2px 4px}
+  .ob-src,.sub,.ob-note,.kpi-f,.badge,.cnt{font-size:7.5px}
+  tr,tr.today{break-inside:avoid}
+  .alert,.disc,.redact,.panel,.alerts,.ss-side{break-inside:avoid}
+  a{color:#000;text-decoration:none}
+  .diff-col.after{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= BARRA LATERAL ================= -->
+  <aside class="sidebar" aria-label="Navegação principal">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 20 20"><rect x="1.6" y="1.6" width="16.8" height="16.8" rx="2.6"/><path d="M5.6 12.6l3.1-5.4 3 5.4"/><path d="M14.2 7.2v5.4"/></svg>
+      </span>
+      <span class="bt">
+        <strong>vn-finance</strong>
+        <em>contabilidade local</em>
+      </span>
+    </div>
+
+    <nav class="nav">
+      <p class="nav-g">Geral</p>
+      <a class="nav-i on" href="#" aria-current="page">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg></span>
+        <span class="lbl">Painel</span>
+      </a>
+      <a class="nav-i" href="#agenda">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="1.4"/><path d="M2 6.6h12M5.6 1.6v2.8M10.4 1.6v2.8"/></svg></span>
+        <span class="lbl">Agenda fiscal</span>
+        <span class="cnt soon">4</span>
+      </a>
+
+      <p class="nav-g">Faturação</p>
+      <a class="nav-i" href="#recibos">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.6 1.6h5.4l3.4 3.4v9.4H3.6z"/><path d="M8.8 1.6v3.6h3.6"/><path d="M5.6 8.6h4.8M5.6 11h3"/></svg></span>
+        <span class="lbl">Recibos emitidos</span>
+        <span class="cnt">7</span>
+      </a>
+      <a class="nav-i" href="#">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8.4 1.6H14v5.6l-6.6 6.6L1.8 8.2z"/><circle cx="11.4" cy="4.4" r="1.1"/></svg></span>
+        <span class="lbl">Despesas</span>
+      </a>
+      <a class="nav-i" href="#">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="6" cy="5.4" r="2.5"/><path d="M1.8 14c0-2.5 1.9-4 4.2-4s4.2 1.5 4.2 4"/><path d="M10.4 3.6a2.3 2.3 0 010 4.2M12 14c0-1.8-.6-3-1.5-3.6"/></svg></span>
+        <span class="lbl">Clientes</span>
+        <span class="cnt">5</span>
+      </a>
+
+      <p class="nav-g">Obrigações</p>
+      <a class="nav-i" href="#ss">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1.6l5.4 2v5c0 3-2.3 5.1-5.4 6.1-3.1-1-5.4-3.1-5.4-6.1v-5z"/></svg></span>
+        <span class="lbl">Segurança Social</span>
+      </a>
+      <a class="nav-i" href="#agenda">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><path d="M12.6 3.4l-9.2 9.2"/></svg></span>
+        <span class="lbl">IVA</span>
+        <span class="cnt soon">1</span>
+      </a>
+      <a class="nav-i" href="#agenda">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="3" y="1.6" width="10" height="12.8" rx="1.2"/><path d="M5.4 4.6h5.2M5.4 8h1.6M9 8h1.6M5.4 10.8h1.6M9 10.8h1.6"/></svg></span>
+        <span class="lbl">IRS</span>
+        <span class="cnt due">1</span>
+      </a>
+
+      <p class="nav-g">Arquivo e apoio</p>
+      <a class="nav-i" href="#cofre">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2.4" y="6.6" width="11.2" height="7.8" rx="1.4"/><path d="M5.4 6.6V5a2.6 2.6 0 015.2 0v1.6"/></svg></span>
+        <span class="lbl">Cofre de documentos</span>
+        <span class="cnt due">2</span>
+      </a>
+      <a class="nav-i" href="#assistente">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1.6l1.6 4.4L14 7.6l-4.4 1.6L8 13.6 6.4 9.2 2 7.6l4.4-1.6z"/></svg></span>
+        <span class="lbl">Atualizar regras</span>
+        <span class="cnt off">desligada</span>
+      </a>
+      <a class="nav-i" href="#regras">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 3.6S6.5 2 3 2v11c3.5 0 5 1.6 5 1.6S9.5 13 13 13V2c-3.5 0-5 1.6-5 1.6z"/><path d="M8 3.6v11"/></svg></span>
+        <span class="lbl">Regras &amp; fontes</span>
+      </a>
+      <a class="nav-i" href="#">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.6 5h10.8M2.6 11h10.8"/><circle cx="6" cy="5" r="1.6"/><circle cx="10.4" cy="11" r="1.6"/></svg></span>
+        <span class="lbl">Definições</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <p class="lockline">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.6 7V5.2a2.4 2.4 0 014.8 0V7"/></svg>
+        <span>Dados só neste computador</span>
+      </p>
+      <p>Regras pt/2026.1.0</p>
+      <p>Verificadas em 20/09/2026</p>
+      <p>Sem telemetria · sem servidores</p>
+    </div>
+  </aside>
+
+  <!-- ================= COLUNA PRINCIPAL ================= -->
+  <div class="shell">
+
+    <header class="topbar">
+      <div class="tb-in">
+        <div class="tb-main">
+          <div class="tb-title">
+            <h1>Painel</h1>
+            <span class="tb-sub">Exercício 2026 · trabalhador independente · CIRS categoria B</span>
+          </div>
+
+          <div class="tb-ctl">
+            <span class="ctl">
+              <span class="ctl-k">Ano</span>
+              <span class="sel">
+                <select aria-label="Ano fiscal">
+                  <option selected>2026</option>
+                  <option>2025</option>
+                  <option>2024</option>
+                </select>
+                <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.2 3.2L5 7l3.8-3.8"/></svg>
+              </span>
+            </span>
+
+            <span class="chip">Atividade: programação informática</span>
+
+            <span class="profile" title="Perfil ativo">
+              <span class="ctl-k">NIF</span>
+              <span class="nif" id="nif-val" data-mask="245 ••• •99" data-full="245 678 999">245 ••• •99</span>
+              <button type="button" class="eye" id="reveal-btn" aria-pressed="false" aria-controls="nif-val">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.4 8s2.4-4.2 6.6-4.2S14.6 8 14.6 8s-2.4 4.2-6.6 4.2S1.4 8 1.4 8z"/><circle cx="8" cy="8" r="1.9"/></svg>
+                <span id="reveal-txt">revelar</span>
+              </button>
+            </span>
+
+            <span class="lockchip" title="Base de dados local cifrada. Sem sincronização.">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.6 7V5.2a2.4 2.4 0 014.8 0V7"/></svg>
+              <span><strong>Bloqueado</strong> · dados só neste computador</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="tb-strip">
+          <span class="rules">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.6S6.5 2 3 2v11c3.5 0 5 1.6 5 1.6S9.5 13 13 13V2c-3.5 0-5 1.6-5 1.6z"/></svg>
+            <span>Regras <span class="mono">pt/2026.1.0</span> · verificadas contra a Agenda Fiscal AT em <span class="mono">20/09/2026</span></span>
+          </span>
+          <span class="strip-r">
+            <span>Motor de regras executado localmente</span>
+            <span class="today-tag">20/09/2026 · hoje</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <p class="print-only">vn-finance · Painel · exercício 2026 · 20/09/2026 · dados apenas neste computador</p>
+
+      <!-- ============ 1. FAIXA DE ALERTA ============ -->
+      <section class="block" aria-label="Alerta urgente">
+        <div class="alertbar">
+          <span class="sev sev-alta"><span class="g" aria-hidden="true">▲</span> Vence amanhã</span>
+          <div class="ab-body">
+            <p class="ab-title">IRS · 2.º pagamento por conta — vence 21/09/2026 (amanhã)</p>
+            <p class="ab-meta">
+              <span>Valor <span class="num">1&nbsp;480,00&nbsp;€</span> <span class="badge est">estimativa</span></span>
+              <span class="dot" aria-hidden="true">·</span>
+              <a href="#agenda">Mais 3 obrigações nos próximos 90 dias</a>
+              <span class="dot" aria-hidden="true">·</span>
+              <a href="#cofre">2 documentos em falta no cofre</a>
+              <span class="dot" aria-hidden="true">·</span>
+              <span>prazo de 20/09 prorrogado para o dia útil seguinte (domingo)</span>
+            </p>
+          </div>
+          <div class="ab-actions">
+            <button type="button" class="btn btn-primary">Ver plano de ação</button>
+            <button type="button" class="btn">Marcar como tratado</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2. INDICADORES ============ -->
+      <section class="block" aria-label="Indicadores do exercício">
+        <div class="block-head">
+          <h2>Indicadores do exercício</h2>
+          <span class="hint">Acumulado a 20/09/2026 · base: faturação emitida e comunicada à AT</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <span class="kpi-k">Rendimento bruto 2026</span>
+            <span class="kpi-v">48&nbsp;600,00&nbsp;€</span>
+            <span class="kpi-s">Serviços prestados a clientes residentes e da UE</span>
+            <span class="kpi-f">7 documentos emitidos</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">Retenções na fonte</span>
+            <span class="kpi-v">7&nbsp;650,00&nbsp;€</span>
+            <span class="kpi-s">25% sobre 30&nbsp;600,00&nbsp;€ de clientes residentes</span>
+            <span class="kpi-f"><span class="mono">CIRS art. 101.º</span></span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">IVA liquidado (acum.)</span>
+            <span class="kpi-v">7&nbsp;038,00&nbsp;€</span>
+            <span class="kpi-s">23% sobre a base nacional · regime trimestral</span>
+            <span class="kpi-f"><span class="mono">CIVA art. 27.º</span></span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">Contribuições SS (T3)</span>
+            <span class="kpi-v">2&nbsp;906,12&nbsp;€</span>
+            <span class="kpi-s">21,4% sobre 70% de 19&nbsp;400,00&nbsp;€</span>
+            <span class="kpi-f"><span class="mono">CRCSPSS art. 162.º</span></span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">Reserva recomendada para 2027</span>
+            <span class="kpi-v">12&nbsp;400,00&nbsp;€</span>
+            <span class="kpi-s">IRS e Segurança Social estimados sobre o rendimento de 2026</span>
+            <span class="kpi-f"><span class="badge est">estimativa</span><span class="mono">regras pt/2026.1.0</span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 3. ALERTAS DO SISTEMA FISCAL ============ -->
+      <section class="block" aria-label="Alertas do sistema fiscal">
+        <div class="block-head">
+          <h2>Alertas do sistema fiscal</h2>
+          <span class="hint">5 verificações ativas · motor de regras pt/2026.1.0 · executado localmente, sem ligação à internet</span>
+        </div>
+
+        <ul class="alerts">
+          <li class="alert">
+            <span class="sev sev-alta"><span class="g" aria-hidden="true">▲</span> Alta</span>
+            <div>
+              <p class="a-t">Margem para o artigo 53.º</p>
+              <p class="a-d">O volume de negócios do ano anterior excedeu 15&nbsp;000&nbsp;€; a isenção do art. 53.º do CIVA não é aplicável em 2026.</p>
+              <p class="a-src"><span class="mono">CIVA art. 53.º</span><span>Regra verificada na versão pt/2026.1.0</span></p>
+            </div>
+            <a class="why" href="#regras">porquê <span aria-hidden="true">→</span></a>
+          </li>
+
+          <li class="alert">
+            <span class="sev sev-media"><span class="g" aria-hidden="true">●</span> Média</span>
+            <div>
+              <p class="a-t">Retenção na fonte</p>
+              <p class="a-d">Clientes residentes devem reter 25%; confirma que os recibos emitidos a clientes da UE indicam "IVA - autoliquidação" e não sofrem retenção.</p>
+              <p class="a-src"><span class="mono">CIRS art. 101.º · CIVA art. 6.º</span><span class="badge ver">? verificar</span><span>interpretação não confirmada na Agenda Fiscal AT</span></p>
+            </div>
+            <a class="why" href="#recibos">porquê <span aria-hidden="true">→</span></a>
+          </li>
+
+          <li class="alert">
+            <span class="sev sev-media"><span class="g" aria-hidden="true">●</span> Média</span>
+            <div>
+              <p class="a-t">Coeficiente do regime simplificado</p>
+              <p class="a-d">Coeficiente aplicado: 0,75. Estimativa recalculada quando o anexo B for preparado.</p>
+              <p class="a-src"><span class="mono">CIRS art. 31.º</span><span class="badge ver">? verificar</span><span>coeficiente de serviços, tabela do art. 31.º</span></p>
+            </div>
+            <a class="why" href="#enquadramento">porquê <span aria-hidden="true">→</span></a>
+          </li>
+
+          <li class="alert">
+            <span class="sev sev-info"><span class="g" aria-hidden="true">○</span> Informativa</span>
+            <div>
+              <p class="a-t">Segurança Social</p>
+              <p class="a-d">Declaração trimestral do 3.º trimestre a entregar em outubro; contribuições pagas entre os dias 10 e 20.</p>
+              <p class="a-src"><span class="mono">CRCSPSS art. 151.º</span><span>prazo a 20/10/2026</span></p>
+            </div>
+            <a class="why" href="#ss">porquê <span aria-hidden="true">→</span></a>
+          </li>
+
+          <li class="alert">
+            <span class="sev sev-alta"><span class="g" aria-hidden="true">▲</span> Alta</span>
+            <div>
+              <p class="a-t">Documentos em falta</p>
+              <p class="a-d">Falta o comprovativo de pagamento da guia de IVA do 2.º trimestre e o SAF-T de agosto.</p>
+              <p class="a-src"><span class="mono">regras pt/2026.1.0 · cofre</span><span>2 de 6 itens com pendências</span></p>
+            </div>
+            <a class="why" href="#cofre">porquê <span aria-hidden="true">→</span></a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ============ 4. AGENDA FISCAL ============ -->
+      <section class="block" id="agenda" aria-label="Agenda fiscal 2026">
+        <div class="block-head">
+          <h2>Agenda fiscal 2026</h2>
+          <span class="hint">17 obrigações · 9 concluídas · 6 em aberto · prazos segundo a Agenda Fiscal AT e o calendário de obrigações declarativas</span>
+        </div>
+
+        <div class="toolbar">
+          <span class="seg" role="group" aria-label="Filtro de estado">
+            <span class="on">Todas 17</span>
+            <span>Em aberto 6</span>
+            <span>Próximos 90 dias 4</span>
+            <span>Não aplicáveis 2</span>
+          </span>
+          <span class="legend" aria-label="Legenda de estados">
+            <i><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></i>
+            <i><span class="pill p-warn"><span class="g" aria-hidden="true">●</span>Pendente</span></i>
+            <i><span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>Vence amanhã</span></i>
+            <i><span class="pill p-future"><span class="g" aria-hidden="true">○</span>Futuro</span></i>
+            <i><span class="pill p-na"><span class="g" aria-hidden="true">⊘</span>Não aplicável</span></i>
+          </span>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <caption class="sr-only">Agenda fiscal de 2026: obrigações, estado, valor e ação.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Obrigação</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="n">Valor</th>
+                <th scope="col">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">05/02/2026</td>
+                <td><span class="ob">Comunicação de faturas (janeiro)</span><span class="ob-src">DL 198/2012 art. 3.º</span></td>
+                <td><span class="tipo">Comunicar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver documento</a></td>
+              </tr>
+              <tr>
+                <td class="d">20/02/2026</td>
+                <td><span class="ob">Declaração periódica de IVA — 4.º trimestre 2025</span><span class="ob-src">CIVA art. 41.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver declaração</a></td>
+              </tr>
+              <tr>
+                <td class="d">25/02/2026</td>
+                <td><span class="ob">Pagamento de IVA — 4.º trimestre 2025</span><span class="ob-src">CIVA art. 27.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver guia</a></td>
+              </tr>
+              <tr>
+                <td class="d">02/03/2026</td>
+                <td><span class="ob">Validação de faturas do ano anterior no e-fatura</span><span class="ob-src">CIRS art. 78.º-B</span></td>
+                <td><span class="tipo">Comunicar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver validação</a></td>
+              </tr>
+              <tr>
+                <td class="d">20/05/2026</td>
+                <td><span class="ob">Declaração periódica de IVA — 1.º trimestre 2026</span><span class="ob-src">CIVA art. 41.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver declaração</a></td>
+              </tr>
+              <tr>
+                <td class="d">25/05/2026</td>
+                <td><span class="ob">Pagamento de IVA — 1.º trimestre 2026</span><span class="ob-src">CIVA art. 27.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver guia</a></td>
+              </tr>
+              <tr class="na">
+                <td class="d">31/05/2026</td>
+                <td><span class="ob">Modelo 22 — IRC (período de tributação de 2025)</span><span class="ob-note">Apenas sociedades / contabilidade organizada</span><span class="ob-src">CIRC art. 118.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-na"><span class="g" aria-hidden="true">⊘</span>Não aplicável</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#enquadramento">Porquê</a></td>
+              </tr>
+              <tr>
+                <td class="d">30/06/2026</td>
+                <td><span class="ob">Modelo 3 IRS + Anexo B + Anexo SS (rendimentos de 2025)</span><span class="ob-src">CIRS art. 57.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver declaração</a></td>
+              </tr>
+              <tr class="na">
+                <td class="d">15/07/2026</td>
+                <td><span class="ob">IES — Informação Empresarial Simplificada</span><span class="ob-note">Apenas sociedades / contabilidade organizada</span><span class="ob-src">DL 8/2007 art. 3.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-na"><span class="g" aria-hidden="true">⊘</span>Não aplicável</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#enquadramento">Porquê</a></td>
+              </tr>
+              <tr>
+                <td class="d">20/07/2026</td>
+                <td><span class="ob">IRS — 1.º pagamento por conta</span><span class="ob-src">CIRS art. 102.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver guia</a></td>
+              </tr>
+              <tr>
+                <td class="d">25/08/2026</td>
+                <td><span class="ob">Pagamento de IVA — 2.º trimestre 2026</span><span class="ob-note">Comprovativo em falta no cofre</span><span class="ob-src">CIVA art. 27.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-warn"><span class="g" aria-hidden="true">●</span>Pendente</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Regularizar</a></td>
+              </tr>
+              <tr>
+                <td class="d">31/08/2026</td>
+                <td><span class="ob">Comunicação de faturas (julho)</span><span class="ob-src">DL 198/2012 art. 3.º</span></td>
+                <td><span class="tipo">Comunicar</span></td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Concluído</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#cofre">Ver documento</a></td>
+              </tr>
+
+              <tr class="today"><td colspan="6">20/09/2026 — hoje · domingo</td></tr>
+
+              <tr>
+                <td class="d">21/09/2026</td>
+                <td><span class="ob">IRS — 2.º pagamento por conta</span><span class="ob-note">Prazo de 20/09 prorrogado para o dia útil seguinte</span><span class="ob-src">CIRS art. 102.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>Vence amanhã</span></td>
+                <td class="n">1&nbsp;480,00&nbsp;€ <span class="badge est">estimativa</span></td>
+                <td class="act"><button type="button" class="btn btn-primary btn-sm">Marcar pago</button></td>
+              </tr>
+              <tr>
+                <td class="d">20/10/2026</td>
+                <td><span class="ob">Segurança Social — declaração trimestral do 3.º trimestre</span><span class="ob-src">CRCSPSS art. 151.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-future"><span class="g" aria-hidden="true">○</span>Futuro</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#ss">Preparar</a></td>
+              </tr>
+              <tr>
+                <td class="d">20/11/2026</td>
+                <td><span class="ob">Declaração periódica de IVA — 3.º trimestre 2026</span><span class="ob-src">CIVA art. 41.º</span></td>
+                <td><span class="tipo">Declarar</span></td>
+                <td><span class="pill p-future"><span class="g" aria-hidden="true">○</span>Futuro</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#recibos">Preparar</a></td>
+              </tr>
+              <tr>
+                <td class="d">25/11/2026</td>
+                <td><span class="ob">Pagamento de IVA — 3.º trimestre 2026</span><span class="ob-src">CIVA art. 27.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-future"><span class="g" aria-hidden="true">○</span>Futuro</span></td>
+                <td class="n">3&nbsp;312,00&nbsp;€</td>
+                <td class="act"><a href="#recibos">Preparar</a></td>
+              </tr>
+              <tr>
+                <td class="d">21/12/2026</td>
+                <td><span class="ob">IRS — 3.º pagamento por conta</span><span class="ob-note">Prazo de 20/12 prorrogado para o dia útil seguinte</span><span class="ob-src">CIRS art. 102.º</span></td>
+                <td><span class="tipo">Pagar</span></td>
+                <td><span class="pill p-future"><span class="g" aria-hidden="true">○</span>Futuro</span></td>
+                <td class="n">—</td>
+                <td class="act"><a href="#enquadramento">Preparar</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tnote">Valores em falta significam que o montante só é conhecido depois da declaração do trimestre. As estimativas são recalculadas localmente pelo motor de regras e nunca substituem a liquidação da AT.</p>
+      </section>
+
+      <!-- ============ 5. ENQUADRAMENTO FISCAL ============ -->
+      <section class="block" id="enquadramento" aria-label="Enquadramento fiscal">
+        <div class="block-head">
+          <h2>Enquadramento fiscal (CAE e CIRS)</h2>
+          <span class="hint">Cartão de identidade da atividade · inalterado desde 01/04/2019</span>
+        </div>
+
+        <dl class="defs">
+          <div class="def">
+            <dt>CAE principal</dt>
+            <dd><span class="mono">62010</span> — Atividades de programação informática</dd>
+          </div>
+          <div class="def">
+            <dt>Regime IRS</dt>
+            <dd>Simplificado<small><span class="mono">CIRS art. 28.º</span></small></dd>
+          </div>
+          <div class="def">
+            <dt>CAE secundário</dt>
+            <dd><span class="mono">62020</span> — Atividades de consultoria em informática</dd>
+          </div>
+          <div class="def">
+            <dt>Coeficiente</dt>
+            <dd><span class="mono">0,75</span> <span class="badge ver">? verificar</span><small><span class="mono">CIRS art. 31.º</span> · rendimentos de serviços</small></dd>
+          </div>
+          <div class="def">
+            <dt>CIRS</dt>
+            <dd>Categoria B — rendimentos empresariais e profissionais</dd>
+          </div>
+          <div class="def">
+            <dt>IVA</dt>
+            <dd>Regime trimestral · taxa normal 23%<small><span class="mono">CIVA art. 41.º</span></small></dd>
+          </div>
+          <div class="def">
+            <dt>Início de atividade</dt>
+            <dd><span class="mono">01/04/2019</span><small>Declaração de início entregue à AT</small></dd>
+          </div>
+          <div class="def">
+            <dt>Retenção na fonte</dt>
+            <dd>25% (residentes) / 0% (UE, autoliquidação)<small><span class="mono">CIRS art. 101.º</span> · <span class="mono">CIVA art. 6.º</span></small></dd>
+          </div>
+          <div class="def">
+            <dt>Segurança Social</dt>
+            <dd>21,4% sobre 70% do rendimento de serviços<small><span class="mono">CRCSPSS art. 162.º</span></small></dd>
+          </div>
+        </dl>
+
+        <div class="disc">
+          <span class="sev sev-media"><span class="g" aria-hidden="true">▲</span> Divergência</span>
+          <div>
+            <p class="a-t">CAE secundário sem faturação desde 09/2024</p>
+            <p class="a-d">O CAE secundário <span class="mono">62020</span> não tem faturação associada nos últimos 24 meses. Remove-o do perfil ou confirma que a atividade continua a ser exercida — o desalinhamento entre o CAE declarado e a faturação emitida é um motivo frequente de divergência com os dados da AT.</p>
+            <p class="a-src"><span class="mono">CAE Rev.4 · INE</span><span class="badge ver">? verificar</span><span>último documento com este CAE: 12/09/2024</span></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 6. RECIBOS EMITIDOS ============ -->
+      <section class="block" id="recibos" aria-label="Recibos emitidos em 2026">
+        <div class="block-head">
+          <h2>Recibos emitidos (2026)</h2>
+          <span class="hint">7 documentos · base 48&nbsp;600,00&nbsp;€ · IVA 7&nbsp;038,00&nbsp;€ · retenção 7&nbsp;650,00&nbsp;€</span>
+        </div>
+
+        <div class="tool">
+          <label class="search">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4l4 4"/></svg>
+            <input type="search" placeholder="Pesquisar cliente, NIF ou n.º de documento" aria-label="Pesquisar recibos">
+          </label>
+          <span class="sel">
+            <select aria-label="Ano dos recibos">
+              <option selected>2026</option>
+              <option>2025</option>
+            </select>
+            <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.2 3.2L5 7l3.8-3.8"/></svg>
+          </span>
+          <span class="tool-r">
+            <button type="button" class="btn btn-primary">Nova fatura-recibo</button>
+            <button type="button" class="btn">Importar SAF-T</button>
+            <button type="button" class="btn btn-tertiary">Exportar</button>
+          </span>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <caption class="sr-only">Recibos emitidos em 2026, com base de incidência, IVA, retenção na fonte, líquido, estado e ATCUD.</caption>
+            <thead>
+              <tr>
+                <th scope="col">N.º</th>
+                <th scope="col">Data</th>
+                <th scope="col">Cliente</th>
+                <th scope="col" class="n">Base</th>
+                <th scope="col" class="n">IVA</th>
+                <th scope="col" class="n">Retenção</th>
+                <th scope="col" class="n">Líquido</th>
+                <th scope="col">Estado</th>
+                <th scope="col">ATCUD / doc.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">FT 2026/012</td>
+                <td class="d">12/02/2026</td>
+                <td class="cust"><span class="nm">Norte Digital, Lda.</span><span class="nf">NIF 501 234 560</span></td>
+                <td class="n">6&nbsp;800,00&nbsp;€</td>
+                <td class="n">1&nbsp;564,00&nbsp;€<span class="sub">23%</span></td>
+                <td class="n">1&nbsp;700,00&nbsp;€<span class="sub">25%</span></td>
+                <td class="n">6&nbsp;664,00&nbsp;€</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span></td>
+                <td class="d">J7K2M9P3-12</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/027</td>
+                <td class="d">19/03/2026</td>
+                <td class="cust"><span class="nm">Fábrica de Software, S.A.</span><span class="nf">NIF 505 918 447</span></td>
+                <td class="n">7&nbsp;500,00&nbsp;€</td>
+                <td class="n">1&nbsp;725,00&nbsp;€<span class="sub">23%</span></td>
+                <td class="n">1&nbsp;875,00&nbsp;€<span class="sub">25%</span></td>
+                <td class="n">7&nbsp;350,00&nbsp;€</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span></td>
+                <td class="d">J7K2M9P3-27</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/044</td>
+                <td class="d">22/04/2026</td>
+                <td class="cust"><span class="nm">Studio Mira</span><span class="nf">NIF 509 442 013</span></td>
+                <td class="n">3&nbsp;200,00&nbsp;€</td>
+                <td class="n">736,00&nbsp;€<span class="sub">23%</span></td>
+                <td class="n">800,00&nbsp;€<span class="sub">25%</span></td>
+                <td class="n">3&nbsp;136,00&nbsp;€</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span></td>
+                <td class="d">J7K2M9P3-44</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/061</td>
+                <td class="d">11/06/2026</td>
+                <td class="cust"><span class="nm">Prisma Consulting, Lda.</span><span class="nf">NIF 502 887 311</span></td>
+                <td class="n">5&nbsp;600,00&nbsp;€</td>
+                <td class="n">1&nbsp;288,00&nbsp;€<span class="sub">23%</span></td>
+                <td class="n">1&nbsp;400,00&nbsp;€<span class="sub">25%</span></td>
+                <td class="n">5&nbsp;488,00&nbsp;€</td>
+                <td>
+                  <span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span>
+                  <span class="miss-tag"><span class="g" aria-hidden="true">▲</span>em falta</span>
+                </td>
+                <td class="d">J7K2M9P3-61</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/078</td>
+                <td class="d">14/07/2026</td>
+                <td class="cust"><span class="nm">Oficina Digital Unipessoal, Lda.</span><span class="nf">NIF 503 671 223</span></td>
+                <td class="n">7&nbsp;500,00&nbsp;€</td>
+                <td class="n">1&nbsp;725,00&nbsp;€<span class="sub">23%</span></td>
+                <td class="n">1&nbsp;875,00&nbsp;€<span class="sub">25%</span></td>
+                <td class="n">7&nbsp;350,00&nbsp;€</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span></td>
+                <td class="d">J7K2M9P3-78</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/084</td>
+                <td class="d">20/07/2026</td>
+                <td class="cust"><span class="nm">Helsinki Labs Oy</span><span class="nf">FI•••••••</span><span class="eu badge">UE · B2B</span></td>
+                <td class="n">9&nbsp;000,00&nbsp;€</td>
+                <td class="n">0,00&nbsp;€<span class="sub">IVA - autoliquidação</span></td>
+                <td class="n">0,00&nbsp;€<span class="sub">não residente</span></td>
+                <td class="n">9&nbsp;000,00&nbsp;€</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Pago</span></td>
+                <td class="d">J7K2M9P3-84</td>
+              </tr>
+              <tr>
+                <td class="d">FT 2026/097</td>
+                <td class="d">08/09/2026</td>
+                <td class="cust"><span class="nm">Berlin Data GmbH</span><span class="nf">DE•••••••</span><span class="eu badge">UE · B2B</span></td>
+                <td class="n">9&nbsp;000,00&nbsp;€</td>
+                <td class="n">0,00&nbsp;€<span class="sub">IVA - autoliquidação</span></td>
+                <td class="n">0,00&nbsp;€<span class="sub">não residente</span></td>
+                <td class="n">9&nbsp;000,00&nbsp;€</td>
+                <td>
+                  <span class="pill p-warn"><span class="g" aria-hidden="true">●</span>Pendente</span>
+                  <span class="miss-tag"><span class="g" aria-hidden="true">▲</span>em falta</span>
+                </td>
+                <td class="d">J7K2M9P3-97</td>
+              </tr>
+              <tr class="tot">
+                <td colspan="3">Total · 7 documentos</td>
+                <td class="n">48&nbsp;600,00&nbsp;€</td>
+                <td class="n">7&nbsp;038,00&nbsp;€</td>
+                <td class="n">7&nbsp;650,00&nbsp;€</td>
+                <td class="n">47&nbsp;988,00&nbsp;€</td>
+                <td colspan="2">5 residentes · 2 UE</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tfoot">
+          <span><span class="miss-tag"><span class="g" aria-hidden="true">▲</span>em falta</span> — recibo sem comprovativo de recebimento associado</span>
+          <span>ATCUD registado em todos os documentos · <span class="mono">DL 28/2019 art. 3.º</span></span>
+          <span>Retenção aplicada apenas a clientes residentes</span>
+        </div>
+      </section>
+
+      <!-- ============ 7. SEGURANÇA SOCIAL ============ -->
+      <section class="block" id="ss" aria-label="Segurança Social, 3.º trimestre de 2026">
+        <div class="block-head">
+          <h2>Segurança Social — 3.º trimestre 2026</h2>
+          <span class="hint">Cálculo da contribuição do trimestre, passo a passo, a partir da faturação emitida</span>
+        </div>
+
+        <div class="ss">
+          <div>
+            <ol class="chain">
+              <li class="calc">
+                <span class="calc-k">Rendimento de serviços do trimestre</span>
+                <span class="calc-v">19&nbsp;400,00&nbsp;€</span>
+                <span class="calc-s">Faturação emitida em julho, agosto e setembro de 2026</span>
+              </li>
+              <li class="calc-op"><span class="opb">× 70%</span><span>rendimento relevante dos trabalhadores independentes · <span class="mono">CRCSPSS art. 162.º</span></span></li>
+              <li class="calc sum">
+                <span class="calc-k">Rendimento relevante (70%)</span>
+                <span class="calc-v">13&nbsp;580,00&nbsp;€</span>
+                <span class="calc-s">19&nbsp;400,00&nbsp;€ × 0,70</span>
+              </li>
+              <li class="calc-op"><span class="opb">× 21,4%</span><span>taxa contributiva aplicável aos trabalhadores independentes</span></li>
+              <li class="calc total">
+                <span class="calc-k">Contribuição (21,4%)</span>
+                <span class="calc-v">2&nbsp;906,12&nbsp;€</span>
+                <span class="calc-s">13&nbsp;580,00&nbsp;€ × 0,214</span>
+              </li>
+              <li class="calc-op"><span class="opb">÷ 3</span><span>prestações mensais, pagas entre os dias 10 e 20</span></li>
+              <li class="calc">
+                <span class="calc-k">1/3 a pagar em outubro, novembro e dezembro</span>
+                <span class="calc-v">968,71&nbsp;€</span>
+                <span class="calc-s">Última prestação ajustada em 0,01&nbsp;€ para fechar a contribuição do trimestre</span>
+              </li>
+            </ol>
+
+            <div class="inst">
+              <div class="inst-row" aria-hidden="true"><span>outubro</span><span>novembro</span><span>dezembro</span></div>
+              <div class="inst-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="inst-row">
+                <span>968,71&nbsp;€</span><span>968,71&nbsp;€</span><span>968,70&nbsp;€</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ss-side">
+            <h3>Notas do cálculo</h3>
+            <dl>
+              <dt class="first">Isenção do primeiro ano</dt>
+              <dd>Não aplicável (atividade iniciada em 2019)</dd>
+              <dt>Declaração trimestral</dt>
+              <dd>3.º trimestre · a entregar até <span class="mono">20/10/2026</span></dd>
+              <dt>Base de incidência</dt>
+              <dd>Rendimento de serviços, sem IVA e sem retenção</dd>
+              <dt>Próxima revisão</dt>
+              <dd>Após a faturação de setembro ser comunicada</dd>
+            </dl>
+            <p class="tnote">O valor é recalculado quando a declaração trimestral for preparada. <span class="badge est">estimativa</span></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 8. COFRE DE DOCUMENTOS ============ -->
+      <section class="block" id="cofre" aria-label="Cofre de documentos">
+        <div class="block-head">
+          <h2>Cofre de documentos</h2>
+          <span class="hint">6 conjuntos de documentos · 3 completos · 1 a aguardar prazo · 2 em falta · ficheiros guardados apenas nesta máquina</span>
+        </div>
+
+        <div class="vault-head">
+          <span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>2 em falta</span>
+          <span class="vault-sum">
+            <span>Próximo prazo: <span class="mono">20/10/2026</span></span>
+            <span>Pasta local: <span class="mono">C:\vn-finance\cofre\2026</span></span>
+          </span>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <caption class="sr-only">Lista de documentos a conservar, agrupados por obrigação, com prazo de conservação e estado.</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="vc"><span class="sr-only">Presente</span></th>
+                <th scope="col">Documento</th>
+                <th scope="col">Obrigação</th>
+                <th scope="col">Conservação</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="grp"><td colspan="5">Faturação</td></tr>
+              <tr>
+                <td class="vc"><span class="cb on" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.2l2.4 2.6 4.4-5.6"/></svg></span></td>
+                <td><span class="ob">Faturas-recibo emitidas 2026</span><span class="ob-src">DL 28/2019 · ATCUD em todos os documentos</span></td>
+                <td>Documento de suporte da faturação emitida</td>
+                <td>Guardar 10 anos</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Completo</span></td>
+              </tr>
+              <tr>
+                <td class="vc"><span class="cb miss" aria-hidden="true"></span></td>
+                <td><span class="ob">SAF-T de faturação — mensal</span><span class="ob-src">Ficheiro de agosto 2026 não encontrado na pasta do cofre</span></td>
+                <td>Comunicação mensal à AT</td>
+                <td>Guardar 10 anos</td>
+                <td><span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>Em falta</span></td>
+              </tr>
+
+              <tr class="grp"><td colspan="5">IVA</td></tr>
+              <tr>
+                <td class="vc"><span class="cb miss" aria-hidden="true"></span></td>
+                <td><span class="ob">Comprovativos de pagamento de IVA</span><span class="ob-src">Falta a guia do 2.º trimestre 2026</span></td>
+                <td>Suporte do pagamento declarado</td>
+                <td>Guardar 4 anos</td>
+                <td><span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>Em falta</span></td>
+              </tr>
+
+              <tr class="grp"><td colspan="5">IRS e retenções</td></tr>
+              <tr>
+                <td class="vc"><span class="cb on" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.2l2.4 2.6 4.4-5.6"/></svg></span></td>
+                <td><span class="ob">Guias de retenção na fonte</span><span class="ob-src">Entregues pelos clientes residentes</span></td>
+                <td>Prova da retenção efetuada por terceiros</td>
+                <td>Guardar 4 anos</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Completo</span></td>
+              </tr>
+
+              <tr class="grp"><td colspan="5">Segurança Social</td></tr>
+              <tr>
+                <td class="vc"><span class="cb on" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.2l2.4 2.6 4.4-5.6"/></svg></span></td>
+                <td><span class="ob">Declaração trimestral da Segurança Social</span><span class="ob-src">1.º e 2.º trimestres entregues · 3.º trimestre a entregar até 20/10/2026</span></td>
+                <td>Declaração das remunerações do trimestre</td>
+                <td>Guardar 5 anos</td>
+                <td><span class="pill p-warn"><span class="g" aria-hidden="true">●</span>Aguarda prazo</span></td>
+              </tr>
+
+              <tr class="grp"><td colspan="5">Clientes</td></tr>
+              <tr>
+                <td class="vc"><span class="cb on" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.6 5.2l2.4 2.6 4.4-5.6"/></svg></span></td>
+                <td><span class="ob">Contratos e propostas com clientes</span><span class="ob-src">5 clientes ativos</span></td>
+                <td>Prova do âmbito e do preço dos serviços</td>
+                <td>Enquanto durar a relação + 4 anos</td>
+                <td><span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Completo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tnote">Prazos de conservação segundo a <span class="mono">Lei Geral Tributária art. 40.º</span> (4 anos) e o <span class="mono">Código Comercial art. 40.º</span> (10 anos). Nada é enviado para a nuvem: o cofre é uma pasta local indexada.</p>
+      </section>
+
+      <!-- ============ 9. ASSISTENTE IA ============ -->
+      <section class="block" id="assistente" aria-label="Atualização das regras">
+        <div class="block-head">
+          <h2>Atualização das regras</h2>
+          <span class="hint">A única função do assistente: propor os valores que a lei muda de ano para ano. Não conversa, não aconselha e não vê os teus dados.</span>
+        </div>
+
+        <div class="redact">
+          <div class="redact-head">
+            <h3>O que é enviado neste pedido</h3>
+            <span class="badge local">sem dados pessoais</span>
+          </div>
+          <div class="ia-cfg">
+            <div class="ia-row">
+              <label class="switch">
+                <input type="checkbox" id="ia-switch">
+                <span class="track" aria-hidden="true"><span class="knob"></span></span>
+                <span class="sr-only">Ativar a atualização de regras assistida</span>
+              </label>
+              <span class="txt">
+                <span class="state off" id="ia-state">Assistente desligado</span>
+                <span class="state-note" id="ia-note">Opcional · todo o resto da aplicação funciona sem ele</span>
+              </span>
+            </div>
+
+            <p class="redact-note" style="border-top:0">
+              <span class="g" aria-hidden="true">✓</span>
+              <span>O pedido é construído apenas a partir do <strong>pacote de regras</strong>: nomes de variáveis, os seus valores atuais e os endereços oficiais já citados por cada regra. Perfil, faturas, clientes e rendimentos <strong>não têm caminho de código</strong> para entrar neste pedido.</span>
+            </p>
+
+            <div class="kv">
+              <div>
+                <dt>Modelo</dt>
+                <dd><span class="mono">deepseek-chat</span> <small>temperatura 0 · resposta obrigatoriamente em JSON</small></dd>
+              </div>
+              <div>
+                <dt>Chave de API</dt>
+                <dd>
+                  <span class="keyfield">
+                    <span class="mono">sk-••••••••••••••••••••</span>
+                    <span class="badge local">Windows Credential Manager</span>
+                  </span>
+                  <small>Guardada no Windows Credential Manager, nunca na base de dados nem nos registos.</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Conteúdo do pedido</dt>
+                <dd><span class="mono">21 variáveis · 1 215 + 6 915 caracteres</span> <small>lei pública: taxas, limites, coeficientes, IAS</small></dd>
+              </div>
+              <div>
+                <dt>Validação</dt>
+                <dd>
+                  <span class="mono">unidade + ordem de grandeza</span>
+                  <small>Uma taxa de IVA de 0,23% é um inteiro de pontos base válido — e é recusada.</small>
+                </dd>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tbl">
+          <table>
+            <caption>Valores propostos para o pacote pt/2026, com a fonte indicada para cada um.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Variável</th>
+                <th scope="col" class="n">Atual</th>
+                <th scope="col" class="n">Proposto</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Fonte indicada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Taxa normal de IVA (continente)</td>
+                <td class="n">23%</td>
+                <td class="n">23%</td>
+                <td>sem alteração</td>
+                <td class="src">CIVA art. 18.º</td>
+              </tr>
+              <tr>
+                <td>Limite do regime do art. 53.º do CIVA</td>
+                <td class="n">15 000,00 €</td>
+                <td class="n">15 000,00 €</td>
+                <td>sem alteração</td>
+                <td class="src">FAQ da AT, art. 53.º</td>
+              </tr>
+              <tr>
+                <td>Coeficiente — serviços da Tabela 4</td>
+                <td class="n">0,75</td>
+                <td class="n">0,75</td>
+                <td>sem alteração</td>
+                <td class="src">CIRS art. 31.º n.º 1</td>
+              </tr>
+              <tr>
+                <td>Retenção na fonte — serviços profissionais, residentes</td>
+                <td class="n">23%</td>
+                <td class="n">23%</td>
+                <td>sem alteração</td>
+                <td class="src">CIRS art. 101.º</td>
+              </tr>
+              <tr>
+                <td>Taxa contributiva da Segurança Social</td>
+                <td class="n">21,4%</td>
+                <td class="n">21,4%</td>
+                <td>sem alteração</td>
+                <td class="src">Guia Prático da OCC</td>
+              </tr>
+              <tr>
+                <td>Valor mensal do IAS</td>
+                <td class="n">537,13 €</td>
+                <td class="n">550,00 €</td>
+                <td><span class="badge">▲ por confirmar</span></td>
+                <td class="src">Portaria n.º 480-A/2025/1</td>
+              </tr>
+              <tr>
+                <td>Meses de diferimento no início de atividade</td>
+                <td class="n">12</td>
+                <td class="n">12</td>
+                <td>sem alteração</td>
+                <td class="src">Guia Prático da OCC</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="disc">
+          <p><strong>Um valor proposto nunca é um valor confirmado.</strong> O IAS acima fica marcado como <em>por confirmar</em> e é assim que aparece no diagnóstico e nos alertas, até alguém o validar na fonte citada. O assistente propõe; não verifica. E o pacote de regras não é alterado até aprovares.</p>
+        </div>
+
+        <div class="redact-act">
+          <button type="button" class="btn btn-primary">Aplicar 1 valor</button>
+          <button type="button" class="btn">Rever diff do pacote</button>
+          <button type="button" class="btn">Descartar proposta</button>
+          <span class="cta-note">Aplicar grava os valores como <strong>propostos pelo assistente</strong>. Passá-los a confirmados é um ato teu, depois de leres a fonte.</span>
+        </div>
+      </section>
+
+      <!-- ============ RODAPÉ ============ -->
+      <footer class="foot">
+        <p class="rule" id="regras">Regras pt/2026.1.0 · fontes citadas em cada regra</p>
+        <p class="warn">Esta aplicação não substitui um contabilista certificado e não entrega declarações por ti.</p>
+        <p class="local">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.6 7V5.2a2.4 2.4 0 014.8 0V7"/></svg>
+          <span>Todos os dados residem neste computador · sem telemetria · sem servidores</span>
+        </p>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Revelar / ocultar o NIF do perfil ativo. */
+  var btn = document.getElementById("reveal-btn");
+  var nif = document.getElementById("nif-val");
+  var txt = document.getElementById("reveal-txt");
+  if (btn && nif && txt) {
+    btn.addEventListener("click", function(){
+      var on = btn.getAttribute("aria-pressed") === "true";
+      var next = !on;
+      btn.setAttribute("aria-pressed", next ? "true" : "false");
+      nif.textContent = next ? nif.dataset.full : nif.dataset.mask;
+      nif.classList.toggle("is-revealed", next);
+      txt.textContent = next ? "ocultar" : "revelar";
+    });
+  }
+
+  /* Estado do interruptor do assistente. */
+  var sw = document.getElementById("ia-switch");
+  var st = document.getElementById("ia-state");
+  var nt = document.getElementById("ia-note");
+  if (sw && st && nt) {
+    sw.addEventListener("change", function(){
+      if (sw.checked) {
+        st.textContent = "IA ligada";
+        st.className = "state on";
+        nt.textContent = "Aprovação manual mantida em cada pedido";
+      } else {
+        st.textContent = "IA desligada";
+        st.className = "state off";
+        nt.textContent = "Desligado por omissão";
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

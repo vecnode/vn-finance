@@ -1,0 +1,34 @@
+{
+  "name": "vn-finance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Assistente fiscal pessoal e local-first para atividade independente em Portugal (CIRS categoria B). Não substitui um contabilista certificado.",
+  "license": "MIT",
+  "author": "vecnode",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "vnfin": "./src/cli.ts",
+    "vn": "./src/cli.ts"
+  },
+  "files": [
+    "src",
+    "design",
+    "docs"
+  ],
+  "scripts": {
+    "dev": "node src/cli.ts",
+    "doctor": "node src/cli.ts doctor",
+    "agenda": "node src/cli.ts agenda",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/core/money.test.ts src/core/estimate.test.ts src/core/calendar.test.ts src/core/rules.test.ts src/core/flags.test.ts src/ai/redact.test.ts src/ai/update.test.ts src/web/server.test.ts",
+    "web": "node src/cli.ts web",
+    "verify": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}

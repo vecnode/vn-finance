@@ -1,0 +1,1413 @@
+{
+  "jurisdiction": "PT",
+  "year": 2026,
+  "packVersion": "2026.1.0",
+  "generatedAt": "2026-09-20",
+  "units": {
+    "money": "EUR_cents",
+    "rate": "basis_points"
+  },
+  "disclaimer": "Este ficheiro não constitui aconselhamento fiscal nem parecer jurídico. E uma compilação de fontes públicas que pode estar incompleta ou desatualizada. Confirme sempre prazos, taxas e obrigações no Portal das Finanças, na Segurança Social Direta ou com um contabilista certificado antes de as cumprir.",
+  "sources": [
+    {
+      "id": "at-agenda-decl-2026",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "Resumo anual - Obrigações declarativas em 2026 (Calendário Fiscal)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/calendario_fiscal/Pages/Quadro_res_Decl_2026.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-agenda-pag-2026",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "Resumo anual - Obrigações de pagamento em 2026 (Calendário Fiscal)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/calendario_fiscal/Pages/Quadro_res_Pag_2026.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-faq-art53-iva",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "Questões Frequentes - IVA: Regime Especial de Isenção do artigo 53.º do CIVA",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/questoes_frequentes/pages/faqs-01001.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-folheto-inicio-atividade",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "Folheto informativo - Inicio de atividade: rendimentos empresariais e profissionais (IRS e IVA)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/Folhetos_informativos/Documents/Inicio_atividade.pdf",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art28",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 28.º - Formas de determinacao dos rendimentos empresariais e profissionais",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs28.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art31",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 31.º - Regime simplificado",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs31.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art60",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 60.º - Prazo de entrega da declaração",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs60.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art71",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 71.º - Taxas liberatórias (retenção sobre rendimentos de não residentes)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs71.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art101",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 101.º - Retenção sobre rendimentos de outras categorias",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art102",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 102.º - Pagamentos por conta",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs102.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art128",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 128.º - Obrigação de comprovar os elementos das declarações",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs128.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-civa-art18",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIVA, artigo 18.º - Taxas do imposto",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva18.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-civa-art41",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIVA, artigo 41.º - Prazo de entrega da declaração periódica",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva41.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-civa-art52",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIVA, artigo 52.º - Prazo de arquivo e conservação dos registos e documentos de suporte",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva52.aspx",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-despacho-68-2026",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT) / SEAF",
+      "title": "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF (link referenciado no calendário fiscal de 2026; PDF não recolhido)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/Despachos_SEAF/Documents/Despacho-SEAF-68-2026-XXV.pdf",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-despacho-81-2026",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT) / SEAF",
+      "title": "Despacho n.º 81/2026 - XXV, de 17/06, da SEAF (prorrogação referenciada no calendário fiscal de 2026; PDF não recolhido)",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/Despachos_SEAF/Documents/Despacho-SEAF-81-2026-XXV.pdf",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "occ-guia-ti-2026",
+      "tier": "secondary",
+      "authority": "Ordem dos Contabilistas Certificados (OCC)",
+      "title": "Guia Prático - Regime contributivo dos trabalhadores independentes (agosto de 2026)",
+      "url": "https://www.occ.pt/sites/default/files/public/2026-08/Guia_pratico_ago_2026a.pdf",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "deco-ti-ss-2026",
+      "tier": "secondary",
+      "authority": "DECO Proteste",
+      "title": "Recibos verdes: obrigações de trabalhadores independentes para com a Segurança Social (23/03/2026)",
+      "url": "https://www.deco.proteste.pt/dinheiro/impostos/noticias/recibos-verdes-obrigacoes-trabalhadores-independentes-seguranca-social",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "garrigues-ias-2026",
+      "tier": "secondary",
+      "authority": "Garrigues",
+      "title": "IAS e atualizado para 537,13 EUR em 2026 (05/01/2026)",
+      "url": "https://www.garrigues.com/pt/pt-PT/news/ias-e-atualizado-eu-53713-em-2026",
+      "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "dr-portaria-480a-2025",
+      "tier": "official",
+      "authority": "Diário da República",
+      "title": "Portaria n.º 480-A/2025/1, de 30 de dezembro (fixa o IAS de 2026 em 537,13 EUR) - pagina oficial não devolveu texto legível por máquina na recolha",
+      "url": "https://diariodarepublica.pt/dr/detalhe/portaria/480-a-2025-993056222",
+      "retrievedAt": "2026-09-20"
+    }
+  ],
+  "constants": {
+    "iva": {
+      "rates": {
+        "normal": 2300,
+        "intermediaire": 1300,
+        "reduzida": 600
+      },
+      "art53": {
+        "ceiling": 1500000,
+        "forbidsExportOperations": true,
+        "requiresNationalDomicile": true,
+        "annualisationInStartYear": false,
+        "sourceIds": [
+          "at-faq-art53-iva",
+          "at-folheto-inicio-atividade"
+        ]
+      },
+      "periodicRegime": {
+        "quarterlyCeiling": 65000000,
+        "monthlyAbove": 65000000,
+        "sourceIds": [
+          "at-civa-art41"
+        ]
+      }
+    },
+    "irs": {
+      "simplifiedRegime": {
+        "ceilingForOrganisedAccounting": 20000000,
+        "coefficients": {
+          "servicesProfessionalTable4": 7500,
+          "servicesOther": 3500
+        },
+        "documentedExpensesDeductionRate": 1500,
+        "documentedExpensesDeductionCap": null,
+        "sourceIds": [
+          "at-cirs-art28",
+          "at-cirs-art31",
+          "occ-guia-ti-2026"
+        ]
+      },
+      "withholding": {
+        "professionalServicesResident": 2300,
+        "otherCategoryBResident": 1150,
+        "nonResident": 2500,
+        "sourceIds": [
+          "at-cirs-art101",
+          "at-cirs-art71",
+          "at-folheto-inicio-atividade"
+        ]
+      }
+    },
+    "socialSecurity": {
+      "contributionRate": 2140,
+      "relevantIncomeShareServices": 7000,
+      "relevantIncomeShareGoods": 2000,
+      "baseMinMultipleIas": 150,
+      "baseMaxMultipleIas": 1200,
+      "iasMonthly": 53713,
+      "startupExemptionMonths": 12,
+      "startupReductions": [],
+      "sourceIds": [
+        "occ-guia-ti-2026",
+        "deco-ti-ss-2026",
+        "dr-portaria-480a-2025",
+        "garrigues-ias-2026"
+      ]
+    }
+  },
+  "obligations": [
+    {
+      "id": "irs.modelo3",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IRS",
+      "title": "Declaração de rendimentos Modelo 3 e respetivos anexos (rendimentos do ano anterior)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "range",
+        "monthFrom": 4,
+        "dayFrom": 1,
+        "monthTo": 6,
+        "dayTo": 30
+      },
+      "officialDates2026": [
+        {
+          "month": 6,
+          "day": 30
+        }
+      ],
+      "legalBasis": [
+        "CIRS art. 60.º n.º 1"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-cirs-art60"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Modelo 3 e anexos entregues, com comprovativo de submissão",
+        "Comprovativos dos rendimentos auferidos e das deduções (CIRS art. 128.º)"
+      ],
+      "penaltyNote": "A falta de entrega ou a entrega fora de prazo esta sujeita a penalidades nos termos do RGIT; montantes concretos não foram verificados nesta recolha.",
+      "verification": "verified",
+      "verifyNote": "Prazo legal (1 de abril a 30 de junho, independentemente de o dia ser útil) confirmado no CIRS art. 60.º n.º 1; a data oficial de 2026 (30 de junho) consta do calendário da AT."
+    },
+    {
+      "id": "irs.pagamentosPorConta",
+      "kind": "pay",
+      "authority": "AT",
+      "tax": "IRS",
+      "title": "Pagamentos por conta de IRS (titulares de rendimentos da categoria B)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20,
+        "months": [
+          7,
+          9,
+          12
+        ]
+      },
+      "officialDates2026": [
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "legalBasis": [
+        "CIRS art. 102.º n.º 1",
+        "CIRS art. 102.º n.º 2 (65 % do montante da fórmula; não exigível se inferior a 50 EUR)"
+      ],
+      "sourceIds": [
+        "at-agenda-pag-2026",
+        "at-cirs-art102"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Guias de pagamento (documentos únicos de cobranca) dos três pagamentos por conta",
+        "Nota demonstrativa da liquidação com o cálculo dos pagamentos por conta"
+      ],
+      "penaltyNote": "O pagamento fora de prazo pode gerar juros de mora e custas; montantes não verificados nesta recolha.",
+      "verification": "verified",
+      "verifyNote": "O CIRS art. 102.º n.º 1 fixa o dia 20 de julho, setembro e dezembro; em 2026 os dias 20 de setembro e 20 de dezembro caem ao domingo, pelo que o calendário da AT indica 21."
+    },
+    {
+      "id": "irs.retencoesPagamento",
+      "kind": "pay",
+      "authority": "AT",
+      "tax": "IRS-IRC",
+      "title": "Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 2,
+          "day": 20
+        },
+        {
+          "month": 3,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 5,
+          "day": 20
+        },
+        {
+          "month": 6,
+          "day": 22
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 8,
+          "day": 31
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 10,
+          "day": 20
+        },
+        {
+          "month": 11,
+          "day": 20
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "legalBasis": [
+        "CIRS art. 101.º (obrigação de retenção na fonte)"
+      ],
+      "sourceIds": [
+        "at-agenda-pag-2026",
+        "at-cirs-art101",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Guias de pagamento das importâncias retidas entregues ao Estado",
+        "Registo das retenções efetuadas por cliente e por recibo emitido",
+        "Declaração mensal de remunerações / declarações de retenções, quando aplicável"
+      ],
+      "penaltyNote": "A não entrega das importâncias retidas dentro do prazo pode gerar juros e responsabilidade contraordenacional; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "As datas oficiais de 2026 vêm do calendário da AT e as taxas do CIRS art. 101.º; o artigo que fixa o prazo de entrega (dia 20 do mês seguinte) não foi confirmado num texto de código nesta recolha."
+    },
+    {
+      "id": "iva.dp.mensal",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração periódica de IVA com os anexos devidos - regime mensal",
+      "appliesWhen": [
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "mensal"
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 2
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 2,
+          "day": 20
+        },
+        {
+          "month": 3,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 5,
+          "day": 20
+        },
+        {
+          "month": 6,
+          "day": 22
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 10,
+          "day": 20
+        },
+        {
+          "month": 11,
+          "day": 20
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "legalBasis": [
+        "CIVA art. 41.º n.º 1 alínea a)",
+        "CIVA art. 41.º n.º 10 (declaração relativa a junho até 20 de setembro)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-civa-art41",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração periódica de IVA entregue e comprovativo de submissão",
+        "Registos das operacoes efetuadas e respetivos documentos de suporte (CIVA art. 50.º)"
+      ],
+      "penaltyNote": "A falta de entrega da declaração periódica esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "verified",
+      "verifyNote": "Não ha declaração periódica mensal a entregar em agosto de 2026 porque a declaração de junho e a do 2.º trimestre são entregues até 20 de setembro (CIVA art. 41.º n.º 10), aqui 21 de setembro por o dia 20 ser domingo."
+    },
+    {
+      "id": "iva.dp.trimestral",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração periódica de IVA com os anexos devidos - regime trimestral",
+      "appliesWhen": [
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "trimestral"
+        }
+      ],
+      "periodicity": {
+        "type": "quarterly",
+        "lagMonths": 2
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 2,
+          "day": 20
+        },
+        {
+          "month": 5,
+          "day": 20
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 11,
+          "day": 20
+        }
+      ],
+      "legalBasis": [
+        "CIVA art. 41.º n.º 1 alínea b)",
+        "CIVA art. 41.º n.º 10 (declaração do 2.º trimestre até 20 de setembro)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-civa-art41",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração periódica de IVA entregue e comprovativo de submissão",
+        "Registos das operacoes efetuadas e respetivos documentos de suporte (CIVA art. 50.º)"
+      ],
+      "penaltyNote": "A falta de entrega da declaração periódica esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "verified",
+      "verifyNote": "O regime trimestral aplica-se a quem teve volume de negócios inferior a 650 000 EUR no ano civil anterior (CIVA art. 41.º n.º 1 b))."
+    },
+    {
+      "id": "iva.pagamento.mensal",
+      "kind": "pay",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Pagamento do IVA apurado - regime mensal",
+      "appliesWhen": [
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "mensal"
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 2
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 25
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 26
+        },
+        {
+          "month": 2,
+          "day": 25
+        },
+        {
+          "month": 3,
+          "day": 25
+        },
+        {
+          "month": 4,
+          "day": 27
+        },
+        {
+          "month": 5,
+          "day": 25
+        },
+        {
+          "month": 6,
+          "day": 25
+        },
+        {
+          "month": 7,
+          "day": 27
+        },
+        {
+          "month": 9,
+          "day": 25
+        },
+        {
+          "month": 10,
+          "day": 26
+        },
+        {
+          "month": 11,
+          "day": 25
+        },
+        {
+          "month": 12,
+          "day": 28
+        }
+      ],
+      "legalBasis": [
+        "Regime de flexibilização de pagamento: Decreto-Lei n.º 125/2021, art. 16.º-C (aditado pelo Decreto-Lei n.º 85/2022, de 21/12), referido na nota b) do calendário de pagamentos de 2026"
+      ],
+      "sourceIds": [
+        "at-agenda-pag-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Guias de pagamento do IVA (documentos únicos de cobranca)",
+        "Declaração periódica que suporta o imposto pago"
+      ],
+      "penaltyNote": "O pagamento fora de prazo gera juros de mora; montantes não verificados nesta recolha.",
+      "verification": "partial",
+      "verifyNote": "O prazo (dia 25 do 2.º mês seguinte) consta do folheto oficial da AT e das datas de 2026 do calendário; o artigo do CIVA que o fixa não foi confirmado nesta recolha. Não ha pagamento mensal de IVA em agosto de 2026 (o IVA de junho e pago até 25 de setembro)."
+    },
+    {
+      "id": "iva.pagamento.trimestral",
+      "kind": "pay",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Pagamento do IVA apurado - regime trimestral",
+      "appliesWhen": [
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "trimestral"
+        }
+      ],
+      "periodicity": {
+        "type": "quarterly",
+        "lagMonths": 2
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 25
+      },
+      "officialDates2026": [
+        {
+          "month": 2,
+          "day": 25
+        },
+        {
+          "month": 5,
+          "day": 25
+        },
+        {
+          "month": 9,
+          "day": 25
+        },
+        {
+          "month": 11,
+          "day": 25
+        }
+      ],
+      "legalBasis": [
+        "Regime de flexibilização de pagamento: Decreto-Lei n.º 125/2021, art. 16.º-C (aditado pelo Decreto-Lei n.º 85/2022, de 21/12)"
+      ],
+      "sourceIds": [
+        "at-agenda-pag-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Guias de pagamento do IVA (documentos únicos de cobranca)",
+        "Declaração periódica que suporta o imposto pago"
+      ],
+      "penaltyNote": "O pagamento fora de prazo gera juros de mora; montantes não verificados nesta recolha.",
+      "verification": "partial",
+      "verifyNote": "Datas oficiais de 2026 confirmadas no calendário de pagamentos da AT; o prazo do 2.º trimestre decorre até 25 de setembro. O artigo do CIVA que fixa o prazo não foi confirmado."
+    },
+    {
+      "id": "iva.recapitulativa",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração recapitulativa de IVA - envio mensal (prestações de serviços a contribuintes de outros Estados-Membros localizadas no pais do adquirente)",
+      "appliesWhen": [
+        {
+          "field": "activity.intraCommunityOperations",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 2,
+          "day": 20
+        },
+        {
+          "month": 3,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 5,
+          "day": 20
+        },
+        {
+          "month": 6,
+          "day": 22
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 8,
+          "day": 31
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 10,
+          "day": 20
+        },
+        {
+          "month": 11,
+          "day": 20
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "legalBasis": [
+        "Declaração recapitulativa: envio até ao dia 20 do mês seguinte (folheto oficial da AT)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração recapitulativa entregue e comprovativo de submissão",
+        "Faturas relativas a prestações intracomunitárias de serviços e prova da localizacao no Estado-Membro do adquirente",
+        "Comprovativos do número de identificação de IVA validado do adquirente (VIES)"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Datas oficiais de 2026 vindas do calendário da AT. A data de 31 de agosto de 2026 não tem nota explicativa no calendário e não foi possível identificar a base legal desse dia (ver todo)."
+    },
+    {
+      "id": "iva.recapitulativa.trimestral",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração recapitulativa de IVA - envio trimestral",
+      "appliesWhen": [
+        {
+          "field": "activity.intraCommunityOperations",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "trimestral"
+        }
+      ],
+      "periodicity": {
+        "type": "quarterly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 10,
+          "day": 20
+        }
+      ],
+      "legalBasis": [
+        "Declaração recapitulativa trimestral: envio até ao dia 20 do mês seguinte ao trimestre (linha própria do calendário declarativo de 2026)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração recapitulativa entregue e comprovativo de submissão",
+        "Faturas relativas a prestações intracomunitárias de serviços"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Datas oficiais de 2026 do calendário da AT ('Declaração recapitulativa para contribuintes com o seu envio trimestral')."
+    },
+    {
+      "id": "efatura.comunicacaoFaturas",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IRS-IRC-IVA",
+      "title": "Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência",
+      "appliesWhen": [
+        {
+          "field": "activity.usesAtWebservice",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 5
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 9,
+          "extensions": [
+            {
+              "despacho": "Despacho n.º 166/2025 - XXV, de 22/12, da SEAF",
+              "originalDay": 5,
+              "url": null,
+              "sourceIds": [
+                "at-agenda-decl-2026"
+              ]
+            }
+          ]
+        },
+        {
+          "month": 2,
+          "day": 5
+        },
+        {
+          "month": 3,
+          "day": 5
+        },
+        {
+          "month": 4,
+          "day": 8,
+          "extensions": [
+            {
+              "despacho": "Despacho n.º 40/2026 - XXV, de 26/03, da SEAF",
+              "originalDay": 5,
+              "url": null,
+              "sourceIds": [
+                "at-agenda-decl-2026"
+              ]
+            }
+          ]
+        },
+        {
+          "month": 5,
+          "day": 8,
+          "extensions": [
+            {
+              "despacho": "Despacho n.º 55/2026 - XXV, de 28/04, da SEAF",
+              "originalDay": 5,
+              "url": null,
+              "sourceIds": [
+                "at-agenda-decl-2026"
+              ]
+            }
+          ]
+        },
+        {
+          "month": 6,
+          "day": 5
+        },
+        {
+          "month": 7,
+          "day": 6
+        },
+        {
+          "month": 8,
+          "day": 31
+        },
+        {
+          "month": 9,
+          "day": 7
+        },
+        {
+          "month": 10,
+          "day": 6
+        },
+        {
+          "month": 11,
+          "day": 5
+        },
+        {
+          "month": 12,
+          "day": 7
+        }
+      ],
+      "legalBasis": [
+        "Decreto-Lei n.º 198/2012, art. 3.º (comunicação dos elementos das faturas)",
+        "Art. 4.º-A do Decreto-Lei n.º 28/2019 (aditado pelo Decreto-Lei n.º 49/2025): a utilização do sistema de emissão de faturas do Portal das Finanças dispensa esta comunicação"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Ficheiro/relação das faturas emitidas em cada mês (mesmo quando comunicadas eletronicamente)",
+        "Comprovativo da comunicação mensal a AT ou da sua inexistência"
+      ],
+      "penaltyNote": "A falta de comunicação esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "verified",
+      "verifyNote": "Regra geral: dia 5 do mês seguinte (folheto oficial da AT). Notas do calendário de 2026: a nota c) da pagina (8 de abril) e o Despacho n.º 40/2026, de 26/03, e a nota d) (8 de maio) e o Despacho n.º 55/2026, de 28/04 - e não os Despachos n.º 68/2026 e n.º 81/2026, que figuram noutras notas (e) e f)) da mesma pagina. O Despacho n.º 68/2026 não foi associado a nenhuma obrigação por não ser possível determina-lo."
+    },
+    {
+      "id": "efatura.validacaoDespesas",
+      "kind": "review",
+      "authority": "AT",
+      "tax": "IRS",
+      "title": "Validação/afetação das faturas do ano anterior no Portal das Finanças (e-fatura) e confirmacao das despesas",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "last_day_of_month",
+        "month": 2
+      },
+      "officialDates2026": [
+        {
+          "month": 2,
+          "day": 28
+        },
+        {
+          "month": 3,
+          "day": 2
+        }
+      ],
+      "legalBasis": [
+        "CIRS art. 31.º n.º 15 alínea a) (afetação das faturas a atividade no Portal das Finanças até ao final do mês de fevereiro do ano seguinte)",
+        "CIRS art. 78.º-B (aplicável com as necessárias adaptações)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-cirs-art31"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Faturas e documentos de despesa com indicacao da afetação (total ou parcial) a atividade",
+        "Comprovativo da classificação/afetação das faturas no e-fatura"
+      ],
+      "penaltyNote": "A não afetação atempada pode reduzir ou impedir a consideração de 15 % das despesas no rendimento tributavel (CIRS art. 31.º n.º 13); penalidades concretas não verificadas.",
+      "verification": "partial",
+      "verifyNote": "O calendário da AT apresenta a célula de fevereiro com a nota a) (mês que termina em fim de semana ou feriado) e 2 de março como dia efetivo: 28 de fevereiro de 2026 foi um sábado, pelo que o prazo passou para o dia útil seguinte. A base legal geral do prazo foi confirmada no CIRS art. 31.º n.º 15 a)."
+    },
+    {
+      "id": "saft.mensal",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IVA-IRS",
+      "title": "Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)",
+      "appliesWhen": [
+        {
+          "field": "activity.usesCertifiedInvoicingSoftware",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "activity.usesAtWebservice",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 5
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 9
+        },
+        {
+          "month": 2,
+          "day": 5
+        },
+        {
+          "month": 3,
+          "day": 5
+        },
+        {
+          "month": 4,
+          "day": 8
+        },
+        {
+          "month": 5,
+          "day": 8
+        },
+        {
+          "month": 6,
+          "day": 5
+        },
+        {
+          "month": 7,
+          "day": 6
+        },
+        {
+          "month": 8,
+          "day": 31
+        },
+        {
+          "month": 9,
+          "day": 7
+        },
+        {
+          "month": 10,
+          "day": 6
+        },
+        {
+          "month": 11,
+          "day": 5
+        },
+        {
+          "month": 12,
+          "day": 7
+        }
+      ],
+      "legalBasis": [
+        "Decreto-Lei n.º 198/2012, art. 3.º n.º 1 alínea b) e n.º 3 (os sujeitos passivos obrigados a produzir o ficheiro SAF-T (PT) tem de optar pela transmissão em tempo real ou pela remessa do ficheiro)"
+      ],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Ficheiro SAF-T (PT) de faturação de cada mês, tal como submetido",
+        "Comprovativo de submissão do ficheiro ou de comunicação em tempo real integrada no software certificado",
+        "Certificado de software de faturação e respetivo número de certificação"
+      ],
+      "penaltyNote": "A falta de comunicação esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "A obrigação mensal pela via do ficheiro SAF-T (PT) decorre do DL 198/2012 art. 3.º n.ºs 1 b) e 3; as datas de 2026 foram transpostas da linha 'Comunicação dos elementos das faturas ou a sua inexistência' do calendário da AT, por se tratar do mesmo prazo do dia 5 do mês seguinte, mas o calendário da AT não tem linha autónoma para o SAF-T. Nota: o texto do DL 198/2012 consultado (PDF parlamentar, redação de 2013) indica ainda o dia 25 no art. 3.º n.º 2, redação já ultrapassada face ao dia 5 praticado e divulgado pela AT."
+    },
+    {
+      "id": "ss.declaracaoTrimestral",
+      "kind": "declare",
+      "authority": "Segurança Social",
+      "tax": "Segurança Social",
+      "title": "Declaração trimestral de rendimentos de trabalhador independente (Segurança Social Direta)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "quarterly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "last_day_of_month",
+        "months": [
+          1,
+          4,
+          7,
+          10
+        ]
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 31
+        },
+        {
+          "month": 4,
+          "day": 30
+        },
+        {
+          "month": 7,
+          "day": 31
+        },
+        {
+          "month": 10,
+          "day": 31
+        }
+      ],
+      "legalBasis": [
+        "Código dos Regimes Contributivos (Lei n.º 110/2009, de 16 de setembro) - regime dos trabalhadores independentes, arts. 132.º a 173.º"
+      ],
+      "sourceIds": [
+        "occ-guia-ti-2026",
+        "deco-ti-ss-2026"
+      ],
+      "portalUrl": "https://www.seg-social.pt/ptss/pssd/home",
+      "documentsToKeep": [
+        "Comprovativo da declaração trimestral submetida na Segurança Social Direta",
+        "Registo dos rendimentos de prestação de serviços e de venda de bens de cada trimestre"
+      ],
+      "penaltyNote": "A falta de entrega da declaração esta sujeita a contraordenação e pode originar apuramento oficioso do rendimento; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Prazo segundo o Guia Prático da OCC: até ao Último DIA de janeiro, abril, julho e outubro (em janeiro declaram-se os rendimentos de outubro a dezembro, e assim sucessivamente); os elementos podem ser substituídos até ao 15.º dia posterior ao termo do prazo. A DECO indica o mesmo. As datas concretas de 2026 são calculadas a partir dessa regra: a Segurança Social não publica um calendário anual equivalente ao da AT e as ligações oficiais a seg-social.pt consultadas devolveram 404 ou redirecionaram para a área reservada."
+    },
+    {
+      "id": "ss.contribuicoesMensais",
+      "kind": "pay",
+      "authority": "Segurança Social",
+      "tax": "Segurança Social",
+      "title": "Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_range",
+        "dayFrom": 10,
+        "dayTo": 20
+      },
+      "officialDates2026": [],
+      "legalBasis": [
+        "Código dos Regimes Contributivos (Lei n.º 110/2009, de 16 de setembro) - regime dos trabalhadores independentes, arts. 132.º a 173.º"
+      ],
+      "sourceIds": [
+        "occ-guia-ti-2026",
+        "deco-ti-ss-2026"
+      ],
+      "portalUrl": "https://www.seg-social.pt/ptss/pssd/home",
+      "documentsToKeep": [
+        "Planos de pagamento / guias de pagamento mensais emitidos na Segurança Social Direta",
+        "Comprovativos bancários dos pagamentos efetuados"
+      ],
+      "penaltyNote": "O pagamento fora do prazo gera juros de mora; montantes não verificados nesta recolha.",
+      "verification": "partial",
+      "verifyNote": "O pagamento é mensal, entre os dias 10 e 20 do mês seguinte aquele a que respeita (Guia Prático da OCC, agosto de 2026; a DECO confirma a mesma janela). Como e uma janela de dias e não um dia fixo, não existem datas oficiais anuais publicadas a registar aqui."
+    },
+    {
+      "id": "ss.declaracaoAnual",
+      "kind": "communicate",
+      "authority": "Segurança Social",
+      "tax": "Segurança Social",
+      "title": "Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "month_of_year",
+        "month": 1
+      },
+      "officialDates2026": [],
+      "legalBasis": [
+        "Código dos Regimes Contributivos, art. 151.º-A"
+      ],
+      "sourceIds": [
+        "occ-guia-ti-2026",
+        "deco-ti-ss-2026"
+      ],
+      "portalUrl": "https://www.seg-social.pt/ptss/pssd/home",
+      "documentsToKeep": [
+        "Comprovativo da declaração anual submetida na Segurança Social Direta",
+        "Cruzamento com os rendimentos declarados no Modelo 3 do IRS"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a contraordenação; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "O Guia Prático da OCC indica que a declaração anual (art. 151.º-A do CRC) e entregue durante o mês de janeiro do ano seguinte e que a obrigação abrange quem tenha estado obrigado a entregar pelo menos uma declaração trimestral; a DECO confirma. Não foi identificado o dia concreto nem datas oficiais publicadas."
+    },
+    {
+      "id": "ies",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IRC",
+      "title": "Informação Empresarial Simplificada (IES) - declaração anual de informação contabilística e fiscal",
+      "appliesWhen": [
+        {
+          "field": "profile.isCompany",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 15,
+        "month": 7
+      },
+      "officialDates2026": [
+        {
+          "month": 7,
+          "day": 15
+        }
+      ],
+      "legalBasis": [],
+      "sourceIds": [
+        "at-agenda-decl-2026"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "IES submetida e comprovativo de submissão",
+        "Contas anuais aprovadas e demais elementos contabilísticos que suportam a declaração"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Apenas aplicável a sociedades (profile.isCompany = true), não a um trabalhador independente. A data oficial de 2026 (15 de julho) consta do calendário da AT na linha 'Informação empresarial e simplificada'; a base legal geral (artigo do CIRC) não foi confirmada nesta recolha."
+    },
+    {
+      "id": "modelo22",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IRC",
+      "title": "Declaração periódica de rendimentos Modelo 22 (IRC), contribuintes com periodo de tributação coincidente com o ano civil",
+      "appliesWhen": [
+        {
+          "field": "profile.isCompany",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "periodicity": {
+        "type": "annual",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 30,
+        "month": 6
+      },
+      "officialDates2026": [
+        {
+          "month": 6,
+          "day": 30,
+          "extensions": [
+            {
+              "despacho": "Despacho n.º 81/2026 - XXV, de 17/06, da SEAF",
+              "originalDay": null,
+              "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/Despachos_SEAF/Documents/Despacho-SEAF-81-2026-XXV.pdf",
+              "sourceIds": [
+                "at-agenda-decl-2026",
+                "at-despacho-81-2026"
+              ]
+            }
+          ]
+        }
+      ],
+      "legalBasis": [],
+      "sourceIds": [
+        "at-agenda-decl-2026",
+        "at-despacho-81-2026"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Modelo 22 submetido e comprovativo de submissão",
+        "Declaração de autoliquidação e respetiva liquidação"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Apenas aplicável a sociedades. A data oficial de 2026 e 30 de junho, com a nota f) do calendário a remeter para o Despacho n.º 81/2026 - XXV, de 17/06 (prorrogação). O prazo geral da lei (habitualmente 31 de maio) não foi confirmado numa fonte oficial nesta recolha, pelo que não e aqui afirmado."
+    },
+    {
+      "id": "iva.declaracaoAlteracoes",
+      "kind": "declare",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração de alterações de atividade (incluindo a passagem ao regime normal quando ultrapassado o limiar do art. 53.º do CIVA)",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "event_driven",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "days_after_event",
+        "days": 15,
+        "note": "15 dias (15 dias úteis nos casos de ultrapassagem do limiar do art. 53.º do CIVA, contados do último dia do ano em que o volume de negócios excedeu 15 000 EUR e ficou abaixo de 18 750 EUR)"
+      },
+      "officialDates2026": [],
+      "legalBasis": [
+        "Folheto oficial da AT (Inicio de atividade): alteração de dados no prazo de 15 dias; ultrapassagem do limiar de isenção, 15 dias úteis",
+        "CIVA art. 53.º (redação do Decreto-Lei n.º 35/2025, de 24/03) e art. 54.º (passagem dos regimes de tributação ao regime especial de isenção)"
+      ],
+      "sourceIds": [
+        "at-folheto-inicio-atividade",
+        "at-faq-art53-iva"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração de alterações submetida e comprovativo",
+        "Documentos que comprovem a alteração (por exemplo, volume de negócios do ano, alteração de CAE ou de regime de IVA)"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Prazos retirados do folheto oficial da AT. Os limiares de 15 000 EUR (limite da isenção) e de 18 750 EUR (25 % acima do limite, com liquidação imediata de IVA a partir da ultrapassagem) constam do mesmo folheto e da FAQ oficial do art. 53.º."
+    },
+    {
+      "id": "guardar.documentos",
+      "kind": "save",
+      "authority": "AT",
+      "tax": "IRS-IVA",
+      "title": "Conservação em boa ordem dos registos e documentos de suporte da atividade",
+      "appliesWhen": [],
+      "periodicity": {
+        "type": "continuous",
+        "lagMonths": null
+      },
+      "deadlineRule": {
+        "kind": "retention_years",
+        "iva": 10,
+        "irs": 4
+      },
+      "officialDates2026": [],
+      "legalBasis": [
+        "CIVA art. 52.º n.º 1 (arquivo e conservação durante 10 anos civis subsequentes; redação do Decreto-Lei n.º 49/2025, de 27/03, em vigor desde 1 de julho de 2025)",
+        "CIRS art. 128.º n.º 3 (a obrigação de comprovar os elementos das declarações mantém-se durante os quatro anos seguintes aquele a que respeitem os documentos)"
+      ],
+      "sourceIds": [
+        "at-civa-art52",
+        "at-cirs-art128"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Faturas e faturas-recibo emitidas a clientes (originais ou arquivo eletrónico em boa ordem) e comprovativos de comunicação a AT",
+        "Faturas e outros documentos de despesas relacionadas com a atividade, com indicacao da afetação total ou parcial (base da dedução de 15 % do art. 31.º n.º 13 do CIRS)",
+        "Comprovativos de pagamento das contribuições para a Segurança Social (planos de pagamento e extratos da Segurança Social Direta)",
+        "Comprovativos das retenções na fonte efetuadas por clientes e guias de entrega dessas retenções ao Estado",
+        "Declarações periódicas de IVA, declarações recapitulativas e respetivos comprovativos de submissão",
+        "Guias de pagamento de IVA, de IRS (pagamentos por conta) e de Imposto do Selo, quando aplicável",
+        "Declaração Modelo 3 e anexos, liquidações, notas de cobranca e comprovativos de reembolso",
+        "Declaração trimestral e declaração anual a Segurança Social, com comprovativos da Segurança Social Direta",
+        "Declaração de inicio, de alterações e de cessação de atividade",
+        "Contratos, propostas aceites, adendas e correspondência com clientes que documentem as prestações de serviços",
+        "Extratos bancários das contas afetas a atividade",
+        "Registo de deslocações (quilómetros, viagens e estadas) e de ajudas de custo, quando existam",
+        "Ficheiros SAF-T (PT) de faturação gerados pelo software certificado e respetivos comprovativos de submissão, quando aplicável",
+        "Comprovativos de despesas com formacao, quotizações de ordens profissionais, seguros e locação de equipamento afetos a atividade",
+        "Comprovativos de IVA suportado em importações e aquisições intracomunitárias relacionadas com a atividade"
+      ],
+      "penaltyNote": "A falta de conservação pode impedir a comprovação de rendimentos e despesas (CIRS art. 128.º) e e sancionável. Prazos diferentes coexistem: 10 anos civis para registos e documentos de suporte de IVA (CIVA art. 52.º n.º 1, redação do DL 49/2025) e 4 anos para a obrigação de comprovar os elementos das declarações de IRS (CIRS art. 128.º n.º 3).",
+      "verification": "verified",
+      "verifyNote": "Ambos os prazos foram lidos diretamente nos artigos oficiais. A aplicação deve conservar pelo prazo mais longo (10 anos) para cobrir o IVA; o prazo de 4 anos do CIRS refere-se a obrigação de comprovar elementos das declarações de IRS."
+    }
+  ],
+  "todo": [
+    "constants.irs.simplifiedRegime.documentedExpensesDeductionCap = null: o art. 31.º n.º 13 do CIRS, na redação em vigor, não fixa um limite monetário. O mecanismo e um acréscimo ao rendimento tributavel igual a diferença positiva entre 15 % dos rendimentos brutos das prestações de serviços e o somatório das despesas elegíveis (dedução específica, despesas com pessoal, rendas, 1,5 %/4 % do VPT dos imóveis, outras despesas comunicadas a AT, importações e aquisições intracomunitárias). O limite de 1 500 EUR habitual em resumos secundários não consta do texto atual: confirmar com um contabilista antes de o codificar.",
+    "IVA: as taxas registadas (23 %, 13 % e 6 %) são as do continente (CIVA art. 18.º n.º 1, redação da Lei n.º 55-A/2010). O art. 18.º n.º 3 permite taxas diminutas nas Regiões Autónomas dos Açores e da Madeira, que não estão refletidas neste pacote.",
+    "IVA, art. 53.º: o pacote registra o limiar de 15 000 EUR. O folheto oficial da AT acrescenta a regra de transição que não esta codificada por falta de chave na estrutura: se o volume de negócios do ano exceder 15 000 EUR mas ficar abaixo de 18 750 EUR, e entregue declaração de alterações em 15 dias úteis a contar do último dia desse ano e o regime normal aplica-se a partir de 1 de janeiro seguinte; se 18 750 EUR for excedido no decurso do ano, o IVA passa a ser liquidado a partir desse momento.",
+    "iva.pagamento.mensal e iva.pagamento.trimestral: o artigo do CIVA que fixa o prazo de pagamento (dia 25 do 2.º mês seguinte) não foi confirmado; a verificação baseia-se no folheto oficial da AT e nas datas de 2026 do calendário de pagamentos.",
+    "irs.retencoesPagamento: o artigo do CIRS que fixa o prazo de entrega das importâncias retidas (dia 20 do mês seguinte) não foi confirmado. As taxas de retenção estão confirmadas no art. 101.º.",
+    "iva.recapitulativa: a data de 31 de agosto de 2026 consta do calendário oficial mas não tem nota nem base legal identificada; confirmar se decorre de despacho ou de regra própria da declaração recapitulativa.",
+    "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF: figura como nota e) do calendário declarativo de 2026 e como nota c) do calendário de pagamentos, mas não foi possível determinar a que obrigação concreta se refere; não foi associado a nenhuma data neste pacote. O PDF não foi recolhido (apenas o link referenciado na pagina).",
+    "Modelo 22 e IES: apenas as datas oficiais de 2026 foram registadas (30 de junho, com prorrogação pelo Despacho n.º 81/2026, e 15 de julho). Os prazos gerais da lei não foram confirmados em fonte oficial nesta recolha e por isso não são afirmados.",
+    "saft.mensal: o calendário da AT não tem linha autónoma para o SAF-T (PT) mensal; as datas foram transpostas da linha da comunicação de faturas (mesmo prazo do dia 5). Confirmar se quem comunica em tempo real por webservice esta efetivamente dispensado da remessa mensal do ficheiro e se a dispensa abrange quem usa o sistema de faturação do Portal das Finanças (esta última consta do folheto oficial).",
+    "Segurança Social: não foi encontrado calendário oficial anual (a seg-social.pt devolveu 404 nos PDFs do Guia Prático e redirecionou as paginas de documentos para a área reservada). Os prazos, a taxa de 21,4 % e os coeficientes de 70 %/20 % foram confirmados no Guia Prático da OCC de agosto de 2026 e corroborados pela DECO. Confirmar igualmente o artigo exato do CRC da declaração trimestral (o Guia cita o art. 151.º-A para a declaração anual, sugerindo o art. 151.º para a trimestral, mas isso não foi confirmado).",
+    "Segurança Social, inicio de atividade: os primeiros 12 meses Não são uma isenção. O Guia Prático da OCC indica que o enquadramento existe mas os seus efeitos so se produzem no 1.º dia do 12.º mês posterior ao inicio de atividade, pelo que o campo startupExemptionMonths foi fixado em 12 como periodo sem obrigação contributiva. Não foi encontrada qualquer redução faseada (por exemplo 50 % e depois 25 %) após esse periodo, pelo que startupReductions ficou vazio: o pressuposto de 'isenção de 12 meses seguida de reduções' não esta sustentado nas fontes consultadas e deve ser confirmado. Também não foram confirmadas as condições de acesso (por exemplo cessação anterior de atividade) nem a regra de suspensão da contagem do prazo em caso de cessação durante os primeiros 12 meses.",
+    "constants.socialSecurity.iasMonthly = 53713 (537,13 EUR): valor corroborado pelo Guia Prático da OCC, que cita a Portaria n.º 480-A/2025/1, de 30 de dezembro, e por fontes secundárias (Garrigues, imprensa). A pagina oficial do Diário da República foi pedida mas não devolveu texto legível por máquina, pelo que o valor não foi lido diretamente no diploma.",
+    "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): codificados em centésimos do IAS, ou seja 1,5 × IAS escreve-se 150 e 12 × IAS escreve-se 1200. A base de incidência mensal é um duodécimo (ou um terço do rendimento relevante trimestral), limitada entre 1,5 x IAS e 12 x IAS; existe ainda um valor mínimo de contribuição de 20,00 EUR por referência ao Despacho n.º 599/2019, citado pelo Guia da OCC mas não lido diretamente.",
+    "Segurança Social, direito de opção: o trabalhador pode fixar rendimento relevante superior ou inferior até 25 %, por escalões de 5 % (art. 164.º do CRC, citado pelo Guia da OCC). Não esta codificado por falta de chave na estrutura; a aplicação deve ter isto em conta ao estimar contribuições.",
+    "Retenção na fonte: além das três taxas codificadas, o art. 101.º do CIRS fixa 16,5 % para rendimentos de propriedade intelectual ou industrial e 20 % para rendimentos abrangidos pelo art. 58.º-A do EBF. Não foram codificadas por a estrutura pedida prever apenas três chaves; considerar a sua inclusão numa versão seguinte do pacote.",
+    "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo (CIRS art. 71.º n.º 4 a), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida). O texto do artigo foi lido, mas a aplicação a casos concretos (convenções para evitar a dupla tributação, estabelecimento estável) exige revisão humana.",
+    "efatura.validacaoDespesas: a base legal do prazo para as despesas pessoais (art. 78.º-B do CIRS) foi apenas referida de forma remissa pelo art. 31.º n.º 15 a); não foi lida integralmente.",
+    "Os prazos de conservação de documentos são diferentes conforme o imposto (10 anos no CIVA art. 52.º; 4 anos no CIRS art. 128.º n.º 3). A aplicação deve adotar por omissão o prazo mais longo (10 anos) para as faturas, mas a decisão deve ser validada por um contabilista certificado.",
+    "ss.declaracaoTrimestral: na integração, periodicity.lagMonths foi corrigido de 0 para 1, porque as datas oficiais do próprio pacote (31/01, 30/04, 31/07, 31/10) so alinham com os trimestres com um mês de desfasamento (T1 -> abril, T2 -> julho, T3 -> outubro). O campo deadlineRule.months não e usado pelo motor."
+  ]
+}

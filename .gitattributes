@@ -1,0 +1,11 @@
+# Normalise line endings to LF in the repository and in the working tree, so the
+# published source is byte-identical on every platform and diffs stay readable.
+* text=auto eol=lf
+
+# Never touch binary content.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff2 binary

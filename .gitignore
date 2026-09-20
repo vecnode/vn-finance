@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# ---------------------------------------------------------------------------
+# PERSONAL DATA NEVER GOES IN THIS REPOSITORY.
+#
+# The application keeps everything in one folder outside the working tree
+# (~/.vn-finance by default), and the vault refuses to open a data directory
+# that sits inside a git work tree. These rules exist as a second line of
+# defence: if someone points --data-dir at the checkout anyway, or copies a
+# vault in by hand, git must not pick it up.
+# ---------------------------------------------------------------------------
+.vn-finance/
+vn-finance-data/
+profile.json
+**/ledger/*.jsonl
+**/obligations/*.jsonl
+**/audit/*.jsonl
+**/rules/proposals-*.json
+**/documents/index.json
+**/ai/deepseek.key
+
+# Exported backups
+exports/
+*.vnfin-backup
+
+# Everything in .gitignore stays out of the pack, but the RULE PACKS themselves
+# are law, not personal data, and are meant to be versioned and reviewed:
+#   src/rules/**/*.json   <- keep these tracked
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*

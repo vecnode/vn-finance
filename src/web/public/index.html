@@ -115,6 +115,8 @@
               </button>
             </span>
 
+            <button type="button" class="btn btn-sm" id="profile-btn" data-act="open-profile" title="Criar, editar, carregar ou exportar o perfil do contribuinte">Perfil</button>
+
             <span class="chip" id="chip-dir">Pasta de dados: <span class="mono">—</span></span>
 
             <span class="lockchip" title="Nada sai deste computador. Sem sincronização, sem telemetria.">
@@ -150,6 +152,16 @@
         <p class="banner banner-err">Este painel precisa de JavaScript ativo para ler o modelo do servidor local. Nenhum dado sai deste computador.</p>
       </noscript>
     </main>
+  </div>
+</div>
+
+<div class="overlay noprint" id="profile-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" id="profile-modal">
+    <div class="modal-head">
+      <h2 id="profile-modal-title">Perfil do contribuinte</h2>
+      <button type="button" class="btn btn-sm" data-act="close-profile" aria-label="Fechar o formulário de perfil">Fechar</button>
+    </div>
+    <div class="modal-body" id="profile-modal-body"></div>
   </div>
 </div>
 

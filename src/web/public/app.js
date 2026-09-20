@@ -20,6 +20,8 @@ const TOKEN_KEY = 'vnfin.token';
 const API = {
   dashboard: '/api/dashboard',
   profile: '/api/profile',
+  profileImport: '/api/profile/import',
+  profileExport: '/api/profile/export',
   invoices: '/api/invoices',
   complete: '/api/obligations/complete',
   documents: '/api/documents',
@@ -39,6 +41,10 @@ const state = {
   preview: false,
   nifRevealed: false,
   ledger: { pt: null, foreign: null },
+  /* O formulário de perfil abre sozinho na primeira utilização — quando o cofre
+     ainda não tem perfil — e fica disponível no botão "Perfil" a partir daí. */
+  profileOpen: false,
+  profilePrompted: false,
 };
 
 /* --------------------------------------------------------------------------
@@ -267,6 +273,23 @@ function bpToInput(bp) {
 function centsToInput(cents) {
   if (typeof cents !== 'number' || !Number.isFinite(cents)) return '';
   return (cents / 100).toFixed(2).replace('.', ',');
+}
+
+/**
+ * Euros por extenso -> cêntimos, para os valores do perfil.
+ *
+ * Ao contrário de `parseEurosToCents`, um campo vazio significa "apagar o valor
+ * guardado" (`null`), porque é isso que o formulário do perfil oferece: a mesma
+ * caixa serve para escrever e para remover um número que estava errado.
+ */
+function parseCentsField(input) {
+  const cleaned = String(input === null || input === undefined ? '' : input)
+    .replace(/[€\s\u00a0\u202f]/g, '')
+    .trim();
+  if (cleaned === '') return null;
+  const cents = parseEurosToCents(cleaned);
+  if (cents === undefined || cents === null || cents < 0) return undefined;
+  return cents;
 }
 
 /* --------------------------------------------------------------------------
@@ -2020,6 +2043,288 @@ function renderAssistente(model) {
 }
 
 /* --------------------------------------------------------------------------
+   Perfil: o formulário do primeiro arranque, e a edição depois
+   --------------------------------------------------------------------------
+
+   Na primeira utilização o cofre não tem perfil — e sem perfil não há
+   enquadramento, agenda nem indicadores. Em vez de exigir um comando de terminal,
+   o painel abre este formulário e grava o resultado no mesmo `profile.json` que
+   a linha de comandos usaria. As listas de regimes vêm do modelo
+   (`profileOptions`), pelo mesmo motivo por que as taxas de IVA vêm do pacote de
+   regras: o painel não decide o que a AT aceita.
+   -------------------------------------------------------------------------- */
+
+function profileFormHtml(model) {
+  const profile = model.profile;
+  const activity = profile?.activity ?? {};
+  const options = model.profileOptions ?? {};
+  const editing = profile !== null && profile !== undefined;
+  const today = isIsoDate(model.meta?.today) ? model.meta.today : '';
+
+  const select = (name, list, selected) =>
+    (list ?? [])
+      .map(
+        (item) =>
+          `<option value="${esc(item.value)}"${item.value === selected ? ' selected' : ''}>${esc(item.label)}</option>`,
+      )
+      .join('');
+
+  const lead = editing
+    ? '<p class="prof-lead">Edita o enquadramento gravado no cofre local. As caixas de volume de negócios mostram o que está guardado; ' +
+      'apagar uma caixa remove esse valor do perfil e a aplicação volta a dizer que não o pode avaliar.</p>'
+    : '<p class="prof-lead">Ainda não existe perfil neste cofre. Estes são os dados da tua declaração de início de atividade: ' +
+      'sem eles a aplicação não sabe que obrigações te pertencem e recusa-se a adivinhá-los.</p>' +
+      '<p class="prof-lead">Ficam gravados apenas em <span class="mono">' +
+      esc(model.meta.dataDir) +
+      '</span>, neste computador. Nada é enviado para fora.</p>';
+
+  const caeHint =
+    (activity.cae ?? []).length > 0
+      ? `${esc(activity.cae[0].code)} — ${esc(activity.cae[0].description)}`
+      : `por omissão ${esc(options.defaultCae?.code ?? '')} — ${esc(options.defaultCae?.description ?? '')}`;
+
+  return (
+    lead +
+    '<form data-form="profile-full" novalidate>' +
+    '<div class="form-grid">' +
+    '<div class="field"><label for="pf-nif">NIF</label>' +
+    `<input id="pf-nif" name="nif" type="text" inputmode="numeric" maxlength="20" autocomplete="off" required value="${esc(profile?.nif ?? '')}">` +
+    '<small>Nove dígitos. O dígito de controlo é validado antes de gravar.</small></div>' +
+    '<div class="field"><label for="pf-name">Nome</label>' +
+    `<input id="pf-name" name="name" type="text" maxlength="120" autocomplete="off" required value="${esc(profile?.name ?? '')}">` +
+    '<small>Nome do contribuinte, como consta na declaração.</small></div>' +
+    '<div class="field"><label for="pf-start">Início de atividade</label>' +
+    `<input id="pf-start" name="startDate" type="date" value="${esc(isIsoDate(activity.startDate) ? activity.startDate : today)}">` +
+    '<small>Data da abertura de atividade, como no Portal das Finanças.</small></div>' +
+    '<div class="field"><label for="pf-cae">CAE principal</label>' +
+    `<input id="pf-cae" name="caeCode" type="text" maxlength="5" inputmode="numeric" autocomplete="off" value="${esc(activity.cae?.[0]?.code ?? '')}" placeholder="62010">` +
+    `<small>Vazio mantém: ${caeHint}.</small></div>` +
+    '<div class="field"><label for="pf-iva">Regime de IVA</label>' +
+    `<select id="pf-iva" name="ivaRegime" required>${select('ivaRegime', options.ivaRegimes, profile?.iva?.regime)}</select>` +
+    '<small>Tal como está no Portal das Finanças. A aplicação não o adivinha.</small></div>' +
+    '<div class="field"><label for="pf-irs">Regime de IRS</label>' +
+    `<select id="pf-irs" name="irsRegime">${select('irsRegime', options.irsRegimes, profile?.irs?.regime)}</select>` +
+    '<small>O coeficiente do regime simplificado vem do pacote de regras, não daqui.</small></div>' +
+    '<div class="field"><label for="pf-prev">Volume de negócios do ano anterior (€)</label>' +
+    `<input id="pf-prev" name="turnoverPreviousYearCents" type="text" inputmode="decimal" autocomplete="off" value="${esc(centsToInput(activity.turnoverPreviousYearCents))}" placeholder="12 400,00">` +
+    '<small>Em território nacional, no ano civil anterior.</small></div>' +
+    '<div class="field"><label for="pf-curr">Volume de negócios esperado para este ano (€)</label>' +
+    `<input id="pf-curr" name="turnoverCurrentYearExpectedCents" type="text" inputmode="decimal" autocomplete="off" value="${esc(centsToInput(activity.turnoverCurrentYearExpectedCents))}" placeholder="48 600,00">` +
+    '<small>A tua estimativa: é o que permite avisar a meio do ano.</small></div>' +
+    '<div class="field full"><span class="lbl">Clientes fora de Portugal</span>' +
+    `<label class="check" for="pf-eu"><input id="pf-eu" name="intraCommunityOperations" type="checkbox"${activity.intraCommunityOperations === true ? ' checked' : ''}> <span>Presto serviços a clientes da União Europeia (operações intracomunitárias)</span></label>` +
+    `<label class="check" for="pf-ex"><input id="pf-ex" name="exports" type="checkbox"${activity.exports === true ? ' checked' : ''}> <span>Presto serviços a clientes fora da União Europeia (exportações)</span></label>` +
+    `<label class="check" for="pf-ss"><input id="pf-ss" name="startupExemptionActive" type="checkbox"${profile?.ss?.startupExemptionActive === true ? ' checked' : ''}> <span>Estou no período de isenção de contribuições do primeiro ano (Segurança Social)</span></label>` +
+    '</div>' +
+    '</div>' +
+    '<div class="form-actions">' +
+    `<button type="submit" class="btn btn-primary">${editing ? 'Guardar alterações' : 'Criar perfil e entrar'}</button>` +
+    '<span class="note">Gravado no cofre local. Nada é enviado para fora deste computador.</span>' +
+    '</div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    '<div class="prof-notes">' +
+    '<p class="subhead">Carregar um perfil já existente</p>' +
+    '<p class="tnote flush">Um <span class="mono">profile.json</span> de outro cofre (ou de uma cópia de segurança) pode ser carregado aqui, ' +
+    'ou o perfil ativo gravado num ficheiro para levar para outro computador.</p>' +
+    '<div class="prof-foot">' +
+    '<label class="btn btn-sm" for="pf-file">Carregar perfil de ficheiro…</label>' +
+    '<input id="pf-file" type="file" accept="application/json,.json" hidden>' +
+    '<button type="button" class="btn btn-sm btn-tertiary" data-act="export-profile">Exportar o perfil atual</button>' +
+    '</div>' +
+    '</div>'
+  );
+}
+
+function renderProfileModal(model) {
+  const overlay = document.getElementById('profile-overlay');
+  const body = document.getElementById('profile-modal-body');
+  const title = document.getElementById('profile-modal-title');
+  if (overlay === null || body === null) return;
+
+  if (model === null || model === undefined) {
+    overlay.hidden = true;
+    return;
+  }
+
+  const editing = model.profile !== null && model.profile !== undefined;
+  if (title !== null) title.textContent = editing ? 'Editar perfil do contribuinte' : 'Criar perfil do contribuinte';
+  body.innerHTML = profileFormHtml(model);
+  overlay.hidden = !state.profileOpen;
+}
+
+function openProfileModal() {
+  state.profileOpen = true;
+  renderProfileModal(state.model);
+  const first = document.querySelector('#profile-modal-body input, #profile-modal-body select');
+  if (first !== null) first.focus();
+}
+
+function closeProfileModal() {
+  state.profileOpen = false;
+  const overlay = document.getElementById('profile-overlay');
+  if (overlay !== null) overlay.hidden = true;
+}
+
+/**
+ * A submitted profile. Creating and updating are the same form on purpose: the
+ * difference is which values the person is looking at, not two different ideas
+ * of what a profile is. `replace` is sent only when the user confirmed it.
+ */
+async function submitProfileFull(form) {
+  const nif = fieldValue(form, 'nif');
+  const name = fieldValue(form, 'name');
+  if (nif === '') {
+    formMessage(form, 'err', 'O NIF é obrigatório: é o número de contribuinte da atividade.');
+    return;
+  }
+  if (name === '') {
+    formMessage(form, 'err', 'O nome é obrigatório.');
+    return;
+  }
+
+  const ivaRegime = fieldValue(form, 'ivaRegime');
+  if (ivaRegime === '') {
+    formMessage(form, 'err', 'Escolhe o regime de IVA declarado no Portal das Finanças.');
+    return;
+  }
+
+  const startDate = fieldValue(form, 'startDate');
+  if (startDate !== '' && !isIsoDate(startDate)) {
+    formMessage(form, 'err', 'A data de início de atividade tem de estar no formato AAAA-MM-DD.');
+    return;
+  }
+
+  const previous = parseCentsField(fieldValue(form, 'turnoverPreviousYearCents'));
+  if (previous === undefined) {
+    formMessage(form, 'err', 'Volume de negócios do ano anterior: escreve um valor em euros, por exemplo 12 400,00 (ou deixa vazio).');
+    return;
+  }
+  const expected = parseCentsField(fieldValue(form, 'turnoverCurrentYearExpectedCents'));
+  if (expected === undefined) {
+    formMessage(form, 'err', 'Previsão para este ano: escreve um valor em euros, por exemplo 48 600,00 (ou deixa vazio).');
+    return;
+  }
+
+  const body = {
+    nif,
+    name,
+    ivaRegime,
+    turnoverPreviousYearCents: previous,
+    turnoverCurrentYearExpectedCents: expected,
+    intraCommunityOperations: fieldChecked(form, 'intraCommunityOperations'),
+    exports: fieldChecked(form, 'exports'),
+    startupExemptionActive: fieldChecked(form, 'startupExemptionActive'),
+  };
+  if (startDate !== '') body.startDate = startDate;
+  const irsRegime = fieldValue(form, 'irsRegime');
+  if (irsRegime !== '') body.irsRegime = irsRegime;
+
+  // A CAE typed by the person running the application, with the description the
+  // form already shows. Leaving it empty keeps the default the model named.
+  const caeCode = fieldValue(form, 'caeCode');
+  if (caeCode !== '') {
+    const stored = state.model?.profile?.activity?.cae?.[0] ?? null;
+    if (stored !== null && stored.code === caeCode) {
+      body.cae = [{ code: stored.code, description: stored.description, role: 'principal' }];
+    } else if (/^\d{5}$/.test(caeCode) && state.model?.profileOptions?.defaultCae?.code === caeCode) {
+      body.cae = [
+        {
+          code: caeCode,
+          description: state.model.profileOptions.defaultCae.description,
+          role: 'principal',
+        },
+      ];
+    } else if (!/^\d{5}$/.test(caeCode)) {
+      formMessage(form, 'err', 'O CAE tem de ter cinco dígitos (por exemplo 62010).');
+      return;
+    } else {
+      formMessage(
+        form,
+        'err',
+        `O CAE ${caeCode} ainda não está descrito neste perfil. Deixa o campo vazio para manter o atual, ` +
+          'ou carrega um perfil já completo a partir de um ficheiro.',
+      );
+      return;
+    }
+  }
+
+  // Read before the request: `send` replaces the model with the answer, so after
+  // it awaits there is no way to tell whether a profile was just created.
+  const created = state.model?.profile === null || state.model?.profile === undefined;
+
+  const data = await send(API.profile, body);
+  const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+  const notes = warnings.length === 0 ? '' : ` ${warnings.join(' ')}`;
+  toast(
+    created
+      ? `Perfil criado no cofre local.${notes}`
+      : `Perfil atualizado no cofre local.${notes}`,
+  );
+  closeProfileModal();
+}
+
+async function exportProfile() {
+  const response = await fetch(API.profileExport, {
+    headers: { 'X-VNFIN-Token': state.token, Accept: 'application/json' },
+    credentials: 'omit',
+    cache: 'no-store',
+  });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = null;
+  }
+  if (!response.ok || data === null || data.profile === undefined) {
+    throw new ApiError(
+      data !== null && typeof data.error === 'string' ? data.error : 'não foi possível exportar o perfil.',
+    );
+  }
+
+  const blob = new Blob([`${JSON.stringify(data.profile, null, 2)}\n`], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `vn-finance-profile-${String(data.profile.nif ?? 'perfil')}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast('Perfil exportado para um ficheiro neste computador.');
+}
+
+/** Um `profile.json` escolhido no disco -> o mesmo POST que o formulário usa. */
+async function importProfileFile(file) {
+  if (file === null || file === undefined) return;
+  if (file.size > 256 * 1024) throw new ApiError('o ficheiro é demasiado grande para ser um perfil.');
+  let parsed = null;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch {
+    throw new ApiError('o ficheiro não é JSON válido: escolhe um profile.json do vn-finance.');
+  }
+
+  const hasProfile = state.model?.profile !== null && state.model?.profile !== undefined;
+  if (
+    hasProfile &&
+    !window.confirm('Já existe um perfil neste cofre. Substituir o perfil atual pelo do ficheiro?')
+  ) {
+    return;
+  }
+
+  const data = await send(API.profileImport, { profile: parsed, replace: hasProfile });
+  const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+  toast(
+    warnings.length === 0
+      ? 'Perfil carregado do ficheiro.'
+      : `Perfil carregado do ficheiro. ${warnings.join(' ')}`,
+  );
+  closeProfileModal();
+}
+
+/* --------------------------------------------------------------------------
    Acompanhamento: perfil ausente (onboarding) e chave de sessão ausente
    -------------------------------------------------------------------------- */
 
@@ -2032,17 +2337,18 @@ function renderOnboarding(model) {
     '<h2>Ainda não existe perfil neste cofre</h2>' +
     '<p>O painel lê o perfil, os recibos e o pacote de regras do cofre local. Sem perfil não há enquadramento, não há agenda e não há indicadores — ' +
     'e é deliberado que assim seja: um painel que preenche estes valores por estimativa seria um painel em que não se pode confiar.</p>' +
-    '<p>Cria o perfil na linha de comandos e recarrega esta página:</p>' +
-    '<p><span class="cmd">vnfin init --nif 123456789 --name "Nome Completo" --iva trimestral --turnover-ano-anterior 12400</span></p>' +
+    '<p>O formulário de perfil tem os dados da tua declaração de início de atividade: NIF, nome, regime de IVA e a data de abertura. ' +
+    'Sem eles a aplicação não sabe que obrigações te pertencem, e não os adivinha.</p>' +
     '<ul>' +
     '<li>O cofre fica em <span class="mono">' + esc(model.meta.dataDir) + '</span> e nunca sai deste computador.</li>' +
     '<li>O volume de negócios do ano anterior nunca é assumido: sem ele, a aplicação não avalia a isenção do art. 53.º do CIVA e diz que não avalia.</li>' +
+    '<li>Um perfil já existente pode ser carregado de um ficheiro <span class="mono">profile.json</span>, no mesmo formulário.</li>' +
     '<li>Depois do perfil criado, esta página passa a mostrar enquadramento, agenda fiscal, recibos, Segurança Social, IVA e IRS.</li>' +
     '</ul>' +
     '<div class="acts">' +
-    '<button type="button" class="btn btn-primary" data-act="retry">Recarregar o modelo</button>' +
+    '<button type="button" class="btn btn-primary" data-act="open-profile">Preencher o perfil</button>' +
+    '<button type="button" class="btn" data-act="retry">Recarregar o modelo</button>' +
     '<a class="btn" href="#regras">Ver regras e fontes</a>' +
-    '<a class="btn" href="#assistente">Atualizar regras</a>' +
     '</div>' +
     (problems.length === 0
       ? ''
@@ -2118,6 +2424,16 @@ function render(model) {
   const host = document.getElementById('painel');
   if (host === null) return;
   host.setAttribute('aria-busy', 'false');
+
+  // First run: there is nothing to show until the profile exists, so the form is
+  // what opens. Asked once per page, so closing it to read the rules does not
+  // have it spring back on the next render.
+  const hasProfile = model.profile !== null && model.profile !== undefined;
+  if (!hasProfile && !state.profilePrompted) {
+    state.profilePrompted = true;
+    state.profileOpen = true;
+  }
+  renderProfileModal(model);
 
   const html = [renderAlertBlock(model)];
   if (model.profile === null || model.profile === undefined) {
@@ -2370,6 +2686,23 @@ document.addEventListener('click', (event) => {
     void boot({ silent: true });
     return;
   }
+  if (act === 'open-profile') {
+    openProfileModal();
+    return;
+  }
+  if (act === 'close-profile') {
+    closeProfileModal();
+    return;
+  }
+  if (act === 'export-profile') {
+    const host = document.getElementById('profile-modal-body');
+    void withBusy(trigger, () => exportProfile()).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      if (host !== null) formMessage(host, 'err', message);
+      showError(message);
+    });
+    return;
+  }
   if (act === 'dismiss-error') {
     clearError();
     return;
@@ -2478,11 +2811,13 @@ document.addEventListener('submit', (event) => {
   const work =
     kind === 'profile'
       ? () => submitProfile(form)
-      : kind === 'invoice'
-        ? () => submitInvoice(form)
-        : kind === 'document'
-          ? () => submitDocument(form)
-          : null;
+      : kind === 'profile-full'
+        ? () => submitProfileFull(form)
+        : kind === 'invoice'
+          ? () => submitInvoice(form)
+          : kind === 'document'
+            ? () => submitDocument(form)
+            : null;
   if (work === null) return;
   void withBusy(button, work).catch((error) => {
     formMessage(form, 'err', error instanceof Error ? error.message : String(error));
@@ -2493,6 +2828,27 @@ document.addEventListener('submit', (event) => {
 document.addEventListener('change', (event) => {
   const target = event.target;
   if (target instanceof HTMLSelectElement && target.id === 'f-country') applyCountryDefaults();
+  if (target instanceof HTMLInputElement && target.id === 'pf-file') {
+    const file = target.files === null ? null : target.files[0];
+    target.value = '';
+    const host = document.getElementById('profile-modal-body');
+    void withBusy(null, () => importProfileFile(file ?? null)).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      if (host !== null) formMessage(host, 'err', message);
+      showError(message);
+    });
+  }
+});
+
+/* O formulário de perfil é um modal: fechar com o rato no fundo escuro ou com a
+   tecla Escape, como qualquer caixa de diálogo. O botão "Fechar" já existe. */
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+  if (event.target.id === 'profile-overlay') closeProfileModal();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && state.profileOpen) closeProfileModal();
 });
 
 /* --------------------------------------------------------------------------

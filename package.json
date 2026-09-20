@@ -23,7 +23,7 @@
     "doctor": "node src/cli.ts doctor",
     "agenda": "node src/cli.ts agenda",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/core/money.test.ts src/core/estimate.test.ts src/core/calendar.test.ts src/core/rules.test.ts src/core/flags.test.ts src/ai/redact.test.ts src/ai/update.test.ts src/web/server.test.ts",
+    "test": "node --test src/core/money.test.ts src/core/estimate.test.ts src/core/calendar.test.ts src/core/rules.test.ts src/core/flags.test.ts src/core/profile.test.ts src/ai/redact.test.ts src/ai/update.test.ts src/web/server.test.ts src/web/profile-api.test.ts",
     "web": "node src/cli.ts web",
     "verify": "npm run typecheck && npm test"
   },

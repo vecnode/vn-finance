@@ -27,7 +27,7 @@ import {
   type Flag,
   type FlagSummary,
 } from '../core/flags.ts';
-import { missingProfileInputs, validateProfile, type ProfileProblem } from '../core/profile.ts';
+import { DEFAULT_CAE, missingProfileInputs, validateProfile, type ProfileProblem } from '../core/profile.ts';
 import { freshness, summarisePack, type Freshness, type PackSummary } from '../core/rules.ts';
 import {
   buildUpdateRequest,
@@ -106,10 +106,38 @@ export interface DashboardDefaults {
   withholdingNonResidentBp: number | null;
 }
 
+/**
+ * The closed vocabularies the profile form offers.
+ *
+ * They travel in the model for the same reason the tax rates do: a select box is
+ * a statement about what the AT accepts, and the front end must not be the place
+ * where that list lives. The labels are here too, so a regime cannot be called
+ * two different things in two places.
+ */
+export interface ProfileOptions {
+  ivaRegimes: Array<{ value: string; label: string }>;
+  irsRegimes: Array<{ value: string; label: string }>;
+  defaultCae: { code: string; description: string };
+}
+
+export const PROFILE_OPTIONS: ProfileOptions = {
+  ivaRegimes: [
+    { value: 'isento_art53', label: 'Isenção do art. 53.º do CIVA' },
+    { value: 'trimestral', label: 'Regime normal — declaração trimestral' },
+    { value: 'mensal', label: 'Regime normal — declaração mensal' },
+  ],
+  irsRegimes: [
+    { value: 'simplificado', label: 'Regime simplificado' },
+    { value: 'organizada', label: 'Contabilidade organizada' },
+  ],
+  defaultCae: { code: DEFAULT_CAE.code, description: DEFAULT_CAE.description },
+};
+
 export interface DashboardModel {
   meta: DashboardMeta;
   guarantees: readonly string[];
   defaults: DashboardDefaults;
+  profileOptions: ProfileOptions;
   profile: TaxProfile | null;
   profileProblems: ProfileProblem[];
   missingInputs: string[];
@@ -212,6 +240,7 @@ export function buildDashboard(input: DashboardInput): DashboardModel {
       withholdingNonResidentBp: pack.constants.irs.withholding.nonResident,
     },
     profile,
+    profileOptions: PROFILE_OPTIONS,
     profileProblems: profile === null ? [] : validateProfile(profile),
     missingInputs: profile === null ? [] : missingProfileInputs(profile),
     pack: { summary, freshness: freshness(pack, today), problems: loaded.problems },

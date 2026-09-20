@@ -11,6 +11,17 @@
 import { isValidPtTaxNumber, normaliseNif } from './nif.ts';
 import type { CaeEntry, IvaRegime, IrsRegime, TaxProfile } from './types.ts';
 
+/** The regimes the AT lets a taxpayer declare. Anything else is not a regime. */
+export const IVA_REGIMES: readonly IvaRegime[] = ['isento_art53', 'trimestral', 'mensal'];
+export const IRS_REGIMES: readonly IrsRegime[] = ['simplificado', 'organizada'];
+
+/** The CAE the interface offers when the user does not name one. */
+export const DEFAULT_CAE: CaeEntry = {
+  code: '62010',
+  description: 'Atividades de programação informática',
+  role: 'principal',
+};
+
 export interface ProfileProblem {
   level: 'error' | 'warning';
   field: string;
@@ -41,47 +52,253 @@ export interface ProfileInput {
   startupExemptionActive?: boolean;
 }
 
-export function createDefaultProfile(input: ProfileInput): TaxProfile {
-  const cae: CaeEntry[] =
-    input.cae !== undefined && input.cae.length > 0
-      ? input.cae
-      : [{ code: '62010', description: 'Atividades de programação informática', role: 'principal' }];
+/**
+ * Everything the interface collects when it creates or edits a profile.
+ *
+ * Unlike `ProfileInput`, which describes a brand-new profile, every field here is
+ * optional: the profile being drafted may already exist, and a draft that omits a
+ * field must leave the stored value alone rather than reset it to a default. What
+ * a profile must have to exist at all is decided by `buildProfile` (NIF and name)
+ * and by the interfaces (`init` and the panel also require a declared regime).
+ */
+export interface ProfileDraft {
+  nif?: string;
+  name?: string;
+  ivaRegime?: IvaRegime;
+  irsRegime?: IrsRegime;
+  startDate?: string;
+  trackingStart?: string;
+  turnoverPreviousYearCents?: number | null;
+  turnoverCurrentYearExpectedCents?: number | null;
+  cae?: CaeEntry[];
+  categoryB?: boolean;
+  residentPT?: boolean;
+  isCompany?: boolean;
+  intraCommunityOperations?: boolean;
+  exports?: boolean;
+  startupExemptionActive?: boolean;
+}
+
+/**
+ * Build one complete profile from a draft and, optionally, the profile it
+ * replaces.
+ *
+ * Every field the draft omits is taken from `current` when there is one, and
+ * only then from the documented default. A field explicitly set to `null` clears
+ * an optional value — which is how a wrong turnover figure is removed — and is
+ * nevertheless a decision the caller made, not something this function guessed.
+ *
+ * The IVA regime has a default here for the same reason `createDefaultProfile`
+ * always had one: a profile built by a test, a fixture or an old import should
+ * not be blocked on a declaration it is not making. What the INTERFACES require
+ * is a separate matter, and they require it: the profile form and the `init`
+ * command both refuse to create a profile without a declared regime, because a
+ * guess there would silently change every downstream obligation.
+ */
+export function buildProfile(
+  draft: ProfileDraft,
+  options: { current?: TaxProfile; coefficientBp?: number } = {},
+): TaxProfile {
+  const current = options.current;
+  const nif = draft.nif ?? current?.nif;
+  if (nif === undefined) throw new Error('o NIF é obrigatório para criar o perfil.');
+  const name = draft.name ?? current?.name;
+  if (name === undefined) throw new Error('o nome é obrigatório para criar o perfil.');
+  const ivaRegime = draft.ivaRegime ?? current?.iva.regime ?? 'trimestral';
+
+  // Null deletes an optional figure; undefined means the draft did not mention it.
+  const carryOver = (
+    drafted: number | null | undefined,
+    stored: number | undefined,
+  ): number | undefined => (drafted === null ? undefined : (drafted ?? stored));
+
+  const startDate = draft.startDate ?? current?.activity.startDate ?? '1970-01-01';
+  const turnoverPreviousYearCents = carryOver(
+    draft.turnoverPreviousYearCents,
+    current?.activity.turnoverPreviousYearCents,
+  );
+  const turnoverCurrentYearExpectedCents = carryOver(
+    draft.turnoverCurrentYearExpectedCents,
+    current?.activity.turnoverCurrentYearExpectedCents,
+  );
+
+  const firstActivityDate = current?.ss.firstActivityDate ?? startDate;
 
   return {
-    nif: normaliseNif(input.nif),
-    name: input.name,
-    residentPT: input.residentPT ?? true,
-    isCompany: input.isCompany ?? false,
-    ...(input.trackingStart === undefined ? {} : { trackingStart: input.trackingStart }),
+    nif: normaliseNif(nif),
+    name,
+    residentPT: draft.residentPT ?? current?.residentPT ?? true,
+    isCompany: draft.isCompany ?? current?.isCompany ?? false,
+    // Only set when someone said so. A profile written without a tracking date is
+    // one the panel has not opened yet, and inventing "today" here would silently
+    // turn this year's earlier deadlines into history.
+    ...(draft.trackingStart === undefined && current?.trackingStart === undefined
+      ? {}
+      : { trackingStart: draft.trackingStart ?? current?.trackingStart }),
     activity: {
-      categoryB: input.categoryB ?? true,
-      startDate: input.startDate ?? '1970-01-01',
-      cae,
-      // Both turnover figures are optional AND never defaulted: the art. 53.º
-      // evaluation must be able to say "I do not know" rather than assume.
+      categoryB: draft.categoryB ?? current?.activity.categoryB ?? true,
+      startDate,
+      cae:
+        draft.cae !== undefined && draft.cae.length > 0
+          ? draft.cae
+          : current?.activity.cae !== undefined && current.activity.cae.length > 0
+            ? current.activity.cae
+            : [{ ...DEFAULT_CAE }],
+      ...(turnoverPreviousYearCents === undefined ? {} : { turnoverPreviousYearCents }),
+      ...(turnoverCurrentYearExpectedCents === undefined ? {} : { turnoverCurrentYearExpectedCents }),
+      intraCommunityOperations: draft.intraCommunityOperations ?? current?.activity.intraCommunityOperations ?? false,
+      exports: draft.exports ?? current?.activity.exports ?? false,
+      hasEmployees: current?.activity.hasEmployees ?? false,
+      usesCertifiedInvoicingSoftware: current?.activity.usesCertifiedInvoicingSoftware ?? true,
+      usesAtWebservice: current?.activity.usesAtWebservice ?? false,
+    },
+    iva: { regime: ivaRegime },
+    irs: {
+      regime: draft.irsRegime ?? current?.irs.regime ?? 'simplificado',
+      coefficientBp: options.coefficientBp ?? current?.irs.coefficientBp ?? 7500,
+    },
+    ss: {
+      startupExemptionActive: draft.startupExemptionActive ?? current?.ss.startupExemptionActive ?? false,
+      firstActivityDate,
+    },
+  };
+}
+
+export function createDefaultProfile(input: ProfileInput): TaxProfile {
+  return buildProfile(
+    {
+      nif: input.nif,
+      name: input.name,
+      ...(input.ivaRegime === undefined ? {} : { ivaRegime: input.ivaRegime }),
+      ...(input.irsRegime === undefined ? {} : { irsRegime: input.irsRegime }),
+      ...(input.categoryB === undefined ? {} : { categoryB: input.categoryB }),
+      ...(input.residentPT === undefined ? {} : { residentPT: input.residentPT }),
+      ...(input.isCompany === undefined ? {} : { isCompany: input.isCompany }),
+      ...(input.cae === undefined ? {} : { cae: input.cae }),
+      ...(input.startDate === undefined ? {} : { startDate: input.startDate }),
+      ...(input.trackingStart === undefined ? {} : { trackingStart: input.trackingStart }),
       ...(input.turnoverPreviousYearCents === undefined
         ? {}
         : { turnoverPreviousYearCents: input.turnoverPreviousYearCents }),
       ...(input.turnoverCurrentYearExpectedCents === undefined
         ? {}
         : { turnoverCurrentYearExpectedCents: input.turnoverCurrentYearExpectedCents }),
-      intraCommunityOperations: input.intraCommunityOperations ?? false,
-      exports: input.exports ?? false,
-      hasEmployees: input.hasEmployees ?? false,
-      usesCertifiedInvoicingSoftware: input.usesCertifiedInvoicingSoftware ?? true,
-      usesAtWebservice: input.usesAtWebservice ?? false,
+      ...(input.intraCommunityOperations === undefined
+        ? {}
+        : { intraCommunityOperations: input.intraCommunityOperations }),
+      ...(input.exports === undefined ? {} : { exports: input.exports }),
+      ...(input.startupExemptionActive === undefined
+        ? {}
+        : { startupExemptionActive: input.startupExemptionActive }),
     },
-    iva: {
-      regime: input.ivaRegime ?? 'trimestral',
-    },
-    irs: {
-      regime: input.irsRegime ?? 'simplificado',
-      coefficientBp: input.coefficientBp ?? 7500,
-    },
-    ss: {
-      startupExemptionActive: input.startupExemptionActive ?? false,
-      firstActivityDate: input.startDate,
-    },
+    input.coefficientBp === undefined ? {} : { coefficientBp: input.coefficientBp },
+  );
+}
+
+/**
+ * A profile that arrived as a file, turned back into a profile.
+ *
+ * An import is not a trusted operation: the file may have been hand-edited, may
+ * come from an older version, or may not be a profile at all. Every unknown is a
+ * problem for `validateProfile` to report, but a value that is the wrong *type*
+ * is refused here, because storing it would make every later calculation
+ * nonsense rather than merely wrong.
+ */
+export function normaliseImportedProfile(value: unknown): TaxProfile {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('o ficheiro não contém um perfil: esperava um objeto JSON.');
+  }
+  const raw = value as Record<string, unknown>;
+  const nif = raw['nif'];
+  const name = raw['name'];
+  if (typeof nif !== 'string' || typeof name !== 'string') {
+    throw new Error('o perfil importado tem de ter "nif" e "name" como texto.');
+  }
+
+  const activity = raw['activity'];
+  const iva = raw['iva'];
+  const irs = raw['irs'];
+  const ss = raw['ss'];
+  const activityRecord = activity !== null && typeof activity === 'object' ? (activity as Record<string, unknown>) : {};
+  const ivaRecord = iva !== null && typeof iva === 'object' ? (iva as Record<string, unknown>) : {};
+  const irsRecord = irs !== null && typeof irs === 'object' ? (irs as Record<string, unknown>) : {};
+  const ssRecord = ss !== null && typeof ss === 'object' ? (ss as Record<string, unknown>) : {};
+
+  const importedIva = readEnum(ivaRecord['regime'], IVA_REGIMES, 'o regime de IVA');
+  const importedIrs = readEnum(irsRecord['regime'], IRS_REGIMES, 'o regime de IRS');
+
+  return buildProfile({
+    nif,
+    name,
+    ...(importedIva === undefined ? {} : { ivaRegime: importedIva }),
+    ...(importedIrs === undefined ? {} : { irsRegime: importedIrs }),
+    ...readOptionalText(activityRecord['startDate'], 'a data de início de atividade', 'startDate'),
+    ...readOptionalText(raw['trackingStart'], 'a data de início do acompanhamento', 'trackingStart'),
+    ...readOptionalCents(activityRecord['turnoverPreviousYearCents'], 'turnoverPreviousYearCents'),
+    ...readOptionalCents(activityRecord['turnoverCurrentYearExpectedCents'], 'turnoverCurrentYearExpectedCents'),
+    ...readCae(activityRecord['cae']),
+    ...(typeof activityRecord['intraCommunityOperations'] === 'boolean'
+      ? { intraCommunityOperations: activityRecord['intraCommunityOperations'] }
+      : {}),
+    ...(typeof activityRecord['exports'] === 'boolean' ? { exports: activityRecord['exports'] } : {}),
+    ...(typeof raw['residentPT'] === 'boolean' ? { residentPT: raw['residentPT'] } : {}),
+    ...(typeof raw['isCompany'] === 'boolean' ? { isCompany: raw['isCompany'] } : {}),
+    ...(typeof ssRecord['startupExemptionActive'] === 'boolean'
+      ? { startupExemptionActive: ssRecord['startupExemptionActive'] }
+      : {}),
+  }, {
+    ...(typeof irsRecord['coefficientBp'] === 'number' ? { coefficientBp: irsRecord['coefficientBp'] } : {}),
+  });
+}
+
+function readEnum<T extends string>(value: unknown, allowed: readonly T[], label: string): T | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'string' && (allowed as readonly string[]).includes(value)) return value as T;
+  throw new Error(`${label} "${String(value)}" não é reconhecido (esperado: ${allowed.join(', ')}).`);
+}
+
+function readOptionalText(
+  value: unknown,
+  label: string,
+  field: string,
+): Record<string, string> {
+  if (value === undefined || value === null || value === '') return {};
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`${label} não está em formato AAAA-MM-DD.`);
+  }
+  return { [field]: value };
+}
+
+function readOptionalCents(value: unknown, field: string): Record<string, number> {
+  if (value === undefined || value === null) return {};
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`"${field}" tem de ser um valor em cêntimos (inteiro, não negativo).`);
+  }
+  return { [field]: value };
+}
+
+function readCae(value: unknown): { cae?: CaeEntry[] } {
+  if (value === undefined || value === null) return {};
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error('"activity.cae" tem de ser uma lista com pelo menos um CAE.');
+  }
+  return {
+    cae: value.map((entry) => {
+      if (entry === null || typeof entry !== 'object') {
+        throw new Error('cada CAE tem de ser um objeto com "code", "description" e "role".');
+      }
+      const record = entry as Record<string, unknown>;
+      const code = record['code'];
+      const description = record['description'];
+      const role = record['role'];
+      if (typeof code !== 'string' || typeof description !== 'string') {
+        throw new Error('cada CAE tem de ter "code" e "description" em texto.');
+      }
+      if (role !== 'principal' && role !== 'secondary') {
+        throw new Error(`o CAE ${code} tem de ter "role" principal ou secondary.`);
+      }
+      return { code, description, role };
+    }),
   };
 }
 

@@ -43,15 +43,55 @@ sources, and is honest about what it does not know.
 git clone <this repository> vn-finance
 cd vn-finance
 npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 92 tests
+npm run verify       # strict typecheck + 111 tests
 ```
 
-`npm run verify` is the gate. It should end with `# pass 95` and `# fail 0`.
+`npm run verify` is the gate. It should end with `# pass 111` and `# fail 0`.
 
-### 2. Create your profile
+### 2. Start it
 
-Two of these values are **compulsory**, because the application refuses to guess
-them: the NIF and your declared IVA regime.
+```bash
+node src/cli.ts          # or: npm start — opens the local panel in your browser
+```
+
+Running it with no command is the normal way to start: it opens the panel at
+`http://127.0.0.1:7717/?t=<token>` and starts the local server. There is no setup
+command to remember and nothing to type at the terminal.
+
+- On a vault with **no profile**, the panel opens its profile form. Fill it in,
+  press save, and the profile is written to `~/.vn-finance/profile.json` — the
+  same file the command line uses.
+- On a vault that **already has a profile**, the panel simply loads it.
+- Use `--no-open` if you would rather open the address yourself, and `--port` to
+  move it off 7717.
+
+### 3. The profile, and why two fields are compulsory
+
+The application refuses to guess the **NIF** and your declared **IVA regime**:
+they are the declaration you made to the AT, and a wrong default would silently
+change every obligation the tool shows you.
+
+| Field | What it is | Why it matters |
+| --- | --- | --- |
+| NIF | Your tax number | Validated with the modulus-11 check digit before it is stored |
+| Name | Your name | Used to redact it from anything sent to a model |
+| IVA regime | `isento_art53`, `trimestral` or `mensal` | **Required.** It is the enquadramento of your declaração de início de atividade |
+| Turnover last year | Turnover in **national territory**, in euros | What the art. 53.º CIVA exemption is measured against. Without it the app says which check it cannot run instead of assuming |
+| Turnover this year | Your estimate | Drives the mid-year warning when the art. 53.º ceiling approaches |
+| Start date | When the activity opened | Used for the Segurança Social startup period |
+| EU / non-EU clients | Who you invoice | Reverse charge, VIES, declaração recapitulativa, export treatment |
+
+Both IVA regimes are plausible for a programmer: `isento_art53` if you stayed under
+€15 000 nationally, `trimestral` once you are above it. If you are not sure which
+one the AT has on file, check the Portal das Finanças first — the application
+deliberately will not decide this for you.
+
+The **Perfil** button in the panel's top bar reopens the same form at any time, and
+it also loads and saves profiles as files: *Carregar perfil de ficheiro…* reads a
+`profile.json` from another vault or a backup, and *Exportar o perfil atual* writes
+the active profile to a file you can carry to another computer.
+
+If you prefer the command line, `init` still exists and does the same thing:
 
 ```bash
 node src/cli.ts init \
@@ -63,25 +103,9 @@ node src/cli.ts init \
   --clientes-ue
 ```
 
-| Option | What it is | Why it matters |
-| --- | --- | --- |
-| `--nif` | Your tax number | Validated with the modulus-11 check digit |
-| `--name` | Your name | Used to redact it from anything sent to a model |
-| `--iva` | `isento_art53`, `trimestral` or `mensal` | **Required.** It is the enquadramento of your declaração de início de atividade. Guessing it would silently change every downstream obligation |
-| `--turnover-ano-anterior` | Turnover in **national territory** last year, in euros | What the art. 53.º CIVA exemption is measured against. Without it the app says which check it cannot run instead of assuming |
-| `--turnover-ano-corrente` | Your estimate for this year | Drives the mid-year warning when the art. 53.º ceiling approaches |
-| `--start-date` | When the activity opened | Used for the Segurança Social startup period |
-| `--clientes-ue` | You invoice businesses in the EU | Reverse charge, VIES, declaração recapitulativa |
-| `--clientes-fora-ue` | You invoice clients outside the EU | Export treatment; does not count towards the art. 53.º ceiling |
-
-Both IVA regimes are plausible for a programmer: `isento_art53` if you stayed under
-€15 000 nationally, `trimestral` once you are above it. If you are not sure which
-one the AT has on file, check the Portal das Finanças first — the application
-deliberately will not decide this for you.
-
 Add `--force` to overwrite an existing profile.
 
-### 3. Read the diagnosis
+### 4. Read the diagnosis
 
 ```bash
 node src/cli.ts doctor
@@ -96,7 +120,7 @@ This is the most informative command in the tool. It reports:
 - whether the rule pack covers the current year or is provisional;
 - how many values the assistant proposed that no human has confirmed yet.
 
-### 4. See what is due
+### 5. See what is due
 
 ```bash
 node src/cli.ts agenda                  # next 90 days, then the rest of the year
@@ -119,7 +143,7 @@ to rows that need your judgement:
 Deadlines that fell before your first day of use are shown as `histórico`, never as
 something you failed to do.
 
-### 5. See the red flags
+### 6. See the red flags
 
 ```bash
 node src/cli.ts flags
@@ -133,7 +157,7 @@ to a non-resident one), duplicated invoice numbers, missing payment proofs,
 documents missing before a deadline, overdue obligations. **No language model is
 involved**, so the result is identical on every run and can be argued with.
 
-### 6. Record invoices
+### 7. Record invoices
 
 ```bash
 node src/cli.ts ledger add --base 1200 --client "ACME, Lda." --nif 501234560
@@ -159,7 +183,7 @@ non-resident by a Portuguese payer. Override any of it with `--treatment`,
 `--iva-rate` and `--retention`; the command refuses a combination that contradicts
 itself. Also available: `--date`, `--number`, `--atcud`, `--status`, `--paid`.
 
-### 7. See the numbers
+### 8. See the numbers
 
 ```bash
 node src/cli.ts estimate                                  # per quarter + reserve
@@ -174,17 +198,18 @@ year's rate table, and until that is in the rule pack the honest output is a bas
 not a tax. Pass `--despesas` with your eligible documented expenses (art. 31.º
 n.º 13 CIRS adds back the shortfall against 15% of service income).
 
-### 8. Open the panel
+### 9. Open the panel again
 
 ```bash
-node src/cli.ts web                 # http://127.0.0.1:7717/?t=<token>
+node src/cli.ts                     # the panel, with the browser opened for you
+node src/cli.ts web --no-open       # same, without opening a browser
 node src/cli.ts web --port 7800
 ```
 
 Open the printed address **in a browser on this machine**. It includes a per-run
 session token; the panel will not answer API calls without it. Press Ctrl+C to stop.
 
-### 9. Keep documents
+### 10. Keep documents
 
 ```bash
 node src/cli.ts vault add ~/Documents/comprovativo-iva-t3.pdf \
@@ -196,7 +221,7 @@ The file is copied into the vault under the first 12 characters of its SHA-256 a
 indexed; the original is never moved or modified. Re-hashing it later proves it has
 not changed.
 
-### 10. Optional — keep the rule values current
+### 11. Optional — keep the rule values current
 
 The assistant has exactly one job: proposing new values for the rule variables that
 change over time (rates, ceilings, the IAS, coefficients), as structured JSON in the
@@ -233,8 +258,11 @@ vnfin agenda
 
 ## The local panel
 
-`vnfin web` serves one HTML file, one stylesheet and one ES module from the same
-core the CLI uses. Five controls make it safe to leave running:
+Running the application starts the panel: `vnfin web`, or simply `vnfin`. It serves
+one HTML file, one stylesheet and one ES module from the same core the CLI uses. It
+is also where the profile is created on first use — an empty vault opens the profile
+form instead of a screen of zeros — and it loads and saves profiles as files. Five
+controls make it safe to leave running:
 
 | Control | Why it exists |
 | --- | --- |
@@ -325,12 +353,13 @@ reports the counts. The `pt/2026` pack has 19 obligations, 20 sources (17 offici
 
 ## What is built and what is not
 
-**Built and tested** (`npm run verify`, 95 tests): the rule pack schema with
+**Built and tested** (`npm run verify`, 111 tests): the rule pack schema with
 provenance validation; the obligation engine with published-date precedence and
 discrepancy reporting; money and rate discipline in integer cents and basis points;
 the IVA, Segurança Social and IRS-base estimates; the alert engine; the local vault
-and append-only ledger; the CLI; the bounded assistant with unit and magnitude
-validation; the local panel and its security guards.
+and append-only ledger; the profile builder with its import path; the CLI; the
+bounded assistant with unit and magnitude validation; the local panel, its profile
+form and its security guards.
 
 **Designed, not built:** the Tauri desktop shell, bank/SAF-T import, an encrypted
 backup export, a printable year pack, and the panel's trend views. See

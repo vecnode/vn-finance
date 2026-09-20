@@ -16,7 +16,9 @@
  *   - Output is plain text with optional colour; `--json` is machine readable.
  */
 
+import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
+import { platform } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -268,7 +270,10 @@ function commandInit(values: Values, context: Context): void {
   const declaredIva = str(values, 'iva');
   if (nif === undefined || name === undefined) {
     fail(
-      'init exige --nif e --name. Exemplo:\n' +
+      'init exige --nif e --name. Para criar o perfil sem opções nenhumas, abre o painel e usa o ' +
+        'formulário do primeiro ecrã:\n' +
+        '  vnfin\n' +
+        'Ou, aqui na linha de comandos:\n' +
         '  vnfin init --nif 123456789 --name "Nome Completo" --iva isento_art53 --turnover-ano-anterior 12400',
     );
   }
@@ -281,7 +286,8 @@ function commandInit(values: Values, context: Context): void {
     fail(
       'init exige o regime de IVA declarado: --iva isento_art53 | trimestral | mensal.\n' +
         '  É o enquadramento da tua declaração de início de atividade; a aplicação não o adivinha.\n' +
-        '  Se não tiveres a certeza, vê o regime no Portal das Finanças e volta a correr o init.',
+        '  Se não tiveres a certeza, vê o regime no Portal das Finanças. No painel (`vnfin`),\n' +
+        '  este campo aparece no formulário de perfil com a mesma exigência.',
     );
   }
   if (iva !== 'isento_art53' && iva !== 'trimestral' && iva !== 'mensal') {
@@ -351,7 +357,7 @@ function commandDoctor(values: Values, context: Context): void {
 
   const profile = context.vault.loadProfile();
   if (profile === null) {
-    warn('perfil', 'não existe perfil. Corre `vnfin init`.');
+    warn('perfil', 'não existe perfil. Abre o painel com `vnfin` e preenche o formulário de perfil.');
   } else {
     const profileProblems = validateProfile(profile);
     const errors = profileProblems.filter((problem) => problem.level === 'error');
@@ -490,7 +496,7 @@ function commandAgenda(values: Values, context: Context): void {
   const packPath = resolvePackPath(str(values, 'rules'), context.year);
   const { pack } = loadRulePack(packPath.path);
   const profile = context.vault.loadProfile();
-  if (profile === null) fail('não existe perfil. Corre `vnfin init` primeiro.');
+  if (profile === null) fail('não existe perfil. Abre o painel com `vnfin` e preenche o formulário.');
 
   const instances = buildAgenda(pack, profile, {
     year: context.year,
@@ -663,7 +669,7 @@ function commandEstimate(values: Values, context: Context): void {
   out(bold('IRS — rendimento tributável do regime simplificado'));
   const profile = context.vault.loadProfile();
   if (profile === null) {
-    out(dim('  sem perfil não há coeficiente a aplicar. Corre `vnfin init`.'));
+    out(dim('  sem perfil não há coeficiente a aplicar. Abre o painel com `vnfin` e cria o perfil.'));
     return;
   }
 
@@ -878,7 +884,7 @@ function commandFlags(values: Values, context: Context): void {
   const packPath = resolvePackPath(str(values, 'rules'), context.year);
   const { pack } = loadRulePack(packPath.path);
   const profile = context.vault.loadProfile();
-  if (profile === null) fail('não existe perfil. Corre `vnfin init` primeiro.');
+  if (profile === null) fail('não existe perfil. Abre o painel com `vnfin` e preenche o formulário.');
 
   const instances = buildAgenda(pack, profile, {
     year: context.year,
@@ -1101,11 +1107,36 @@ async function commandUpdate(values: Values, context: Context): Promise<void> {
 }
 
 /**
+ * Open a URL in the system browser, best effort.
+ *
+ * The address carries the per-run session token, so falling back to printing it
+ * is a complete answer rather than a degraded one: the panel is usable by
+ * copying what was printed. A browser that will not launch must therefore never
+ * be an error the user has to clear before using the application.
+ */
+function openInBrowser(url: string): void {
+  const command = process.platform === 'win32' ? 'explorer.exe' : platform() === 'darwin' ? 'open' : 'xdg-open';
+  try {
+    const child = spawn(command, [url], { stdio: 'ignore', detached: true, windowsHide: false });
+    child.on('error', () => {});
+    // The browser is somebody else's process: if the terminal exits first it must
+    // not take the browser down with it.
+    child.unref();
+  } catch {
+    /* Sem browser a partir daqui: o endereço já foi impresso e continua a valer. */
+  }
+}
+
+/**
  * Start the local panel.
  *
  * The server binds to 127.0.0.1 only, validates the Host header, and requires the
  * per-run token printed in the URL. Nothing here reaches the network: the panel is
  * a view over the same vault the command line uses.
+ *
+ * This is also what runs when the application is started with no command at all.
+ * The first profile is created in the panel itself, so there is no required
+ * command line step between installing the application and using it.
  */
 async function commandWeb(values: Values, context: Context): Promise<void> {
   const packPath = resolvePackPath(str(values, 'rules'), context.year);
@@ -1118,14 +1149,31 @@ async function commandWeb(values: Values, context: Context): Promise<void> {
   });
   context.vault.appendAudit({ action: 'web.started', detail: `porta ${running.port}` });
 
+  const profile = context.vault.loadProfile();
+
   out(bold('Painel local') + dim('  ·  só neste computador'));
   out();
   out(`  ${cyan(running.url)}`);
+  out();
+  if (profile === null) {
+    out(yellow('  Ainda não existe perfil neste cofre.'));
+    out(dim('  O painel abre com o formulário de perfil: preenche-o e fica gravado aqui, sem comandos.'));
+  } else {
+    out(dim(`  Perfil carregado: ${profile.name} · NIF ${maskNif(profile.nif)} · IVA ${profile.iva.regime}.`));
+  }
   out();
   out(dim('  Abre este endereço no navegador desta máquina.'));
   out(dim('  O endereço inclui a chave da sessão: sem ela o painel não responde a pedidos.'));
   out(dim('  Não abras este endereço noutro dispositivo nem o partilhes.'));
   out(dim('  O servidor escuta apenas em 127.0.0.1 e recusa pedidos de outros anfitriões.'));
+  out();
+
+  if (bool(values, 'no-open')) {
+    out(dim('  --no-open: o navegador não foi aberto. Abre o endereço acima à mão.'));
+  } else {
+    out(dim('  A abrir o navegador… usa --no-open para não o fazer.'));
+    openInBrowser(running.url);
+  }
   out();
   out(dim('  Ctrl+C para parar.'));
 
@@ -1158,14 +1206,19 @@ function formatValue(value: number | null, unit: string): string {
 const USAGE = `${bold('vnfin')} — assistente fiscal local (Portugal, CIRS categoria B)  v${VERSION}
 
 ${bold('USO')}
-  vnfin <comando> [opções]
+  vnfin [comando] [opções]
+
+Sem comando, abre o painel local no navegador — é a forma normal de começar: se
+ainda não existir perfil, o próprio painel pede os dados do contribuinte e
+grava-os no cofre. Nada é preciso escrever aqui na linha de comandos.
 
 ${bold('COMANDOS')}
-  init          Cria o perfil do contribuinte no cofre local
+  (sem comando) Abre o painel local; cria ou carrega o perfil no primeiro uso
+  web           O mesmo que não indicar comando
+  init          Cria o perfil do contribuinte no cofre local, a partir de opções
   doctor        Diagnostica o perfil, o pacote de regras, o cofre e a chave da API
   agenda        Mostra o calendário de obrigações e o que vence a seguir
   flags         Alertas, riscos e tarefas em falta (calculados por código)
-  web           Abre o painel no navegador, só neste computador (127.0.0.1)
   rules         Lista as regras e as fontes citadas por cada uma
   estimate      Calcula IVA, Segurança Social e reserva a partir do livro de faturas
   ledger        Lista ou registra faturas  (ledger list | ledger add)
@@ -1182,6 +1235,8 @@ ${bold('OPÇÕES GLOBAIS')}
 
 ${bold('OPÇÕES POR COMANDO')}
   web       --port <porta>        Porta local (por omissão 7717)
+            --no-open             Não abrir o navegador automaticamente
+  init      --nif --name --iva    Dados do contribuinte (o painel também os pede)
   estimate  --quarter <1-4>       Só um trimestre
             --despesas <valor>    Despesas elegíveis, para o rendimento tributável do IRS
             --as-of <AAAA-MM-DD>  Data de apuramento
@@ -1189,14 +1244,15 @@ ${bold('OPÇÕES POR COMANDO')}
             --all                 Inclui concluídas, não aplicáveis e histórico
 
 ${bold('EXEMPLOS')}
-  vnfin init --nif 123456789 --name "Nome Completo" --iva isento_art53 --turnover-ano-anterior 12400
+  vnfin                          # painel local; o perfil cria-se no primeiro ecrã
+  vnfin web --no-open            # idem, sem abrir o navegador
   vnfin agenda --horizon 120
   vnfin flags
-  vnfin web --port 7717          # painel local, só neste computador
   vnfin ledger add --base 1200 --client "ACME, Lda." --nif 501234567
   vnfin estimate --quarter 3
   vnfin update --send            # só nomes de variáveis e lei pública; nada teu
   vnfin update --approve         # aplica a proposta; fica por confirmar até validares
+  vnfin init --nif 123456789 --name "Nome Completo" --iva isento_art53   # sem painel
 
 ${bold('O QUE ESTA APLICAÇÃO NUNCA FAZ')}
   Não fala com o Portal das Finanças, com a Segurança Social nem com qualquer outro
@@ -1205,6 +1261,22 @@ ${bold('O QUE ESTA APLICAÇÃO NUNCA FAZ')}
 
 ${dim('Esta aplicação não substitui um contabilista certificado e não entrega declarações por ti.')}
 `;
+
+/**
+ * Which command the arguments ask for.
+ *
+ * Kept separate from `main` because the interesting rule is not the parsing but
+ * the fallback: no command at all means "start the panel", which is the normal
+ * way to run the application and the only one a first-time user needs.
+ */
+function resolveCommand(
+  positionals: readonly string[],
+  flags: { help: boolean; version: boolean },
+): string {
+  if (flags.help) return 'help';
+  if (flags.version) return 'version';
+  return positionals[0] ?? 'web';
+}
 
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
@@ -1229,6 +1301,7 @@ async function main(): Promise<void> {
       send: { type: 'boolean' },
       approve: { type: 'boolean' },
       verified: { type: 'boolean' },
+      'no-open': { type: 'boolean' },
 
       'data-dir': { type: 'string' },
       year: { type: 'string' },
@@ -1274,13 +1347,16 @@ async function main(): Promise<void> {
   });
   const argv = values as Values;
 
-  if (bool(argv, 'version')) {
+  const command = resolveCommand(positionals, {
+    help: bool(argv, 'help'),
+    version: bool(argv, 'version'),
+  });
+
+  if (command === 'version') {
     out(VERSION);
     return;
   }
-
-  const command = positionals[0];
-  if (command === undefined || bool(argv, 'help')) {
+  if (command === 'help') {
     out(USAGE);
     return;
   }
@@ -1293,6 +1369,9 @@ async function main(): Promise<void> {
     json: bool(argv, 'json'),
   };
 
+  // Without a command the panel is what starts, and the panel is where the
+  // profile is created on first use: running the application and beginning to
+  // use it are the same act, so there is no `init` step to remember.
   switch (command) {
     case 'init':
       commandInit(argv, context);

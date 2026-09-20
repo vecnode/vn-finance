@@ -233,6 +233,31 @@ test('the panel can supply the inputs only the taxpayer has', async () => {
       body: JSON.stringify({ ivaRegime: 'isento_ao_contrario' }),
     });
     assert.equal(bad.status, 400);
+
+    // An empty box in the form is a decision, not an omission: it removes the
+    // figure so the app goes back to saying it cannot run that check. A box the
+    // form sends as absent, on the other hand, must leave the value alone.
+    const cleared = await api(server, '/api/profile', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ turnoverPreviousYearCents: null }),
+    });
+    assert.equal(cleared.status, 200);
+    const afterClear = await model(cleared);
+    assert.equal(afterClear.profile?.activity.turnoverPreviousYearCents, undefined);
+    assert.equal(
+      afterClear.profile?.activity.turnoverCurrentYearExpectedCents,
+      1_100_000,
+      'o campo não mencionado mantém o valor guardado',
+    );
+    assert.ok(afterClear.missingInputs.some((input) => input.includes('ano anterior')));
+
+    const rejected = await api(server, '/api/profile', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ turnoverPreviousYearCents: 12.5 }),
+    });
+    assert.equal(rejected.status, 400, 'cêntimos fracionados continuam a ser recusados');
   });
 });
 

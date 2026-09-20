@@ -31,8 +31,15 @@ import { fileURLToPath } from 'node:url';
 
 import { todayInLisbon } from '../core/dates.ts';
 import { type Invoice, type VatTreatment } from '../core/estimate.ts';
+import {
+  IRS_REGIMES,
+  IVA_REGIMES,
+  buildProfile,
+  normaliseImportedProfile,
+  validateProfile,
+} from '../core/profile.ts';
 import { loadRulePack, resolvePackPath } from '../core/rules.ts';
-import type { IvaRegime, LoadedPack, TaxProfile } from '../core/types.ts';
+import type { IrsRegime, IvaRegime, LoadedPack, TaxProfile } from '../core/types.ts';
 import { resolveApiKey } from '../ai/keyring.ts';
 import { DEFAULT_MODEL, DeepSeekClient, scrubCredentials } from '../ai/deepseek.ts';
 import { redactForSend } from '../ai/redact.ts';
@@ -258,12 +265,13 @@ const VAT_TREATMENTS: readonly VatTreatment[] = [
   'exportacao',
 ];
 const INVOICE_STATUSES = ['issued', 'paid', 'pending'] as const;
-const IVA_REGIMES: readonly IvaRegime[] = ['isento_art53', 'trimestral', 'mensal'];
 
 /** Every API route, with the single method it accepts. */
 const API_ROUTES: Record<string, 'GET' | 'POST'> = {
   '/api/dashboard': 'GET',
   '/api/profile': 'POST',
+  '/api/profile/import': 'POST',
+  '/api/profile/export': 'GET',
   '/api/invoices': 'POST',
   '/api/obligations/complete': 'POST',
   '/api/documents': 'POST',
@@ -276,10 +284,186 @@ const API_ROUTES: Record<string, 'GET' | 'POST'> = {
 // Route handlers
 // ---------------------------------------------------------------------------
 
+/**
+ * Build the profile from what the interface sent.
+ *
+ * Everything here is a value the taxpayer declared to the AT, so a missing one
+ * is an error rather than an invitation to guess: the IVA regime in particular
+ * changes every downstream obligation, and a wrong default would be a silent
+ * lie. `buildProfile` enforces that; this only checks the shapes that come off
+ * the wire, where TypeScript has no say.
+ */
+function profileDraftFromBody(
+  body: Record<string, unknown>,
+  fallbackCoefficientBp: number,
+): ReturnType<typeof buildProfile> {
+  const nif = requireString(body, 'nif', 20);
+  const name = requireString(body, 'name', 120);
+  const declaredIva = requireString(body, 'ivaRegime', 24);
+  if (!(IVA_REGIMES as readonly string[]).includes(declaredIva)) {
+    throw new HttpError(400, 'regime de IVA inválido: usa isento_art53, trimestral ou mensal.');
+  }
+  const declaredIrs = optionalString(body, 'irsRegime', 24);
+  if (declaredIrs !== null && !(IRS_REGIMES as readonly string[]).includes(declaredIrs)) {
+    throw new HttpError(400, 'regime de IRS inválido: usa simplificado ou organizada.');
+  }
+
+  const startDate = optionalString(body, 'startDate', 10);
+  if (startDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+    throw new HttpError(400, 'a data de início de atividade tem de estar em formato AAAA-MM-DD.');
+  }
+
+  // Read once each: these validators throw on nonsense, and calling one twice
+  // would report the same mistake twice in a worse place.
+  const previous = optionalCents(body, 'turnoverPreviousYearCents');
+  const expected = optionalCents(body, 'turnoverCurrentYearExpectedCents');
+  const intraCommunityOperations = optionalBool(body, 'intraCommunityOperations');
+  const exports = optionalBool(body, 'exports');
+  const startupExemptionActive = optionalBool(body, 'startupExemptionActive');
+
+  return buildProfile(
+    {
+      nif,
+      name,
+      ivaRegime: declaredIva as IvaRegime,
+      ...(declaredIrs === null ? {} : { irsRegime: declaredIrs as IrsRegime }),
+      ...(startDate === null ? {} : { startDate }),
+      ...(previous === undefined ? {} : { turnoverPreviousYearCents: previous }),
+      ...(expected === undefined ? {} : { turnoverCurrentYearExpectedCents: expected }),
+      ...(intraCommunityOperations === undefined ? {} : { intraCommunityOperations }),
+      ...(exports === undefined ? {} : { exports }),
+      ...(startupExemptionActive === undefined ? {} : { startupExemptionActive }),
+    },
+    // The coefficient is law, not a preference: it comes from the rule pack.
+    { coefficientBp: fallbackCoefficientBp },
+  );
+}
+
+/** An optional euro figure in cents: absent means "unmentioned", null means "clear it". */
+function optionalCents(body: Record<string, unknown>, key: string): number | null | undefined {
+  const value = body[key];
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new HttpError(400, `campo "${key}" tem de ser um valor em cêntimos (inteiro, não negativo).`);
+  }
+  return value;
+}
+
+/**
+ * Create the profile — or replace it, when the interface says so explicitly.
+ *
+ * Creating is refused when a profile already exists, because the interface
+ * offering "create" over someone's stored profile is a way to lose it by
+ * accident. Replacing is a separate, deliberate flag, and it must carry the
+ * declared fields: "replace" means "this is another, complete profile", not
+ * "apply only what I happened to send".
+ */
+function handleProfileCreate(context: RequestContext, body: Record<string, unknown>): DashboardModel {
+  const existing = context.vault.loadProfile();
+  const replace = optionalBool(body, 'replace') ?? false;
+  if (existing !== null && !replace) {
+    throw new HttpError(
+      409,
+      'já existe um perfil neste cofre. Edita-o no painel ou confirma a substituição para o trocar.',
+    );
+  }
+
+  const loaded = loadCurrentPack(context);
+  const profile: TaxProfile = {
+    ...profileDraftFromBody(
+      body,
+      loaded.pack.constants.irs.simplifiedRegime.coefficients.servicesProfessionalTable4 ?? 7500,
+    ),
+    // The profile is created today, so tracking starts today: deadlines that fell
+    // earlier in the year are history, not failures. A replacement does the same,
+    // because it is a different profile being written, not a continuation.
+    trackingStart: todayInLisbon(),
+  };
+  const problems = validateProfile(profile).filter((problem) => problem.level === 'error');
+  if (problems.length > 0) {
+    throw new HttpError(400, problems.map((problem) => `${problem.field}: ${problem.message}`).join(' · '));
+  }
+
+  context.vault.ensure();
+  context.vault.saveProfile(profile);
+  context.vault.appendAudit({ action: existing === null ? 'profile.created' : 'profile.replaced' });
+  return buildModel(context);
+}
+
+/**
+ * Import a profile that arrived as a file.
+ *
+ * The browser reads the file and posts its contents — the server never reaches
+ * out for a path — so an imported file is an untrusted document like any other.
+ * It is normalised field by field, the same checks the interface's own form goes
+ * through are applied, and the warnings come back rather than being swallowed.
+ */
+function handleProfileImport(context: RequestContext, body: Record<string, unknown>): {
+  model: DashboardModel;
+  warnings: string[];
+} {
+  const existing = context.vault.loadProfile();
+  const replace = optionalBool(body, 'replace') ?? false;
+  if (existing !== null && !replace) {
+    throw new HttpError(
+      409,
+      'já existe um perfil neste cofre. Confirma a substituição para carregar este ficheiro por cima.',
+    );
+  }
+
+  // `buildProfile` fills what the file omits from the profile being replaced,
+  // which is right for an edit and wrong here: a file presented as a whole
+  // profile must declare what a profile has to declare, or it would inherit a
+  // regime from a profile it is meant to replace.
+  const incoming = body['profile'];
+  const raw = incoming !== null && typeof incoming === 'object' && !Array.isArray(incoming)
+    ? (incoming as Record<string, unknown>)
+    : null;
+  if (raw === null) throw new HttpError(400, 'o ficheiro não contém um perfil.');
+  for (const field of ['nif', 'name'] as const) {
+    if (typeof raw[field] !== 'string' || (raw[field] as string).trim() === '') {
+      throw new HttpError(400, `o perfil importado tem de declarar "${field}".`);
+    }
+  }
+  const importedIva = raw['iva'];
+  const importedRegime =
+    importedIva !== null && typeof importedIva === 'object'
+      ? (importedIva as Record<string, unknown>)['regime']
+      : undefined;
+  if (typeof importedRegime !== 'string' || !(IVA_REGIMES as readonly string[]).includes(importedRegime)) {
+    throw new HttpError(
+      400,
+      'o perfil importado tem de declarar o regime de IVA (isento_art53, trimestral ou mensal).',
+    );
+  }
+
+  let profile: TaxProfile;
+  try {
+    profile = normaliseImportedProfile(incoming);
+  } catch (cause) {
+    throw new HttpError(400, (cause as Error).message);
+  }
+
+  const problems = validateProfile(profile);
+  const errors = problems.filter((problem) => problem.level === 'error');
+  if (errors.length > 0) {
+    throw new HttpError(400, errors.map((problem) => `${problem.field}: ${problem.message}`).join(' · '));
+  }
+
+  context.vault.ensure();
+  context.vault.saveProfile(profile);
+  context.vault.appendAudit({ action: existing === null ? 'profile.imported' : 'profile.replaced' });
+  return {
+    model: buildModel(context),
+    warnings: problems.filter((problem) => problem.level === 'warning').map((problem) => problem.message),
+  };
+}
+
 async function handleProfile(context: RequestContext, body: Record<string, unknown>): Promise<DashboardModel> {
   const profile = context.vault.loadProfile();
   if (profile === null) {
-    throw new HttpError(409, 'não existe perfil neste cofre. Corre `vnfin init` primeiro.');
+    throw new HttpError(409, 'não existe perfil neste cofre. Abre o painel e preenche o formulário de perfil.');
   }
 
   const updated: TaxProfile = {
@@ -288,20 +472,19 @@ async function handleProfile(context: RequestContext, body: Record<string, unkno
     iva: { ...profile.iva },
   };
 
-  const previous = body['turnoverPreviousYearCents'];
-  if (previous !== undefined && previous !== null) {
-    if (typeof previous !== 'number' || !Number.isInteger(previous) || previous < 0) {
-      throw new HttpError(400, 'o volume de negócios do ano anterior tem de ser um valor em cêntimos.');
-    }
-    updated.activity.turnoverPreviousYearCents = previous;
+  // `optionalCents` keeps the three cases apart: absent means "the form did not
+  // mention this", null means "remove it" — which is how a wrong turnover figure
+  // is corrected — and anything else has to be a whole number of cents.
+  const previous = optionalCents(body, 'turnoverPreviousYearCents');
+  if (previous !== undefined) {
+    if (previous === null) delete updated.activity.turnoverPreviousYearCents;
+    else updated.activity.turnoverPreviousYearCents = previous;
   }
 
-  const expected = body['turnoverCurrentYearExpectedCents'];
-  if (expected !== undefined && expected !== null) {
-    if (typeof expected !== 'number' || !Number.isInteger(expected) || expected < 0) {
-      throw new HttpError(400, 'a estimativa para o ano corrente tem de ser um valor em cêntimos.');
-    }
-    updated.activity.turnoverCurrentYearExpectedCents = expected;
+  const expected = optionalCents(body, 'turnoverCurrentYearExpectedCents');
+  if (expected !== undefined) {
+    if (expected === null) delete updated.activity.turnoverCurrentYearExpectedCents;
+    else updated.activity.turnoverCurrentYearExpectedCents = expected;
   }
 
   const regime = body['ivaRegime'];
@@ -334,7 +517,7 @@ async function handleProfile(context: RequestContext, body: Record<string, unkno
 
 async function handleInvoice(context: RequestContext, body: Record<string, unknown>): Promise<DashboardModel> {
   if (context.vault.loadProfile() === null) {
-    throw new HttpError(409, 'não existe perfil neste cofre. Corre `vnfin init` primeiro.');
+    throw new HttpError(409, 'não existe perfil neste cofre. Abre o painel e preenche o formulário de perfil.');
   }
 
   const country = requireString(body, 'clientCountry', 3).toUpperCase();
@@ -606,6 +789,12 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
     requireToken(request, context);
 
     if (allowed === 'GET') {
+      if (path === '/api/profile/export') {
+        const profile = context.vault.loadProfile();
+        if (profile === null) throw new HttpError(409, 'não existe perfil para exportar.');
+        sendJson(response, 200, { ok: true, exportedAt: new Date().toISOString(), profile });
+        return;
+      }
       sendJson(response, 200, { ok: true, model: buildModel(context) });
       return;
     }
@@ -614,7 +803,25 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
 
     switch (path) {
       case '/api/profile':
-        sendJson(response, 200, { ok: true, model: await handleProfile(context, body) });
+        // The same route does the jobs the panel needs, and what it does is
+        // explicit rather than inferred: `replace` writes a whole profile over
+        // whatever is stored. Without it, an empty vault CREATES the profile from
+        // the declaration fields — which is what makes a first run possible with
+        // no command line step at all — and a vault that already has one UPDATES
+        // the editable inputs. There, the declaration fields are not re-read,
+        // because changing them is a different, deliberate action.
+        sendJson(response, 200, {
+          ok: true,
+          model: (optionalBool(body, 'replace') ?? false) || context.vault.loadProfile() === null
+            ? handleProfileCreate(context, body)
+            : await handleProfile(context, body),
+        });
+        return;
+      case '/api/profile/import':
+        {
+          const imported = handleProfileImport(context, body);
+          sendJson(response, 200, { ok: true, model: imported.model, warnings: imported.warnings });
+        }
         return;
       case '/api/invoices':
         sendJson(response, 200, { ok: true, model: await handleInvoice(context, body) });

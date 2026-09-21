@@ -497,13 +497,19 @@ td.vc{width:30px}
 .form-grid .full{grid-column:1/-1}
 .field{display:flex;flex-direction:column;gap:3px;min-width:0}
 .field>label,.field>span.lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);font-weight:700}
-.field input,.field select,.field textarea{font:inherit;font-size:12.5px;color:var(--text);background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);padding:4px 7px;min-height:27px;font-variant-numeric:tabular-nums;width:100%}
-.field input:hover,.field select:hover{border-color:var(--text-3)}
+/* Os controlos de texto ocupam a largura da célula. Uma caixa de seleção não: como
+   tipo de campo, herdava `width:100%` e esticava-se até ao fim da linha, empurrando
+   o texto do rótulo para fora da caixa do formulário. As exclusões são explícitas
+   para que a regra continue a valer para todo o resto. */
+.field input:not([type="checkbox"]):not([type="radio"]),.field select,.field textarea{font:inherit;font-size:12.5px;color:var(--text);background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);padding:4px 7px;min-height:27px;font-variant-numeric:tabular-nums;width:100%}
+.field input:not([type="checkbox"]):not([type="radio"]):hover,.field select:hover{border-color:var(--text-3)}
 .field small{font-size:10.5px;color:var(--text-4);line-height:1.35}
 .field.inline{flex-direction:row;align-items:center;gap:7px}
 .field.inline input{width:118px}
 .check{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text-2)}
-.check input{margin:2px 0 0;flex:none}
+.check input{flex:none;width:15px;height:15px;min-height:0;margin:2px 0 0;padding:0;border:0;background:none;accent-color:var(--accent)}
+.check+.check{margin-top:3px}
+.check span{min-width:0}
 .form-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .form-actions .note{margin-left:auto;font-size:10.5px;color:var(--text-4);max-width:56ch;text-align:right}
 .form-error{margin-top:9px;border:1px solid var(--danger-border);border-left:3px solid var(--danger);background:var(--danger-bg);color:var(--text-2);border-radius:var(--radius);padding:6px 9px;font-size:11.5px}
@@ -574,6 +580,15 @@ td.pt{font-family:var(--mono);font-size:10.5px;color:var(--text-3);white-space:n
 .prof-notes{border-top:1px solid var(--border);margin-top:12px;padding-top:10px}
 .prof-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .prof-foot .btn-tertiary{margin-left:auto}
+
+/* ---------------- ecrãs estreitos: um campo por linha --------------------- */
+/* Depois das regras do formulário, que de outra forma ganhariam por ordem. */
+@media (max-width:820px){
+  .form-grid{grid-template-columns:minmax(0,1fr)}
+  .overlay{padding:12px}
+  .modal-head,.modal-body{padding:11px 12px}
+  .form-actions .note{margin-left:0;text-align:left}
+}
 
 /* ---------------- impressão: controlos fora do papel ----------------------- */
 @media print{

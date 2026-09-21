@@ -43,10 +43,10 @@ sources, and is honest about what it does not know.
 git clone <this repository> vn-finance
 cd vn-finance
 npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 117 tests
+npm run verify       # strict typecheck + 118 tests
 ```
 
-`npm run verify` is the gate. It should end with `# pass 117` and `# fail 0`.
+`npm run verify` is the gate. It should end with `# pass 118` and `# fail 0`.
 
 ### 2. Start it
 
@@ -384,7 +384,7 @@ reports the counts. The `pt/2026` pack has 19 obligations, 20 sources (17 offici
 
 ## What is built and what is not
 
-**Built and tested** (`npm run verify`, 117 tests): the rule pack schema with
+**Built and tested** (`npm run verify`, 118 tests): the rule pack schema with
 provenance validation; the obligation engine with published-date precedence and
 discrepancy reporting; money and rate discipline in integer cents and basis points;
 the IVA, Segurança Social and IRS-base estimates; the alert engine; the local vault

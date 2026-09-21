@@ -381,6 +381,44 @@ test('every asset the page references is served, with the right content type', a
   });
 });
 
+test('the stylesheet does not stretch a checkbox to the width of its field', async () => {
+  // A layout bug is invisible to node:test, so the guard has to be structural. The
+  // generic text-control rule used to apply `width:100%` to every input, including
+  // the checkboxes in the profile form: each one filled its row, which pushed the
+  // label's text out of the dialog and onto the backdrop — the first thing a new
+  // user saw. The exclusions and the checkbox's own size are what prevent it, so
+  // they are asserted rather than assumed.
+  await withServer(async (server) => {
+    const css = await (await fetch(`http://${HOST}:${server.port}/app.css`)).text();
+    const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((match) => ({
+      selector: (match[1] ?? '').trim(),
+      body: match[2] ?? '',
+    }));
+
+    const fullWidth = blocks.find(
+      (block) => block.selector.includes('.field input') && block.body.includes('width:100%'),
+    );
+    assert.ok(
+      fullWidth !== undefined,
+      'a regra de largura dos campos de texto tem de existir',
+    );
+    assert.match(
+      fullWidth.selector,
+      /\.field input:not\(\[type="checkbox"\]\)/,
+      'a largura total de um campo não pode aplicar-se a caixas de seleção',
+    );
+    assert.match(fullWidth.selector, /:not\(\[type="radio"\]\)/);
+
+    const checkbox = blocks.find((block) => block.selector === '.check input');
+    assert.ok(checkbox !== undefined, 'a caixa de seleção tem de ter uma regra própria');
+    assert.match(
+      checkbox.body,
+      /width:15px/,
+      'a caixa de seleção tem de ter tamanho próprio, não o da linha',
+    );
+  });
+});
+
 test('the panel is served as correct Portuguese, with no encoding damage', async () => {
   // A structural test cannot see this: the file parsed, was served, and contained
   // the right API calls — while every accented character in it was mangled. UTF-8

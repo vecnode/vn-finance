@@ -30,7 +30,7 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { todayInLisbon } from '../core/dates.ts';
-import { type Invoice, type VatTreatment } from '../core/estimate.ts';
+import { estimateIrsSimplifiedBase, type Invoice, type VatTreatment } from '../core/estimate.ts';
 import {
   IRS_REGIMES,
   IVA_REGIMES,
@@ -40,7 +40,15 @@ import {
 } from '../core/profile.ts';
 import { loadRulePack, resolvePackPath } from '../core/rules.ts';
 import type { IrsRegime, IvaRegime, LoadedPack, TaxProfile } from '../core/types.ts';
-import { resolveApiKey } from '../ai/keyring.ts';
+import {
+  MIN_PASSPHRASE_LENGTH,
+  apiKeyFilePath,
+  decryptKeyFile,
+  maskKey,
+  resolveApiKey,
+  saveApiKey,
+  type ResolvedKey,
+} from '../ai/keyring.ts';
 import { DEFAULT_MODEL, DeepSeekClient, scrubCredentials } from '../ai/deepseek.ts';
 import { redactForSend } from '../ai/redact.ts';
 import {
@@ -51,11 +59,18 @@ import {
   parseUpdateResponse,
   type UpdateProposal,
 } from '../ai/update.ts';
-import { Vault } from '../store/vault.ts';
+import { Vault, sanitiseDocumentName } from '../store/vault.ts';
 import { buildDashboard, type DashboardModel } from './report.ts';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const MAX_BODY_BYTES = 256 * 1024;
+/**
+ * Document uploads are the one request that is allowed to be large, because a
+ * scan of a *guia* is a few megabytes and the alternative — asking someone to
+ * type a filesystem path into a web page — is not an interface. The ceiling is
+ * still a ceiling: past it the request is refused rather than buffered.
+ */
+const MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
 const UPDATE_PROPOSAL_PATH = (year: number): string => `rules/proposals-${year}.json`;
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -110,6 +125,62 @@ interface RequestContext {
   token: string;
   model: string;
   allowedHosts: Set<string>;
+  /**
+   * A key the person using the panel supplied in the browser, held for the life
+   * of this process only. It is never written to the vault in plaintext and never
+   * sent back to the browser; starting the panel again starts with no key, unless
+   * the encrypted file was also written.
+   */
+  runtimeKey: string | null;
+}
+
+/** Whether the passphrase that opens a stored key is in this process's environment. */
+function passphraseFromEnv(): boolean {
+  const value = process.env['VN_FINANCE_PASSPHRASE'];
+  return value !== undefined && value !== '';
+}
+
+/**
+ * The key this request may use, and everything the panel needs to explain it.
+ *
+ * A key supplied through the panel wins over everything else: it is the most
+ * recent, most explicit statement of which credential to use, and it exists only
+ * because someone typed it a moment ago.
+ */
+function resolveContextKey(context: RequestContext): ResolvedKey {
+  if (context.runtimeKey !== null) {
+    return { key: context.runtimeKey, source: 'session', problems: [] };
+  }
+  return resolveApiKey({
+    dataDir: context.vault.dir,
+    ...(passphraseFromEnv() ? { passphrase: process.env['VN_FINANCE_PASSPHRASE'] } : {}),
+  });
+}
+
+function buildModel(context: RequestContext, pendingProposal?: UpdateProposal | null): DashboardModel {
+  const loaded = loadCurrentPack(context);
+  const key = resolveContextKey(context);
+  const stored = existsSync(apiKeyFilePath(context.vault.dir));
+  return buildDashboard({
+    vault: context.vault,
+    loaded,
+    year: context.year,
+    // Read the clock per request, not once at startup: a panel left running
+    // across midnight must not keep yesterday's date, or every "vence amanhã"
+    // becomes wrong.
+    today: todayInLisbon(),
+    version: context.version,
+    apiKeyAvailable: key.key !== null,
+    apiKeySource: key.source,
+    apiKeyMasked: key.key === null ? null : maskKey(key.key),
+    apiKeyProblems: key.problems,
+    apiKeyStored: stored,
+    // "Locked" is a fact about this process, not about the vault: the same file
+    // is openable by a server that was started with the passphrase.
+    apiKeyLocked: stored && key.key === null && !passphraseFromEnv(),
+    apiKeyPassphraseFromEnv: passphraseFromEnv(),
+    ...(pendingProposal === undefined ? {} : { pendingProposal }),
+  });
 }
 
 class HttpError extends Error {
@@ -128,24 +199,6 @@ function loadCurrentPack(context: RequestContext): LoadedPack {
     throw new HttpError(500, 'não há pacote de regras disponível para este ano.');
   }
   return loadRulePack(resolved.path);
-}
-
-function buildModel(context: RequestContext, pendingProposal?: UpdateProposal | null): DashboardModel {
-  const loaded = loadCurrentPack(context);
-  const key = resolveApiKey({ dataDir: context.vault.dir });
-  return buildDashboard({
-    vault: context.vault,
-    loaded,
-    year: context.year,
-    // Read the clock per request, not once at startup: a panel left running
-    // across midnight must not keep yesterday's date, or every "vence amanhã"
-    // becomes wrong.
-    today: todayInLisbon(),
-    version: context.version,
-    apiKeyAvailable: key.key !== null,
-    apiKeySource: key.source,
-    ...(pendingProposal === undefined ? {} : { pendingProposal }),
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +225,25 @@ async function readJsonBody(request: IncomingMessage): Promise<Record<string, un
     if (cause instanceof HttpError) throw cause;
     throw new HttpError(400, 'o corpo do pedido não é JSON válido.');
   }
+}
+
+/**
+ * The body of a document upload, kept as bytes.
+ *
+ * A file is not JSON, and wrapping one in base64 to fit a JSON envelope would make
+ * every upload a third larger for no gain. The cap is enforced while reading, so
+ * an oversized body is refused instead of being buffered and then rejected.
+ */
+async function readBinaryBody(request: IncomingMessage, maxBytes: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of request) {
+    const buffer = chunk as Buffer;
+    size += buffer.length;
+    if (size > maxBytes) throw new HttpError(413, 'ficheiro demasiado grande para o cofre.');
+    chunks.push(buffer);
+  }
+  return Buffer.concat(chunks);
 }
 
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
@@ -243,6 +315,22 @@ function requireInt(body: Record<string, unknown>, key: string, min: number, max
   return value;
 }
 
+/**
+ * A passphrase, exactly as it was typed.
+ *
+ * Every other string off the wire is trimmed, because surrounding whitespace in a
+ * name or an id is a typo. A passphrase is not: a leading or trailing space is
+ * part of the secret, and trimming it here would make a key saved by the command
+ * line impossible to open from the panel.
+ */
+function secret(body: Record<string, unknown>, key: string, max = 300): string | null {
+  const value = body[key];
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string') throw new HttpError(400, `campo "${key}" tem de ser texto.`);
+  if (value.length > max) throw new HttpError(400, `campo "${key}" demasiado longo.`);
+  return value;
+}
+
 function optionalBool(body: Record<string, unknown>, key: string): boolean | undefined {
   const value = body[key];
   if (value === undefined || value === null) return undefined;
@@ -275,6 +363,10 @@ const API_ROUTES: Record<string, 'GET' | 'POST'> = {
   '/api/invoices': 'POST',
   '/api/obligations/complete': 'POST',
   '/api/documents': 'POST',
+  '/api/documents/upload': 'POST',
+  '/api/estimate/irs': 'POST',
+  '/api/ai-key': 'POST',
+  '/api/ai-key/unlock': 'POST',
   '/api/update/send': 'POST',
   '/api/update/apply': 'POST',
   '/api/update/discard': 'POST',
@@ -588,6 +680,147 @@ async function handleComplete(context: RequestContext, body: Record<string, unkn
   return buildModel(context);
 }
 
+/**
+ * The same archive, for a file chosen in the browser.
+ *
+ * The browser hands over the bytes, not a path, because that is what a browser
+ * has. Everything after that is the one `addDocumentBytes` rule the command line
+ * uses too: hash, name, copy, index, audit.
+ */
+async function handleDocumentUpload(
+  context: RequestContext,
+  request: IncomingMessage,
+  url: URL,
+): Promise<Record<string, unknown>> {
+  const name = sanitiseDocumentName(url.searchParams.get('name') ?? 'documento');
+  const kind = optionalQuery(url, 'kind', 40);
+  const obligationId = optionalQuery(url, 'obligationId', 80);
+  const bytes = await readBinaryBody(request, MAX_UPLOAD_BYTES);
+  if (bytes.length === 0) throw new HttpError(400, 'o ficheiro recebido está vazio.');
+
+  let added: { file: string; sha256: string };
+  try {
+    added = context.vault.addDocumentBytes(bytes, name, {
+      ...(kind === null ? {} : { kind }),
+      obligationId,
+    });
+  } catch (cause) {
+    throw new HttpError(400, (cause as Error).message);
+  }
+  return { ok: true, model: buildModel(context), added, bytes: bytes.length };
+}
+
+/** A query parameter as a bounded string: absent and empty are the same thing. */
+function optionalQuery(url: URL, key: string, max: number): string | null {
+  const value = url.searchParams.get(key);
+  if (value === null || value.trim() === '') return null;
+  if (value.length > max) throw new HttpError(400, `parâmetro "${key}" demasiado longo.`);
+  return value.trim();
+}
+
+/**
+ * The taxable base of the simplified regime, computed from an expense figure the
+ * panel asks for.
+ *
+ * The command line has `estimate --despesas`, and this is the same call with the
+ * same core function. Nothing is stored: the figure is a judgement about which
+ * expenses are eligible, and the answer belongs to the person who made it, not to
+ * a note the application keeps on their behalf.
+ */
+function handleIrsEstimate(context: RequestContext, body: Record<string, unknown>): Record<string, unknown> {
+  const profile = context.vault.loadProfile();
+  if (profile === null) {
+    throw new HttpError(409, 'não existe perfil neste cofre. Abre o painel e preenche o formulário de perfil.');
+  }
+  const loaded = loadCurrentPack(context);
+  const documented = requireInt(body, 'documentedExpensesCents', 0, 10_000_000_000);
+  const estimate = estimateIrsSimplifiedBase(
+    loaded.pack,
+    profile,
+    context.vault.loadInvoices(),
+    context.year,
+    documented,
+  );
+  return { ok: true, year: context.year, documentedExpensesCents: documented, estimate };
+}
+
+/**
+ * Store, forget or delete the assistant's credential, from the panel.
+ *
+ * Three separate intentions, and none of them is inferred:
+ *   - with a key: use it. With a passphrase as well, also encrypt it into the
+ *     vault; without one, it lives in this process's memory until the panel is
+ *     stopped, and the answer says so rather than pretending it was saved.
+ *   - `forget`: stop using the key in this session. Nothing on disk changes.
+ *   - `delete`: remove the encrypted file from the vault.
+ * The key is never written to the audit log and never sent back to the browser.
+ */
+function handleAiKey(context: RequestContext, body: Record<string, unknown>): Record<string, unknown> {
+  if (optionalBool(body, 'forget') === true) {
+    context.runtimeKey = null;
+    context.vault.appendAudit({ action: 'apikey.forgotten' });
+    return { ok: true, model: buildModel(context), forgotten: true, deleted: false };
+  }
+
+  if (optionalBool(body, 'delete') === true) {
+    const path = apiKeyFilePath(context.vault.dir);
+    const existed = existsSync(path);
+    if (existed) unlinkSync(path);
+    context.runtimeKey = null;
+    context.vault.appendAudit({ action: 'apikey.deleted' });
+    return { ok: true, model: buildModel(context), forgotten: true, deleted: existed };
+  }
+
+  const key = requireString(body, 'key', 300);
+  const passphrase = secret(body, 'passphrase');
+  if (passphrase !== null && passphrase.length < MIN_PASSPHRASE_LENGTH) {
+    throw new HttpError(
+      400,
+      `a frase-passe que cifra a chave deve ter pelo menos ${MIN_PASSPHRASE_LENGTH} caracteres. ` +
+        'Deixa-a vazia para usar a chave só nesta sessão, sem a guardar em disco.',
+    );
+  }
+
+  let stored = false;
+  if (passphrase !== null) {
+    context.vault.ensure();
+    try {
+      saveApiKey(context.vault.dir, key, passphrase);
+    } catch (cause) {
+      throw new HttpError(400, (cause as Error).message);
+    }
+    stored = true;
+  }
+
+  context.runtimeKey = key;
+  context.vault.appendAudit({
+    action: 'apikey.stored',
+    detail: stored ? 'cifrada no cofre e ativa nesta sessão' : 'apenas na memória desta sessão',
+  });
+  return { ok: true, model: buildModel(context), stored, sessionOnly: !stored };
+}
+
+/** Open a key that is already in the vault, with the passphrase typed in the panel. */
+function handleAiKeyUnlock(context: RequestContext, body: Record<string, unknown>): Record<string, unknown> {
+  const passphrase = secret(body, 'passphrase');
+  if (passphrase === null) throw new HttpError(400, 'campo "passphrase" em falta.');
+  const path = apiKeyFilePath(context.vault.dir);
+  if (!existsSync(path)) {
+    throw new HttpError(409, 'não há nenhuma chave guardada no cofre para desbloquear.');
+  }
+  let key: string;
+  try {
+    key = decryptKeyFile(path, passphrase);
+  } catch {
+    // The error from the cipher says nothing useful and can be mistaken for a
+    // corrupt file; the only thing the person can act on is that it did not open.
+    throw new HttpError(400, 'a chave guardada não abriu com essa frase-passe.');
+  }
+  context.runtimeKey = key;
+  context.vault.appendAudit({ action: 'apikey.unlocked' });
+  return { ok: true, model: buildModel(context), unlocked: true };
+}
+
 async function handleDocument(context: RequestContext, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const path = requireString(body, 'path', 1024);
   const kind = optionalString(body, 'kind', 40);
@@ -611,11 +844,12 @@ async function handleDocument(context: RequestContext, body: Record<string, unkn
  * behind the token, with a payload built from the rule pack alone.
  */
 async function handleUpdateSend(context: RequestContext): Promise<DashboardModel> {
-  const key = resolveApiKey({ dataDir: context.vault.dir });
+  const key = resolveContextKey(context);
   if (key.key === null) {
     throw new HttpError(
       400,
-      'não há chave DeepSeek configurada: nada foi enviado. Corre `vnfin ai-key set`.',
+      'não há chave DeepSeek: nada foi enviado. Guarda uma chave na secção "Diagnóstico" do painel, ' +
+        'ou define DEEPSEEK_API_KEY e volta a abrir o painel.',
     );
   }
 
@@ -756,6 +990,7 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
     token,
     model: options.model ?? DEFAULT_MODEL,
     allowedHosts: new Set(),
+    runtimeKey: null,
   };
 
   async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
@@ -787,6 +1022,13 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
     if (method !== allowed) throw new HttpError(405, `esta rota só aceita ${allowed}.`);
 
     requireToken(request, context);
+
+    // The one route whose body is not JSON, because it is the file itself. It is
+    // dispatched before the JSON reader rather than inside the switch below.
+    if (path === '/api/documents/upload') {
+      sendJson(response, 200, await handleDocumentUpload(context, request, url));
+      return;
+    }
 
     if (allowed === 'GET') {
       if (path === '/api/profile/export') {
@@ -831,6 +1073,15 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
         return;
       case '/api/documents':
         sendJson(response, 200, await handleDocument(context, body));
+        return;
+      case '/api/estimate/irs':
+        sendJson(response, 200, handleIrsEstimate(context, body));
+        return;
+      case '/api/ai-key':
+        sendJson(response, 200, handleAiKey(context, body));
+        return;
+      case '/api/ai-key/unlock':
+        sendJson(response, 200, handleAiKeyUnlock(context, body));
         return;
       case '/api/update/send':
         sendJson(response, 200, { ok: true, model: await handleUpdateSend(context) });

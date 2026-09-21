@@ -48,11 +48,14 @@ local server goes wrong:
 | Path traversal | `GET /../package.json`-style requests | Every path is resolved and must stay inside `public/`; anything else is 403. Tested, including percent-encoded variants. |
 | Injected script | The panel renders values that came from the vault, including client names | A strict CSP allows no inline script, no inline style and no external resource, so an injected `<script>` cannot run, and the front end writes text rather than HTML. |
 | Cross-site request forgery | A form on another page could POST to loopback | The token header cannot be set cross-origin, and with no CORS there is no preflight to approve. There is no cookie, so there is no session to ride. |
+| A hostile file upload | The panel accepts bytes from the browser, and a file name is attacker-controlled input | The body cap (32 MiB) is enforced while reading, so an oversized upload is refused rather than buffered; the name is reduced to its last path segment and sanitised before it is joined to the vault directory; the stored name is the file's own SHA-256 plus that name, so content cannot masquerade as another document. |
+| A stolen API key through the panel | The key travels from the browser to the local server | It crosses loopback only, behind the session token, is never returned to the browser (the model carries a mask), is never written to the audit log, and is held in process memory unless the user supplies a passphrase to encrypt it into the vault. |
 
 What the panel explicitly does **not** do: it never binds to `0.0.0.0`, it opens no
 port on your network, it sends no CORS headers, it sets no cookie, and it fetches
-nothing from outside. Twelve tests cover these guards rather than the happy path
-alone (`src/web/server.test.ts`).
+nothing from outside. These guards, and the writes the panel performs, are covered by
+tests rather than the happy path alone (`src/web/server.test.ts`,
+`src/web/profile-api.test.ts`).
 
 The residual risk is the one stated in the next section: the vault itself is not
 encrypted at rest, so the panel changes the *reachability* of your data, not its
@@ -142,9 +145,11 @@ asserting it.
 
 | Aspect | v0 behaviour |
 | --- | --- |
-| Sources, in order | `--key` flag → `DEEPSEEK_API_KEY` environment variable → encrypted file in the vault |
+| Sources, in order | `--key` flag → `DEEPSEEK_API_KEY` environment variable → key held by the running panel (session) → encrypted file in the vault |
+| Typed in the panel | Sent to the local server over loopback with the session token; kept in the server process's memory, and written to the vault only if a passphrase is supplied with it |
+| Back to the browser | Never. Only a mask (`sk-a…f9c2`) and the source are part of the view model |
 | Encrypted file | AES-256-GCM; key derived with scrypt (N=2¹⁵, r=8, p=1, 32-byte key) from `VN_FINANCE_PASSPHRASE`, random 16-byte salt and 12-byte IV per file |
-| Minimum passphrase | 12 characters, enforced |
+| Minimum passphrase | 12 characters, enforced (also for the panel's form) |
 | Never written to | The ledger, the audit log, the profile, any backup of the ledger |
 | Displayed as | `sk-a…f9c2`, never in full |
 | Target (M6) | OS credential store: Windows Credential Manager/DPAPI, libsecret, macOS Keychain, via Tauri's keyring plugin |
@@ -155,6 +160,13 @@ history. The encrypted file is the better default; the credential store is the
 right answer once the desktop shell exists. This ordering is stated in the code
 and here rather than glossed over.
 
+The panel adds one case that the command line cannot have, because only a long-lived
+process can hold a secret without writing it down: a key typed into the browser can
+live in the server's memory for the life of that run — nothing on disk, nothing in
+the audit log longer than the fact that a key was set — and it is gone when the panel
+stops. It is not a substitute for the encrypted file, and the panel says which of the
+two it did.
+
 ## 7. Integrity of records
 
 - **Append-only ledger.** Invoices, completions and audit events are appended to
@@ -162,7 +174,9 @@ and here rather than glossed over.
   matters when a figure is questioned a year later.
 - **Hash-addressed documents.** `vnfin vault add` copies the file into the vault
   under the first 12 characters of its SHA-256, and the original is never moved or
-  modified. Re-hashing the file proves it has not changed since it was archived.
+  modified. Re-hashing the file proves it has not changed since it was archived. A
+  document uploaded from the panel goes through the same one archive function, on the
+  bytes the browser sent instead of a path.
 - **Atomic writes.** Non-append writes go to a temporary file and are renamed, so
   an interrupted write cannot leave a half-written profile.
 - **Copy before index.** A document is written into the vault before the index
@@ -177,7 +191,7 @@ and here rather than glossed over.
 | Device theft or loss | Full-disk encryption (user-supplied) | Medium — depends on the user enabling it |
 | A dependency is compromised | Zero runtime dependencies | Very low |
 | An identifier leaks to the AI provider | Redaction + residual scan + per-request approval + audit | Low — depends on the patterns being right; the residual scan makes a missed pattern fail closed |
-| The API key leaks | Encrypted at rest, masked in output, never logged | Low; rises if the key is put in an environment variable on a shared machine |
+| The API key leaks | Encrypted at rest, masked in output, never logged, held in memory only for the life of a panel run unless saved | Low; rises if the key is put in an environment variable on a shared machine |
 | The wrong obligation is trusted | Verification flags, discrepancy reporting, provisional marking, golden test | Low, and the failure is visible rather than silent |
 | A backup leaks | Backups are the vault; same controls apply | Medium until encrypted export (M3) |
 | The tool is trusted too much | Disclaimers in pack, CLI and UI; nothing is filed | Medium — a social risk, mitigated by design honesty rather than technology |

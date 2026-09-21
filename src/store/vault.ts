@@ -95,6 +95,26 @@ export function checkDataDirRisk(dir: string): DataDirRisk {
   };
 }
 
+/**
+ * A file name that is safe to join onto the vault directory.
+ *
+ * A name that arrived from a browser is untrusted input like any other: it is
+ * reduced to its last segment (no `..`, no separators, no drive letters), stripped
+ * of characters that are not meaningful in a name, and capped so the stored name
+ * cannot outgrow the filesystem's limit once the hash prefix is added.
+ */
+export function sanitiseDocumentName(fileName: string): string {
+  const last = fileName.split(/[\\/]/).pop() ?? '';
+  const cleaned = last
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[<>:"|?*]/g, '-')
+    .replace(/^\.+/, '')
+    .replace(/[.\s]+$/, '')
+    .trim();
+  if (cleaned === '') return 'documento';
+  return cleaned.length > 120 ? cleaned.slice(-120) : cleaned;
+}
+
 export function resolveDataDir(explicit?: string, env: NodeJS.ProcessEnv = process.env): string {
   const dir = resolveDataDirUnchecked(explicit, env);
   if (env['VN_FINANCE_ALLOW_IN_REPO'] !== '1') {
@@ -244,10 +264,42 @@ export class Vault {
     const stored = `${sha256.slice(0, 12)}-${baseName}`;
     copyFileSync(absolutePath, this.path(DOCUMENTS_DIR, stored));
 
+    return this.indexDocument(stored, sha256, meta, absolutePath);
+  }
+
+  /**
+   * The same thing for bytes that arrived over the wire.
+   *
+   * The local panel runs in a browser, and a browser cannot hand over a path: it
+   * can only hand over the file itself. Writing the bytes here rather than through
+   * a temporary file keeps one implementation of the archive rule — hash, name,
+   * copy, index — instead of two that can drift. There is no `originalPath`,
+   * because there is no original on this filesystem to point at.
+   */
+  addDocumentBytes(
+    bytes: Buffer,
+    fileName: string,
+    meta: { kind?: string; obligationId?: string | null } = {},
+  ): { file: string; sha256: string } {
+    if (bytes.length === 0) throw new Error('o ficheiro recebido está vazio.');
+    this.ensure();
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const baseName = sanitiseDocumentName(fileName);
+    const stored = `${sha256.slice(0, 12)}-${baseName}`;
+    writeFileSync(this.path(DOCUMENTS_DIR, stored), bytes);
+    return this.indexDocument(stored, sha256, meta, null);
+  }
+
+  private indexDocument(
+    stored: string,
+    sha256: string,
+    meta: { kind?: string; obligationId?: string | null },
+    originalPath: string | null,
+  ): { file: string; sha256: string } {
     const index = this.readJson<Array<Record<string, unknown>>>('documents/index.json', []);
     index.push({
       file: `${DOCUMENTS_DIR}/${stored}`,
-      originalPath: absolutePath,
+      originalPath,
       sha256,
       addedAt: new Date().toISOString(),
       kind: meta.kind ?? 'outro',

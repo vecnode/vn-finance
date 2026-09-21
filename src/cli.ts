@@ -434,6 +434,7 @@ function commandDoctor(values: Values, context: Context): void {
   const key = resolveApiKey({ dataDir: context.vault.dir, explicit: str(values, 'api-key') });
   if (key.key === null) {
     out(`  ${dim('info ')} ${pad('chave DeepSeek', 26)} ausente. O assistente fica indisponível; todo o resto funciona.`);
+    out(`       ${dim('podes guardá-la no painel, na secção «Diagnóstico», sem usar esta linha de comandos.')}`);
   } else {
     ok('chave DeepSeek', `${maskKey(key.key)} (origem: ${key.source})`);
   }
@@ -1166,6 +1167,9 @@ async function commandWeb(values: Values, context: Context): Promise<void> {
   out(dim('  O endereço inclui a chave da sessão: sem ela o painel não responde a pedidos.'));
   out(dim('  Não abras este endereço noutro dispositivo nem o partilhes.'));
   out(dim('  O servidor escuta apenas em 127.0.0.1 e recusa pedidos de outros anfitriões.'));
+  out();
+  out(dim('  Perfil, faturas, documentos e a secção «Diagnóstico» (onde podes guardar a chave'));
+  out(dim('  da DeepSeek) estão todos no painel: a linha de comandos é equivalente, não é obrigatória.'));
   out();
 
   if (bool(values, 'no-open')) {

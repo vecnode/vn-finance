@@ -8,12 +8,14 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
+import { apiKeyFilePath, saveApiKey } from '../ai/keyring.ts';
 import { createDefaultProfile } from '../core/profile.ts';
 import { Vault } from '../store/vault.ts';
 import { startWebServer, type RunningWebServer } from './server.ts';
@@ -467,4 +469,281 @@ test('unknown routes, wrong methods and oversized bodies are refused', async () 
     });
     assert.equal(notJson.status, 400);
   });
+});
+
+/* ---------------------------------------------------------------------------
+   O painel como interface única: o que antes só existia na linha de comandos.
+   --------------------------------------------------------------------------- */
+
+test('the model carries the facts `doctor` reports, for a browser-only user', async () => {
+  await withServer(async (server) => {
+    const dashboard = await model(await api(server, '/api/dashboard'));
+
+    assert.match(dashboard.meta.nodeVersion, /^v\d+\./, 'a versão do runtime tem de vir no modelo');
+    assert.equal(dashboard.meta.dataDirRisk.level, 'none', 'um cofre fora de git não é um risco');
+    assert.equal(dashboard.key.available, false, 'sem chave no ambiente nem no cofre');
+    assert.equal(dashboard.key.stored, false);
+    assert.equal(dashboard.key.locked, false);
+    assert.equal(dashboard.key.masked, null, 'não há máscara sem chave');
+    assert.equal(typeof dashboard.key.minPassphraseLength, 'number');
+    assert.ok(dashboard.key.minPassphraseLength >= 12);
+  });
+});
+
+test('a key typed in the panel works for the session and never comes back to the browser', async () => {
+  await withServer(async (server, vault) => {
+    const secretKey = 'sk-teste-1234567890abcdefghijklmnop';
+
+    const response = await api(server, '/api/ai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: secretKey }),
+    });
+    assert.equal(response.status, 200);
+    const payload = (await response.json()) as {
+      ok: boolean;
+      model: DashboardModel;
+      stored: boolean;
+      sessionOnly: boolean;
+    };
+    assert.equal(payload.ok, true);
+    assert.equal(payload.stored, false, 'sem frase-passe não se escreve nada em disco');
+    assert.equal(payload.sessionOnly, true);
+    assert.equal(payload.model.update.hasKey, true, 'o envio passa a estar disponível');
+    assert.equal(payload.model.key.source, 'session');
+    assert.equal(existsSync(apiKeyFilePath(vault.dir)), false, 'a chave não foi guardada em ficheiro');
+    assert.equal(
+      JSON.stringify(payload).includes(secretKey),
+      false,
+      'a chave nunca é devolvida ao browser, nem dentro de outro campo',
+    );
+    assert.match(payload.model.key.masked ?? '', /^sk-t…mnop$/, 'só uma máscara identifica a chave');
+
+    // And it is usable by the one call that needs it — as far as the local server
+    // is concerned the credential exists, which is exactly what the panel shows.
+    const after = await model(await api(server, '/api/dashboard'));
+    assert.equal(after.update.hasKey, true);
+
+    const forgotten = await api(server, '/api/ai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ forget: true }),
+    });
+    assert.equal(forgotten.status, 200);
+    assert.equal((await model(forgotten)).update.hasKey, false);
+  });
+});
+
+test('a key stored with a passphrase survives a restart and opens only with that passphrase', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'vnfin-key-'));
+  const vault = new Vault(dir);
+  vault.ensure();
+  vault.saveProfile(
+    createDefaultProfile({ nif: '245678999', name: 'Contribuinte de Teste', ivaRegime: 'isento_art53' }),
+  );
+  const secretKey = 'sk-outra-chave-abcdefghijklmnopqrst';
+  const passphrase = 'uma frase-passe longa';
+
+  const first = await startWebServer({ vault, version: 'teste', year: 2026, port: 0, token: TOKEN });
+  try {
+    const stored = await api(first, '/api/ai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: secretKey, passphrase }),
+    });
+    assert.equal(stored.status, 200);
+    const payload = (await stored.json()) as { ok: boolean; model: DashboardModel; stored: boolean };
+    assert.equal(payload.stored, true);
+    assert.equal(payload.model.key.source, 'session', 'a chave fica logo utilizável nesta sessão');
+
+    const path = apiKeyFilePath(dir);
+    assert.equal(existsSync(path), true);
+    const raw = readFileSync(path, 'utf8');
+    assert.equal(raw.includes(secretKey), false, 'o ficheiro da chave não contém a chave em claro');
+
+    const tooShort = await api(first, '/api/ai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: secretKey, passphrase: 'curta' }),
+    });
+    assert.equal(tooShort.status, 400, 'uma frase-passe curta é recusada em vez de enfraquecer o ficheiro');
+  } finally {
+    await first.close();
+  }
+
+  // A new process over the same vault: no key in the environment, so the file is
+  // there but closed. That is the state the panel has to be able to explain.
+  const second = await startWebServer({ vault, version: 'teste', year: 2026, port: 0, token: TOKEN });
+  try {
+    const locked = await model(await api(second, '/api/dashboard'));
+    assert.equal(locked.key.available, false);
+    assert.equal(locked.key.stored, true);
+    assert.equal(locked.key.locked, true);
+
+    const wrong = await api(second, '/api/ai-key/unlock', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ passphrase: 'não é esta' }),
+    });
+    assert.equal(wrong.status, 400);
+    assert.match(((await wrong.json()) as { error: string }).error, /não abriu/);
+
+    const opened = await api(second, '/api/ai-key/unlock', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ passphrase }),
+    });
+    assert.equal(opened.status, 200);
+    const afterUnlock = (await opened.json()) as { ok: boolean; model: DashboardModel };
+    assert.equal(afterUnlock.model.key.available, true);
+    assert.equal(afterUnlock.model.key.locked, false);
+
+    const deleted = await api(second, '/api/ai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ delete: true }),
+    });
+    assert.equal(deleted.status, 200);
+    assert.equal(existsSync(apiKeyFilePath(dir)), false);
+    assert.equal((await model(deleted)).update.hasKey, false);
+  } finally {
+    await second.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a document chosen in the browser is uploaded, hashed and indexed', async () => {
+  await withServer(async (server, vault) => {
+    const bytes = Buffer.from('%PDF-1.4 guia de pagamento de teste\n', 'utf8');
+    const expected = createHash('sha256').update(bytes).digest('hex');
+
+    const response = await api(server, '/api/documents/upload?name=guia-iva-t3.pdf&kind=guia', {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: bytes,
+    });
+    assert.equal(response.status, 200);
+    const payload = (await response.json()) as {
+      ok: boolean;
+      model: DashboardModel;
+      added: { file: string; sha256: string };
+      bytes: number;
+    };
+    assert.equal(payload.ok, true);
+    assert.equal(payload.added.sha256, expected, 'o hash é o dos bytes recebidos');
+    assert.equal(payload.bytes, bytes.length);
+    assert.match(payload.added.file, /^documents\/[0-9a-f]{12}-guia-iva-t3\.pdf$/);
+    assert.equal(existsSync(vault.path(payload.added.file)), true, 'o ficheiro foi copiado para o cofre');
+    assert.deepEqual(readFileSync(vault.path(payload.added.file)), bytes, 'os bytes estão intactos');
+    assert.equal(payload.model.vault.entries.length, 1);
+    assert.equal(payload.model.vault.entries[0]?.kind, 'guia');
+
+    // A name that arrived off the wire is a path only if it is treated as one.
+    const traversal = await api(server, '/api/documents/upload?name=..%2f..%2fescaped.pdf', {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: Buffer.from('x', 'utf8'),
+    });
+    assert.equal(traversal.status, 200);
+    const escaped = ((await traversal.json()) as { added: { file: string } }).added.file;
+    assert.match(escaped, /^documents\/[0-9a-f]{12}-escaped\.pdf$/, 'o nome é reduzido ao último segmento');
+    assert.equal(escaped.includes('..'), false);
+    assert.equal(existsSync(join(vault.dir, 'escaped.pdf')), false);
+
+    const empty = await api(server, '/api/documents/upload?name=vazio.pdf', {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: '',
+    });
+    assert.equal(empty.status, 400, 'um ficheiro vazio é recusado');
+  });
+});
+
+test('the taxable base of the simplified regime is computed on request, and stored nowhere', async () => {
+  await withServer(async (server, vault) => {
+    await api(server, '/api/invoices', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        date: '2026-05-10',
+        clientName: 'ACME, Lda.',
+        clientCountry: 'PT',
+        baseCents: 1_000_000,
+        ivaRateBp: 0,
+        retentionBp: 2300,
+        vatTreatment: 'isento_art53',
+      }),
+    });
+
+    const response = await api(server, '/api/estimate/irs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ documentedExpensesCents: 50_000 }),
+    });
+    assert.equal(response.status, 200);
+    const payload = (await response.json()) as {
+      ok: boolean;
+      estimate: {
+        grossServiceIncomeCents: number;
+        taxableFromCoefficientCents: number;
+        documentedExpensesReferenceCents: number | null;
+        additionToTaxableIncomeCents: number | null;
+        taxableIncomeCents: number | null;
+        limitations: string[];
+      };
+    };
+    assert.equal(payload.ok, true);
+    const estimate = payload.estimate;
+    assert.equal(estimate.grossServiceIncomeCents, 1_000_000, 'a base vem dos recibos do exercício');
+    assert.equal(estimate.taxableFromCoefficientCents, 750_000, 'coeficiente de 75% para serviços');
+    assert.equal(estimate.documentedExpensesReferenceCents, 150_000, '15% do rendimento de serviços');
+    assert.equal(estimate.additionToTaxableIncomeCents, 100_000, 'acresce a diferença não documentada');
+    assert.equal(estimate.taxableIncomeCents, 850_000);
+    assert.ok(estimate.limitations.length > 0, 'as limitações acompanham sempre o número');
+
+    // The figure is a judgement, not a record: it is not written anywhere.
+    assert.equal(existsSync(vault.path('estimates')), false);
+    assert.equal(existsSync(vault.path('ledger/expenses.jsonl')), false);
+
+    const negative = await api(server, '/api/estimate/irs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ documentedExpensesCents: -1 }),
+    });
+    assert.equal(negative.status, 400);
+
+    const missing = await api(server, '/api/estimate/irs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(missing.status, 400);
+  });
+});
+
+test('the assistant refuses to send when the only credential is a locked file', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'vnfin-locked-'));
+  const vault = new Vault(dir);
+  vault.ensure();
+  vault.saveProfile(createDefaultProfile({ nif: '245678999', name: 'Contribuinte de Teste', ivaRegime: 'isento_art53' }));
+  // A key file that no passphrase in this process can open.
+  saveApiKey(dir, 'sk-guardada-mas-fechada-1234567890', 'frase-passe-de-teste');
+
+  const server = await startWebServer({ vault, version: 'teste', year: 2026, port: 0, token: TOKEN });
+  try {
+    const response = await api(server, '/api/update/send', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(response.status, 400);
+    assert.match(((await response.json()) as { error: string }).error, /não há chave DeepSeek/);
+
+    const locked = await model(await api(server, '/api/dashboard'));
+    assert.equal(locked.key.locked, true, 'o painel explica que há uma chave fechada, e não que não há nenhuma');
+    assert.ok(locked.key.problems.some((problem) => problem.includes('frase-passe')));
+  } finally {
+    await server.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

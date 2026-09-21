@@ -25,6 +25,10 @@ const API = {
   invoices: '/api/invoices',
   complete: '/api/obligations/complete',
   documents: '/api/documents',
+  documentsUpload: '/api/documents/upload',
+  irsEstimate: '/api/estimate/irs',
+  aiKey: '/api/ai-key',
+  aiKeyUnlock: '/api/ai-key/unlock',
   updateSend: '/api/update/send',
   updateApply: '/api/update/apply',
   updateDiscard: '/api/update/discard',
@@ -45,6 +49,11 @@ const state = {
      ainda não tem perfil — e fica disponível no botão "Perfil" a partir daí. */
   profileOpen: false,
   profilePrompted: false,
+  /* O resultado do cálculo do rendimento tributável do IRS: vive no estado
+     porque é uma resposta do servidor a um valor que não é guardado em lado
+     nenhum. Muda quando muda o valor, e desaparece quando a página recarrega. */
+  irs: null,
+  irsInput: 0,
 };
 
 /* --------------------------------------------------------------------------
@@ -376,6 +385,10 @@ async function send(path, body) {
   if (model === null || typeof model !== 'object') {
     throw new ApiError('A resposta do servidor não incluiu o modelo atualizado.');
   }
+  // O cálculo do IRS é uma resposta a um estado que acabou de mudar: manter o
+  // número antigo ao lado de um livro de recibos novo seria mostrar uma conta
+  // que já não é verdade.
+  state.irs = null;
   applyModel(model);
   return data;
 }
@@ -647,6 +660,16 @@ function renderChrome(model) {
   setCount('cnt-cofre', String(missingDocs.length), missingDocs.length > 0 ? 'due' : 'off');
 
   setCount('cnt-regras', String(summary.obligations ?? 0), (model.pack?.problems ?? []).length > 0 ? 'soon' : '');
+
+  /* O diagnóstico conta o que está por resolver: erros de perfil, cofre em git e
+     pacote a rever. É o número que responde a "está tudo bem?". */
+  const keyInfo = model.key ?? {};
+  const profileErrors = (model.profileProblems ?? []).filter((problem) => problem.level === 'error').length;
+  const risk = meta.dataDirRisk ?? { level: 'none' };
+  const diagPoints =
+    profileErrors + (risk.level === 'none' ? 0 : 1) + ((model.pack?.freshness ?? {}).status === 'current' ? 0 : 1);
+  setCount('cnt-diag', diagPoints === 0 ? 'ok' : String(diagPoints), diagPoints === 0 ? 'off' : 'due');
+  if (keyInfo.available !== true) setCount('cnt-diag', 'sem chave', diagPoints === 0 ? 'off' : 'due');
 
   const update = model.update ?? {};
   if (update.hasKey === false) setCount('cnt-assistente', 'sem chave', 'off');
@@ -1594,7 +1617,77 @@ function renderIvaIrs(model) {
     '</div>' +
     '<p class="tnote">Não há, em lado nenhum deste painel, um valor final de IRS a pagar: o modelo para no rendimento tributável e as ' +
     'limitações acima dizem porquê. Qualquer apuramento final exige as taxas do ano e as deduções, e é matéria de um contabilista certificado.</p>' +
+    irsCalculator(model) +
     '</section>'
+  );
+}
+
+/**
+ * O rendimento tributável do regime simplificado, a pedido.
+ *
+ * Esta é a única conta do painel cujo dado de entrada o cofre não pode fornecer:
+ * que despesas são elegíveis é um juízo teu. O comando de linha de comandos pede-o
+ * com `estimate --despesas`; aqui pede-se no mesmo sítio onde o resultado aparece,
+ * e o valor não fica guardado em lado nenhum — nem no cofre, nem no browser.
+ */
+function irsCalculator(model) {
+  const estimate = state.irs;
+  const step = (label, value, note = '') =>
+    '<tr>' +
+    `<td>${esc(label)}</td>` +
+    `<td class="n">${value === null || value === undefined ? '<span class="mini">—</span>' : eur(value)}</td>` +
+    `<td class="small">${note === '' ? '' : esc(note)}</td>` +
+    '</tr>';
+
+  let result = '';
+  if (estimate !== null && estimate !== undefined && state.irsInput !== undefined) {
+    const reference = estimate.documentedExpensesReferenceCents;
+    result =
+      '<p class="subhead mt-12">Cálculo para ' + esc(eur(state.irsInput)) + ' de despesas documentadas</p>' +
+      tableWrap(
+        'Cadeia de cálculo do rendimento tributável do regime simplificado, do rendimento bruto ao rendimento tributável.',
+        '<th scope="col">Passo</th><th scope="col" class="n">Valor</th><th scope="col">Nota</th>',
+        [
+          step('Rendimento de serviços faturado no ano', estimate.grossServiceIncomeCents, 'soma das bases dos recibos do exercício'),
+          step(`× coeficiente ${bpCoefficient(estimate.coefficientBp)}`, estimate.taxableFromCoefficientCents, 'coeficiente do perfil, definido no pacote de regras'),
+          step('Referência de despesas', reference, '15% do rendimento de serviços (art. 31.º n.º 13 do CIRS)'),
+          step('Despesas elegíveis documentadas', estimate.eligibleExpensesCents, 'valor que indicaste'),
+          step('Acréscimo ao rendimento tributável', estimate.additionToTaxableIncomeCents, 'diferença positiva entre a referência e o documentado'),
+          '<tr class="tot">' +
+            '<td>Rendimento tributável</td>' +
+            `<td class="n">${estimate.taxableIncomeCents === null ? '—' : eur(estimate.taxableIncomeCents)}</td>` +
+            '<td class="small">base do IRS; não é o imposto a pagar</td>' +
+            '</tr>',
+        ].join(''),
+      ) +
+      `<p class="tnote">Retenções já sofridas no exercício: ${eur(estimate.withholdingCents)} — são creditadas no IRS final, não descontadas aqui.</p>` +
+      notes(estimate.limitations) +
+      ((estimate.assumptions ?? []).length === 0
+        ? ''
+        : '<p class="subhead mt-12">Pressupostos</p>' +
+          '<div class="notes tight">' +
+          estimate.assumptions
+            .map((item) => `<p><span aria-hidden="true">·</span><span>${esc(item)}</span></p>`)
+            .join('') +
+          '</div>');
+  }
+
+  return (
+    '<div class="panel mt-10 panel-pad">' +
+    '<p class="subhead">IRS — rendimento tributável do regime simplificado</p>' +
+    '<p class="tnote">O rendimento de serviços e o coeficiente já estão no modelo; o que falta são as <strong>despesas elegíveis ' +
+    'documentadas</strong>, porque decidir o que é elegível é um juízo teu e não um cálculo. O valor serve para esta conta e não é guardado.</p>' +
+    '<form data-form="irs" novalidate>' +
+    '<div class="form-grid">' +
+    '<div class="field"><label for="irs-desp">Despesas elegíveis documentadas (€)</label>' +
+    '<input id="irs-desp" name="documentedExpenses" type="text" inputmode="decimal" autocomplete="off" placeholder="5 000,00" required>' +
+    '<small>Escreve em euros; o painel converte para cêntimos antes de enviar.</small></div>' +
+    '</div>' +
+    '<div class="form-actions"><button type="submit" class="btn btn-primary">Calcular rendimento tributável</button></div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    result +
+    '</div>'
   );
 }
 
@@ -1623,9 +1716,41 @@ function renderCofre(model) {
     '</span>' +
     '</div>';
 
+  const upload =
+    '<details class="disclosure noprint" open>' +
+    '<summary>Escolher um ficheiro deste computador<span class="cnt off">o servidor calcula o SHA-256 e copia</span></summary>' +
+    '<div class="d-body">' +
+    '<form data-form="document-upload" novalidate>' +
+    '<div class="form-grid">' +
+    '<div class="field full"><label for="du-file">Ficheiro</label>' +
+    '<input id="du-file" name="file" type="file" required>' +
+    '<small>O ficheiro é enviado para o servidor local (loopback), identificado por hash e copiado para o cofre. ' +
+    'O original fica onde está e não é alterado.</small></div>' +
+    '<div class="field"><label for="du-kind">Tipo de documento</label>' +
+    '<select id="du-kind" name="kind">' +
+    '<option value="declaracao">Declaração</option>' +
+    '<option value="guia">Guia de pagamento</option>' +
+    '<option value="comprovativo">Comprovativo</option>' +
+    '<option value="fatura">Fatura ou recibo</option>' +
+    '<option value="saft">SAF-T</option>' +
+    '<option value="contrato">Contrato</option>' +
+    '<option value="outro" selected>Outro</option>' +
+    '</select></div>' +
+    '<div class="field"><label for="du-obligation">Obrigação associada (id da regra)</label>' +
+    '<input id="du-obligation" name="obligationId" type="text" autocomplete="off" placeholder="opcional · ex. iva.dp.trimestral">' +
+    '<small>Associar o documento à regra é o que faz o painel deixar de o contar como em falta.</small></div>' +
+    '</div>' +
+    '<div class="form-actions">' +
+    '<button type="submit" class="btn btn-primary">Guardar no cofre</button>' +
+    '</div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    '</div>' +
+    '</details>';
+
   const form =
     '<details class="disclosure noprint">' +
-    '<summary>Registar documento por caminho absoluto<span class="cnt off">o servidor calcula o SHA-256 e copia</span></summary>' +
+    '<summary>Registar documento por caminho absoluto<span class="cnt off">para ficheiros que já estão nesta máquina</span></summary>' +
     '<div class="d-body">' +
     '<form data-form="document" novalidate>' +
     '<div class="form-grid">' +
@@ -1680,7 +1805,7 @@ function renderCofre(model) {
   } else {
     table = emptyState(
       'Nada registado no cofre',
-      'Ainda não há documentos indexados. Regista um comprovativo pelo caminho absoluto para começar a fechar as pendências.',
+      'Ainda não há documentos indexados. Escolhe um comprovativo e guarda-o no cofre para começar a fechar as pendências.',
     );
   }
 
@@ -1691,6 +1816,7 @@ function renderCofre(model) {
       `${entries.length} entradas indexadas · ficheiros guardados apenas nesta máquina`,
     ) +
     head +
+    upload +
     form +
     table +
     checklistTable(model, documented) +
@@ -1852,7 +1978,219 @@ function renderRegras(model) {
 }
 
 /* --------------------------------------------------------------------------
-   11. Atualizar regras (o assistente limitado)
+   11. Diagnóstico — o mesmo que `vnfin doctor` responde, para quem só usa o
+   browser.
+
+   Nada aqui é calculado: o modelo traz o perfil, o pacote de regras, as
+   contagens do cofre, o risco da pasta de dados e o estado da chave. Esta
+   secção reúne-os num só lugar, e é onde vive o formulário da chave da API,
+   porque era o único passo que ainda obrigava a abrir um terminal.
+   -------------------------------------------------------------------------- */
+
+const KEY_SOURCE_LABEL = {
+  flag: 'indicada no arranque',
+  env: 'variável de ambiente',
+  file: 'ficheiro cifrado no cofre',
+  session: 'esta sessão do painel',
+  none: 'sem origem',
+};
+
+/** A chave da API: guardar, desbloquear, esquecer ou apagar — tudo daqui. */
+function aiKeyPanel(model) {
+  const key = model.key ?? { available: false, source: 'none', masked: null, problems: [], stored: false, locked: false, passphraseFromEnv: false, minPassphraseLength: 12 };
+  const min = Number(key.minPassphraseLength ?? 12);
+
+  const stateLine = key.available
+    ? '<p class="dl-inline"><span class="state on"><span aria-hidden="true">●</span> Chave em uso</span>' +
+      `<span class="mono">${esc(key.masked ?? '••••')}</span>` +
+      `<span class="badge local">${esc(KEY_SOURCE_LABEL[key.source] ?? key.source)}</span></p>`
+    : key.locked
+      ? '<p class="dl-inline"><span class="state off"><span aria-hidden="true">⊘</span> Chave guardada, fechada</span>' +
+        '<span class="badge miss">falta a frase-passe</span></p>'
+      : '<p class="dl-inline"><span class="state off"><span aria-hidden="true">⊘</span> Sem chave configurada</span>' +
+        '<span class="badge miss">assistente desligado</span></p>';
+
+  const unlock =
+    key.locked && !key.available
+      ? '<form data-form="ai-key-unlock" novalidate class="mt-10">' +
+        '<div class="form-grid">' +
+        '<div class="field full"><label for="ak-pass-unlock">Frase-passe da chave guardada</label>' +
+        '<input id="ak-pass-unlock" name="passphrase" type="password" autocomplete="current-password" required>' +
+        `<small>A mesma frase-passe com que a chave foi cifrada (${esc(min)} caracteres ou mais). É usada para abrir a chave e não é guardada.</small></div>` +
+        '</div>' +
+        '<div class="form-actions"><button type="submit" class="btn btn-primary">Desbloquear nesta sessão</button></div>' +
+        '<div data-role="form-message"></div>' +
+        '</form>'
+      : '';
+
+  const replace =
+    '<details class="disclosure noprint"' + (key.available ? '' : ' open') + '>' +
+    '<summary>' + (key.available ? 'Substituir a chave' : 'Configurar a chave DeepSeek') +
+    '<span class="cnt off">fica fora do browser</span></summary>' +
+    '<div class="d-body">' +
+    '<p class="tnote">A chave é enviada para o servidor local por loopback, cifrada no cofre se indicares uma frase-passe, ' +
+    'e nunca é devolvida ao browser — daqui só sai uma máscara. Sem frase-passe a chave vive apenas na memória deste ' +
+    'processo e desaparece quando fechas o painel.</p>' +
+    '<form data-form="ai-key" novalidate>' +
+    '<div class="form-grid">' +
+    '<div class="field full"><label for="ak-key">Chave da API DeepSeek</label>' +
+    '<input id="ak-key" name="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" required>' +
+    '<small>Não é validada aqui: uma chave errada só se revela no primeiro envio. Não é escrita no registo de auditoria.</small></div>' +
+    '<div class="field full"><label for="ak-pass">Frase-passe para a guardar cifrada (opcional)</label>' +
+    `<input id="ak-pass" name="passphrase" type="password" autocomplete="new-password">` +
+    `<small>Com ${esc(min)} caracteres ou mais, a chave fica cifrada no cofre e sobrevive ao reinício. Vazio: só nesta sessão.</small></div>` +
+    '</div>' +
+    '<div class="form-actions">' +
+    '<button type="submit" class="btn btn-primary">Usar esta chave</button>' +
+    (key.source === 'session'
+      ? '<button type="button" class="btn" data-act="ai-key-forget">Esquecer a chave desta sessão</button>'
+      : '') +
+    (key.stored
+      ? '<button type="button" class="btn btn-tertiary" data-act="ai-key-delete">Apagar a chave guardada no cofre</button>'
+      : '') +
+    '</div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    '</div>' +
+    '</details>';
+
+  const envNote =
+    key.stored === true && key.passphraseFromEnv === true
+      ? '<p class="tnote"><span class="state on"><span aria-hidden="true">✓</span> Frase-passe no ambiente</span> ' +
+        'A frase-passe está definida no ambiente do servidor (<span class="mono">VN_FINANCE_PASSPHRASE</span>), ' +
+        'por isso a chave guardada no cofre abre sozinha quando o painel arranca.</p>'
+      : '';
+
+  return (
+    '<div class="panel mt-10 panel-pad">' +
+    '<p class="subhead">Assistente — chave da API</p>' +
+    stateLine +
+    envNote +
+    notes(key.problems ?? [], 'danger') +
+    unlock +
+    replace +
+    '</div>'
+  );
+}
+
+function renderDiagnostico(model) {
+  const meta = model.meta ?? {};
+  const summary = model.pack?.summary ?? {};
+  const freshness = model.pack?.freshness ?? null;
+  const key = model.key ?? {};
+  const profile = model.profile ?? null;
+  const vault = model.vault ?? { files: 0, bytes: 0, entries: [] };
+  const risk = meta.dataDirRisk ?? { level: 'none', message: null };
+
+  const profileProblems = model.profileProblems ?? [];
+  const profileErrors = profileProblems.filter((problem) => problem.level === 'error');
+  const profileWarnings = profileProblems.filter((problem) => problem.level === 'warning');
+  const packProblems = (model.pack?.problems ?? []).filter((problem) => problem.level !== 'info');
+  const packHealth = (model.flags ?? []).filter((flag) => flag.code === 'RULE_PACK_STALE' || flag.code === 'VALUE_PROPOSED_BY_AI_UNCONFIRMED');
+  const nullConstants = summary.nullConstants ?? [];
+  const missingInputs = model.missingInputs ?? [];
+
+  const unverified = (summary.unverified ?? 0) + (summary.stale ?? 0);
+  const problems =
+    profileErrors.length +
+    packProblems.filter((problem) => problem.level === 'error').length +
+    (risk.level === 'none' ? 0 : 1) +
+    (freshness !== null && freshness.status !== 'current' ? 1 : 0) +
+    unverified;
+  const warnings = profileWarnings.length + missingInputs.length + nullConstants.length + packHealth.length + packProblems.filter((p) => p.level === 'warning').length;
+
+  const verdict =
+    problems === 0 && warnings === 0
+      ? '<div class="disc pos"><span class="sev sev-info"><span class="g" aria-hidden="true">✓</span> Sem problemas</span>' +
+        '<div><p class="a-t">Nada a assinalar</p><p class="a-d">Perfil, pacote de regras, cofre e chave estão como deviam estar.</p></div></div>'
+      : `<div class="disc"><span class="sev ${problems > 0 ? 'sev-alta' : 'sev-media'}"><span class="g" aria-hidden="true">▲</span> ` +
+        `${esc(problems)} erro(s) · ${esc(warnings)} aviso(s)</span>` +
+        '<div><p class="a-t">O que fazer a seguir</p><p class="a-d">Cada ponto abaixo diz o que se passa e o que falta. ' +
+        'Um aviso não impede o trabalho; um erro impede um cálculo.</p></div></div>';
+
+  const envTable = tableWrap(
+    'Estado do ambiente local: aplicação, runtime, cofre, pacote de regras e chave da API.',
+    '<th scope="col">Item</th><th scope="col">Valor</th>',
+    [
+      '<tr><td>Versão da aplicação</td><td class="mono">' + esc(meta.version ?? '—') + '</td></tr>',
+      '<tr><td>Runtime</td><td class="mono">Node ' + esc(meta.nodeVersion ?? '—') + '</td></tr>',
+      '<tr><td>Exercício</td><td class="mono">' + esc(meta.year ?? '—') + ' · hoje ' + esc(ptDate(meta.today)) + '</td></tr>',
+      '<tr><td>Cofre</td><td class="mono">' + esc(meta.dataDir ?? '—') + '</td></tr>',
+      '<tr><td>Ficheiros no cofre</td><td>' + esc(vault.files) + ' ficheiros · ' + esc(bytesLabel(vault.bytes)) + '</td></tr>',
+      '<tr><td>Pacote de regras</td><td>pt/' + esc(meta.packVersion ?? '—') + ' <span class="mono">' + esc(String(meta.packChecksum ?? '').slice(0, 16)) + '…</span><span class="sub mono">' + esc(meta.packPath ?? '') + '</span></td></tr>',
+      '<tr><td>Chave DeepSeek</td><td>' +
+        (key.available
+          ? '<span class="badge local">presente</span> <span class="mono">' + esc(key.masked ?? '••••') + '</span> <span class="sub">' + esc(KEY_SOURCE_LABEL[key.source] ?? key.source ?? '') + '</span>'
+          : '<span class="badge miss">ausente</span><span class="sub">o assistente fica indisponível; todo o resto funciona</span>') +
+        '</td></tr>',
+    ].join(''),
+  );
+
+  const riskBlock =
+    risk.level === 'none'
+      ? ''
+      : `<div class="disc noprint"><span class="sev ${risk.level === 'fatal' ? 'sev-alta' : 'sev-media'}">` +
+        `<span class="g" aria-hidden="true">▲</span> Cofre ${risk.level === 'fatal' ? 'recusado' : 'em git'}</span>` +
+        `<div><p class="a-t">A pasta de dados ${risk.level === 'fatal' ? 'está dentro do repositório da aplicação' : 'está dentro de um repositório git'}</p>` +
+        `<p class="a-d">${escLines(risk.message ?? '')}</p></div></div>`;
+
+  const profileBlock =
+    profile === null
+      ? emptyState('Sem perfil', 'Não existe perfil neste cofre. O painel abre o formulário de perfil no primeiro ecrã — nenhum comando é necessário.')
+      : (profileProblems.length === 0
+          ? '<p class="tnote"><span class="state on"><span aria-hidden="true">✓</span> Perfil válido</span> ' +
+            esc(profile.name) + ' · NIF ' + esc(maskNif(String(profile.nif ?? ''))) + ' · IVA ' + esc(ivaRegimeLabel(profile.iva?.regime)) + '</p>'
+          : notes(
+              profileProblems.map((problem) => `${problem.level === 'error' ? 'erro' : 'aviso'} · ${problem.field}: ${problem.message}`),
+              profileErrors.length > 0 ? 'danger' : 'warn',
+            )) +
+        (missingInputs.length === 0
+          ? ''
+          : '<p class="subhead mt-12">Dados que só tu podes fornecer</p>' +
+            notes(missingInputs) +
+            '<p class="tnote">A aplicação não adivinha estes valores: sem eles há verificações que simplesmente não correm.</p>');
+
+  const packBlock =
+    (freshness === null
+      ? ''
+      : `<p class="tnote">${freshness.status === 'current' ? '<span class="state on"><span aria-hidden="true">✓</span> Pacote atual</span>' : '<span class="state off"><span aria-hidden="true">▲</span> Pacote a rever</span>'} ${esc(freshness.message)}</p>`) +
+    `<p class="tnote">${esc(summary.verified ?? 0)} regras verificadas · ${esc(summary.partial ?? 0)} parciais · ` +
+    `${esc(unverified)} por verificar ou desatualizadas · ${esc(summary.eventDriven ?? 0)} sem prazo fixo (não entram na agenda)` +
+    ((summary.nullConstants ?? []).length === 0
+      ? ''
+      : ` · ${esc((summary.nullConstants ?? []).length)} constantes sem valor (os cálculos que dependem delas são recusados, não estimados)`) +
+    '.</p>' +
+    notes(packProblems.slice(0, 20).map((problem) => `${problem.path} — ${problem.message}`), packProblems.some((p) => p.level === 'error') ? 'danger' : 'warn') +
+    (packHealth.length === 0
+      ? ''
+      : '<p class="subhead mt-12">Saúde do pacote de regras</p>' +
+        notes(packHealth.map((flag) => `${flag.title} — ${String(flag.detail).split('\n')[0] ?? ''}`))) +
+    ((model.rules?.todo ?? []).length === 0
+      ? ''
+      : '<p class="subhead mt-12">Por verificar na fonte citada</p>' + notes(model.rules.todo));
+
+  return (
+    '<section class="block" id="diagnostico" aria-label="Diagnóstico">' +
+    sectionHead(
+      'Diagnóstico',
+      'O mesmo que o comando <span class="mono">doctor</span> responde: perfil, pacote de regras, cofre e chave',
+    ) +
+    verdict +
+    envTable +
+    riskBlock +
+    '<p class="subhead mt-14">Perfil</p>' +
+    profileBlock +
+    '<p class="subhead mt-14">Pacote de regras e cofre</p>' +
+    packBlock +
+    aiKeyPanel(model) +
+    '<p class="tnote">Este diagnóstico é lido do cofre local e do pacote de regras em cada carregamento da página. ' +
+    'Nada é enviado para fora deste computador: a única chamada de rede da aplicação é a que autorizares em «Atualizar regras».</p>' +
+    '</section>'
+  );
+}
+
+/* --------------------------------------------------------------------------
+   12. Atualizar regras (o assistente limitado)
    -------------------------------------------------------------------------- */
 
 function unitValue(value, unit) {
@@ -1880,10 +2218,11 @@ function renderAssistente(model) {
   const keyRow =
     update.hasKey === true
       ? '<div><dt>Chave de API</dt><dd><span class="keyfield"><span class="mono">chave presente</span>' +
-        `<span class="badge local">${esc(update.keySource || 'origem não indicada')}</span></span>` +
-        '<small>A chave fica fora do cofre e nunca é escrita nos registos nem enviada para o browser.</small></dd></div>'
+        `<span class="badge local">${esc(KEY_SOURCE_LABEL[update.keySource] ?? update.keySource ?? 'origem não indicada')}</span></span>` +
+        '<small>A chave nunca é escrita no registo de auditoria nem devolvida ao browser — só a máscara. ' +
+        'Podes substituí-la no <a href="#diagnostico">Diagnóstico</a>.</small></dd></div>'
       : '<div><dt>Chave de API</dt><dd><span class="state off"><span aria-hidden="true">⊘</span> Sem chave configurada</span>' +
-        '<small>O envio está desativado. Para o ativar: <span class="cmd">vnfin ai-key set</span>.</small></dd></div>';
+        '<small>O envio está desativado. Guarda uma chave no <a href="#diagnostico">Diagnóstico</a>, sem sair do painel.</small></dd></div>';
 
   const variableRows = variables
     .map(
@@ -1923,7 +2262,8 @@ function renderAssistente(model) {
             '<span class="cta-note">Esta é a única chamada de rede da aplicação. A resposta é guardada como proposta e não altera o pacote até tu mandares aplicar.</span>'
           : '<button type="button" class="btn" disabled>Enviar à DeepSeek</button>' +
             '<button type="button" class="btn" data-act="cancel-preview">Cancelar</button>' +
-            '<span class="cta-note">Envio desativado: não há chave configurada. Corre <span class="cmd">vnfin ai-key set</span>.</span>') +
+            '<span class="cta-note">Envio desativado: não há chave configurada. ' +
+            'Configura-a no <a href="#diagnostico">Diagnóstico</a>.</span>') +
         '</div>' +
         '</div>';
 
@@ -2002,7 +2342,7 @@ function renderAssistente(model) {
       ? '<button type="button" class="btn" data-act="cancel-preview">Fechar pré-visualização</button>'
       : update.hasKey === true
         ? '<button type="button" class="btn btn-primary" data-act="preview-update">Pré-visualizar pedido</button>'
-        : '<button type="button" class="btn" disabled>Pré-visualizar pedido</button><span class="cta-note">Disponível quando existir chave: <span class="cmd">vnfin ai-key set</span>.</span>') +
+        : '<button type="button" class="btn" disabled>Pré-visualizar pedido</button><span class="cta-note">Disponível quando existir chave: configura-a no <a href="#diagnostico">Diagnóstico</a>.</span>') +
     '</div>' +
     '</div>';
 
@@ -2448,6 +2788,11 @@ function render(model) {
     html.push(renderCofre(model));
     html.push(renderRegras(model));
   }
+  // Diagnostics and the assistant are shown with or without a profile: "why is
+  // there no profile, and why can I not send anything" are exactly the questions
+  // of a first run, and answering them with a CLI command is what this section
+  // exists to stop doing.
+  html.push(renderDiagnostico(model));
   html.push(renderAssistente(model));
   html.push(renderFooter(model));
   host.innerHTML = html.join('');
@@ -2485,6 +2830,18 @@ function fieldValue(form, name) {
   const field = form.elements.namedItem(name);
   if (field === null) return '';
   return typeof field.value === 'string' ? field.value.trim() : '';
+}
+
+/**
+ * Como `fieldValue`, mas sem tirar espaços.
+ *
+ * Só a frase-passe da chave precisa disto: é um segredo escrito por uma pessoa e
+ * um espaço no início ou no fim é parte dele. Apará-lo aqui faria com que uma
+ * chave guardada na linha de comandos não abrisse no painel.
+ */
+function fieldRaw(form, name) {
+  const field = form.elements.namedItem(name);
+  return field !== null && typeof field.value === 'string' ? field.value : '';
 }
 
 function fieldChecked(form, name) {
@@ -2669,6 +3026,129 @@ async function submitDocument(form) {
   );
 }
 
+/**
+ * O mesmo registo, para o ficheiro escolhido no browser.
+ *
+ * O ficheiro vai como corpo do pedido (`application/octet-stream`) e o nome, o
+ * tipo e a obrigação vão na query: um browser não sabe o caminho absoluto de um
+ * ficheiro que o utilizador escolheu, e inventá-lo seria pior do que não o ter.
+ */
+async function submitDocumentUpload(form) {
+  const input = form.querySelector('input[type="file"]');
+  const file = input === null || input.files === null ? null : input.files[0];
+  if (file === null) {
+    formMessage(form, 'err', 'Escolhe um ficheiro para guardar no cofre.');
+    return;
+  }
+
+  const params = new URLSearchParams();
+  params.set('name', file.name);
+  const kind = fieldValue(form, 'kind');
+  if (kind !== '') params.set('kind', kind);
+  const obligationId = fieldValue(form, 'obligationId');
+  if (obligationId !== '') params.set('obligationId', obligationId);
+
+  const data = await sendBinary(`${API.documentsUpload}?${params.toString()}`, file);
+  const added = data.added ?? null;
+  toast(
+    added === null
+      ? 'Documento guardado no cofre.'
+      : `Documento no cofre: ${added.file} · sha256 ${String(added.sha256 ?? '').slice(0, 16)}…`,
+  );
+  if (input !== null) input.value = '';
+}
+
+/** Um POST cujo corpo são bytes de um ficheiro, e não JSON. */
+async function sendBinary(path, blob) {
+  let response;
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      headers: { 'X-VNFIN-Token': state.token, 'Content-Type': 'application/octet-stream' },
+      credentials: 'omit',
+      cache: 'no-store',
+      body: blob,
+    });
+  } catch {
+    throw new ApiError('Não foi possível contactar o servidor local. Confirma que ainda está a correr.');
+  }
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text === '' ? null : JSON.parse(text);
+  } catch {
+    data = null;
+  }
+  if (!response.ok || data === null || data.ok === false) {
+    const message =
+      data !== null && typeof data.error === 'string' && data.error !== ''
+        ? data.error
+        : `O servidor local respondeu ${response.status}${response.statusText ? ` ${response.statusText}` : ''}.`;
+    throw new ApiError(message);
+  }
+  const model = data.model;
+  if (model === null || typeof model !== 'object') {
+    throw new ApiError('A resposta do servidor não incluiu o modelo atualizado.');
+  }
+  applyModel(model);
+  return data;
+}
+
+/**
+ * A chave da API, escrita no painel.
+ *
+ * Sem frase-passe a chave vale só para esta sessão do servidor; com ela, fica
+ * cifrada no cofre e sobrevive ao reinício. As duas coisas são ditas antes e
+ * depois, porque "guardei a chave" e "guardei a chave até fechar a janela" são
+ * promessas diferentes.
+ */
+async function submitAiKey(form, unlockOnly) {
+  const passphrase = fieldRaw(form, 'passphrase');
+
+  if (unlockOnly) {
+    if (passphrase === '') {
+      formMessage(form, 'err', 'Escreve a frase-passe com que a chave foi cifrada.');
+      return;
+    }
+    await send(API.aiKeyUnlock, { passphrase });
+    toast('Chave desbloqueada nesta sessão. O envio para a DeepSeek está disponível.');
+    return;
+  }
+
+  const key = fieldValue(form, 'key');
+  if (key.trim() === '') {
+    formMessage(form, 'err', 'Escreve a chave da API.');
+    return;
+  }
+  const body = { key: key.trim() };
+  if (passphrase !== '') body.passphrase = passphrase;
+
+  const data = await send(API.aiKey, body);
+  toast(
+    data.stored === true
+      ? 'Chave ativa e cifrada no cofre.'
+      : 'Chave ativa apenas nesta sessão: o cofre não foi alterado.',
+  );
+}
+
+/** O rendimento tributável do IRS: um cálculo, não um registo. Nada é gravado. */
+async function submitIrs(form) {
+  const cents = parseEurosToCents(fieldValue(form, 'documentedExpenses'));
+  if (cents === undefined || cents === null || cents < 0) {
+    formMessage(form, 'err', 'Escreve as despesas elegíveis em euros, por exemplo 5 000,00.');
+    return;
+  }
+  const data = await request(API.irsEstimate, 'POST', { documentedExpensesCents: cents });
+  state.irs = data.estimate ?? null;
+  state.irsInput = cents;
+  if (state.model !== null) applyModel(state.model);
+  // O formulário é reconstruído no render: o valor escrito volta a ele, porque
+  // continua a ser o valor para o qual o resultado apresentado é a resposta.
+  const input = document.getElementById('irs-desp');
+  if (input !== null) input.value = centsToInput(cents);
+  toast('Rendimento tributável calculado. O valor não foi guardado.');
+}
+
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
   const trigger = event.target.closest('[data-act]');
@@ -2730,6 +3210,26 @@ document.addEventListener('click', (event) => {
     state.preview = true;
     if (state.model !== null) applyModel(state.model);
     document.getElementById('assistente')?.scrollIntoView({ block: 'start' });
+    return;
+  }
+  if (act === 'ai-key-forget') {
+    if (!window.confirm('Esquecer a chave nesta sessão? O cofre não é tocado e a próxima utilização volta a pedi-la.')) return;
+    void withBusy(trigger, async () => {
+      await send(API.aiKey, { forget: true });
+      toast('Chave esquecida nesta sessão.');
+    }).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
+    return;
+  }
+  if (act === 'ai-key-delete') {
+    if (!window.confirm('Apagar a chave cifrada guardada no cofre? Fica só o que estiver no ambiente ou nesta sessão.')) return;
+    void withBusy(trigger, async () => {
+      const data = await send(API.aiKey, { delete: true });
+      toast(data.deleted === true ? 'Chave guardada apagada do cofre.' : 'Não havia chave guardada para apagar.');
+    }).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
     return;
   }
   if (act === 'cancel-preview') {
@@ -2817,7 +3317,15 @@ document.addEventListener('submit', (event) => {
           ? () => submitInvoice(form)
           : kind === 'document'
             ? () => submitDocument(form)
-            : null;
+            : kind === 'document-upload'
+              ? () => submitDocumentUpload(form)
+              : kind === 'ai-key'
+                ? () => submitAiKey(form, false)
+                : kind === 'ai-key-unlock'
+                  ? () => submitAiKey(form, true)
+                  : kind === 'irs'
+                    ? () => submitIrs(form)
+                    : null;
   if (work === null) return;
   void withBusy(button, work).catch((error) => {
     formMessage(form, 'err', error instanceof Error ? error.message : String(error));
@@ -2879,6 +3387,7 @@ async function boot({ silent = false } = {}) {
     }
     clearError();
     computeLedgerDefaults(model.invoices ?? []);
+    state.irs = null;
     applyModel(model);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

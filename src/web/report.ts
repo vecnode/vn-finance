@@ -43,7 +43,8 @@ import type {
   RuleSource,
   TaxProfile,
 } from '../core/types.ts';
-import type { Vault } from '../store/vault.ts';
+import { checkDataDirRisk, type Vault } from '../store/vault.ts';
+import { MIN_PASSPHRASE_LENGTH } from '../ai/keyring.ts';
 
 /**
  * What this application never does, in one place, so the command line, the panel
@@ -66,6 +67,35 @@ export interface DashboardMeta {
   packVersion: string;
   packChecksum: string;
   packPath: string;
+  /**
+   * The runtime the local server is on, and whether the vault sits inside a git
+   * work tree. Both are `vnfin doctor` facts; the panel shows them in the same
+   * diagnostic section, because someone who only ever opens the browser must be
+   * able to read what the command line would have told them.
+   */
+  nodeVersion: string;
+  dataDirRisk: { level: 'none' | 'warning' | 'fatal'; gitRoot: string | null; message: string | null };
+}
+
+/**
+ * The state of the assistant's credential, as the panel may see it.
+ *
+ * `masked` is the only form of the key that ever reaches the browser: a panel that
+ * could read the key back would turn any script-injection bug into credential
+ * theft, and there is no feature that needs it.
+ */
+export interface KeyInfo {
+  available: boolean;
+  source: string;
+  masked: string | null;
+  problems: string[];
+  /** A key file exists in the vault, whether or not it can be read right now. */
+  stored: boolean;
+  /** A key file exists but no passphrase is available to open it. */
+  locked: boolean;
+  /** The passphrase is present in the server's environment, so stored keys open. */
+  passphraseFromEnv: boolean;
+  minPassphraseLength: number;
 }
 
 export interface VaultEntry {
@@ -151,6 +181,7 @@ export interface DashboardModel {
   vault: { entries: VaultEntry[]; files: number; bytes: number };
   rules: { sources: RuleSource[]; obligations: ObligationRule[]; todo: string[] };
   update: UpdateState;
+  key: KeyInfo;
 }
 
 export interface DashboardInput {
@@ -162,6 +193,14 @@ export interface DashboardInput {
   horizonDays?: number;
   apiKeyAvailable: boolean;
   apiKeySource: string;
+  /** The masked key, when there is one. Never the key itself. */
+  apiKeyMasked?: string | null;
+  /** Why a stored key could not be used, when that is the case. */
+  apiKeyProblems?: string[];
+  /** A key file exists in the vault. */
+  apiKeyStored?: boolean;
+  apiKeyLocked?: boolean;
+  apiKeyPassphraseFromEnv?: boolean;
   /** Overrides the stored proposal, so a freshly fetched one renders immediately. */
   pendingProposal?: UpdateProposal | null;
 }
@@ -230,6 +269,8 @@ export function buildDashboard(input: DashboardInput): DashboardModel {
       packVersion: pack.packVersion,
       packChecksum: loaded.checksum,
       packPath: loaded.path,
+      nodeVersion: process.version,
+      dataDirRisk: checkDataDirRisk(vault.dir),
     },
     guarantees: GUARANTEES,
     defaults: {
@@ -260,6 +301,16 @@ export function buildDashboard(input: DashboardInput): DashboardModel {
       keySource: input.apiKeySource,
       pending,
       pendingChanges: pending === null ? 0 : diffProposal(pending).filter((diff) => diff.changed).length,
+    },
+    key: {
+      available: input.apiKeyAvailable,
+      source: input.apiKeySource,
+      masked: input.apiKeyMasked ?? null,
+      problems: input.apiKeyProblems ?? [],
+      stored: input.apiKeyStored ?? false,
+      locked: input.apiKeyLocked ?? false,
+      passphraseFromEnv: input.apiKeyPassphraseFromEnv ?? false,
+      minPassphraseLength: MIN_PASSPHRASE_LENGTH,
     },
   };
 }

@@ -5,6 +5,12 @@
  * the local vault. The key is NEVER written to the database, never logged, and
  * never included in a backup of the ledger.
  *
+ * The panel adds one more place a key can live: the memory of the server process
+ * it is using (see `KeySource`). A key typed into the browser is never echoed
+ * back to the browser — only a mask of it is — and it is gone when the panel
+ * stops. Storing it encrypted on disk stays an explicit choice: leaving the
+ * passphrase empty means "this session only".
+ *
  * The encrypted-file path exists so the tool is usable today with zero native
  * dependencies. The intended production home for the key is the operating
  * system's credential store (Windows Credential Manager / DPAPI, libsecret,
@@ -31,7 +37,19 @@ const SCRYPT_PARAMS = {
 } as const;
 const KEY_FILE_VERSION = 1;
 
-export type KeySource = 'flag' | 'env' | 'file' | 'none';
+/** The one place the minimum passphrase length is written down. */
+export const MIN_PASSPHRASE_LENGTH = 12;
+
+/**
+ * Where a usable key came from.
+ *
+ * `session` is the browser panel's half of the file case: a key typed into the
+ * panel is held in the server process's memory for the life of that process, so
+ * using it does not require the passphrase to be exported into the environment
+ * before starting the application. `resolveApiKey` never returns it; only the
+ * panel's server does, because only it has a process to hold a key in.
+ */
+export type KeySource = 'flag' | 'env' | 'file' | 'session' | 'none';
 
 export interface ResolvedKey {
   key: string | null;
@@ -136,8 +154,8 @@ export function decryptKeyFile(path: string, passphrase: string): string {
 }
 
 export function saveApiKey(dataDir: string, apiKey: string, passphrase: string): string {
-  if (passphrase.length < 12) {
-    throw new Error('a frase-passe deve ter pelo menos 12 caracteres');
+  if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
+    throw new Error(`a frase-passe deve ter pelo menos ${MIN_PASSPHRASE_LENGTH} caracteres`);
   }
   const path = apiKeyFilePath(dataDir);
   mkdirSync(dirname(path), { recursive: true });

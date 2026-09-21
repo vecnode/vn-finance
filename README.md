@@ -43,10 +43,10 @@ sources, and is honest about what it does not know.
 git clone <this repository> vn-finance
 cd vn-finance
 npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 111 tests
+npm run verify       # strict typecheck + 117 tests
 ```
 
-`npm run verify` is the gate. It should end with `# pass 111` and `# fail 0`.
+`npm run verify` is the gate. It should end with `# pass 117` and `# fail 0`.
 
 ### 2. Start it
 
@@ -219,7 +219,9 @@ node src/cli.ts vault list
 
 The file is copied into the vault under the first 12 characters of its SHA-256 and
 indexed; the original is never moved or modified. Re-hashing it later proves it has
-not changed.
+not changed. In the panel the same thing is a file picker in *Cofre de documentos*:
+the browser hands over the bytes, the local server hashes and copies them, and the
+absolute-path form stays for files that are already on the machine.
 
 ### 11. Optional — keep the rule values current
 
@@ -238,6 +240,13 @@ node src/cli.ts update --approve --verified      # only if you checked each sour
 `ai-key set` encrypts the key with AES-256-GCM (scrypt-derived, from
 `VN_FINANCE_PASSPHRASE`). The stored key is never written to the ledger, the audit
 log or a backup of the ledger.
+
+In the panel this is the *Diagnóstico* section: type the key there and it is used
+immediately. Add a passphrase of 12 characters or more and it is also encrypted into
+the vault, so it survives a restart; leave the passphrase empty and it lives only in
+the server process's memory, gone when you close the panel. The key is never sent
+back to the browser — only a mask such as `sk-a…f9c2` — and it never reaches the
+audit log.
 
 `update` is a dry run unless you pass `--send`, and nothing is written to the pack
 without `--approve`. An applied value is recorded as `ai-proposed` and
@@ -261,8 +270,25 @@ vnfin agenda
 Running the application starts the panel: `vnfin web`, or simply `vnfin`. It serves
 one HTML file, one stylesheet and one ES module from the same core the CLI uses. It
 is also where the profile is created on first use — an empty vault opens the profile
-form instead of a screen of zeros — and it loads and saves profiles as files. Five
-controls make it safe to leave running:
+form instead of a screen of zeros — and it loads and saves profiles as files.
+
+**The panel is the whole application, not a viewer.** Everything the command line
+does can be done in the browser, through the same core, the same vault, the same
+validation and the same audit log:
+
+| Section | What you can do there |
+| --- | --- |
+| *Painel* | Alerts, KPIs, your CAE/CIRS situation, and the inputs only you can supply |
+| *Agenda fiscal* | What is due, filtered by 30/90 days, the year, done and not applicable; mark an obligation handled |
+| *Recibos emitidos* | Record an invoice with the IVA treatment and retention the profile implies; see the quarterly totals |
+| *Segurança Social* | The contribution derivation, instalment by instalment |
+| *IVA e IRS* | Quarter reports, the reserve, and the simplified-regime **taxable income** from an expense figure you type |
+| *Cofre de documentos* | Upload a file with the file picker (or register one by absolute path), tie it to an obligation, and see the checklist of what is missing |
+| *Regras & fontes* | Every rule, its verification state and its cited source |
+| *Diagnóstico* | What `doctor` prints — profile validity, missing inputs, pack freshness, vault size, git risk, key state — **and the form to store, unlock, replace or delete the DeepSeek key**, with or without saving it to disk |
+| *Atualizar regras* | Preview, send, apply or discard a rule-value proposal |
+
+Five controls make it safe to leave running:
 
 | Control | Why it exists |
 | --- | --- |
@@ -275,8 +301,13 @@ controls make it safe to leave running:
 The panel contains **no tax logic**: one view model (`src/web/report.ts`) assembles
 everything from the deterministic core, and the browser only lays it out. Every
 write — recording an invoice, marking an obligation handled, archiving a document,
-applying a rule update — goes through the same vault, the same validation and the
-same append-only audit log as the CLI.
+applying a rule update, storing the API key — goes through the same vault, the same
+validation and the same append-only audit log as the CLI. `ARCHITECTURE.md` carries
+the command-by-command equivalence table.
+
+`node src/cli.ts doctor` is still the fastest route to a plain-text diagnosis, and
+the panel's *Diagnóstico* section is the same report with the key form attached.
+Neither interface is required to use the application.
 
 ---
 
@@ -353,7 +384,7 @@ reports the counts. The `pt/2026` pack has 19 obligations, 20 sources (17 offici
 
 ## What is built and what is not
 
-**Built and tested** (`npm run verify`, 111 tests): the rule pack schema with
+**Built and tested** (`npm run verify`, 117 tests): the rule pack schema with
 provenance validation; the obligation engine with published-date precedence and
 discrepancy reporting; money and rate discipline in integer cents and basis points;
 the IVA, Segurança Social and IRS-base estimates; the alert engine; the local vault
@@ -371,6 +402,8 @@ backup export, a printable year pack, and the panel's trend views. See
 
 | Document | What it covers |
 | --- | --- |
+| `AGENTS.md` | Orientation for anyone editing the repo: the browser-first rule, hard invariants, repo map, commands, definition of done |
+| `ARCHITECTURE.md` | The layer map, the data flow, the server guards and routes, the assistant boundary, and where to add things |
 | `docs/PROPOSAL.md` | The design: principles, architecture, the rule pack, the engine, the AI boundary, risks, decisions |
 | `docs/DOMAIN-PT.md` | The Portuguese domain, and the verification status of every legal fact |
 | `docs/PRIVACY-SECURITY.md` | Threat model, the panel's attack surface, key handling, what is not protected yet |

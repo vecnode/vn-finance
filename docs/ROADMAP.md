@@ -81,9 +81,18 @@ single view model that feeds it, and the panel itself — agenda, alerts, CAE/CI
 situation, the "inputs only you can supply" form, the invoice ledger, the Segurança
 Social derivation, the quarter reports, the document vault, the rule sources and
 the bounded rule-update flow. The server's guards (loopback binding, Host
-allowlist, per-run token, no CORS, CSP, path containment) are covered by twelve
-tests, and the stylesheet is lifted from the reviewed mockup rather than
-re-invented.
+allowlist, per-run token, no CORS, CSP, path containment) are covered by tests, and
+the stylesheet is lifted from the reviewed mockup rather than re-invented.
+
+Closed the remaining command-line-only steps, so a browser-only user never needs a
+terminal: the panel now carries the `doctor` diagnostic (profile validity, missing
+inputs, pack freshness and verification, vault size, git risk, verdict), its own
+form to store, unlock, replace or delete the DeepSeek key — with the key held in the
+server's memory when it is not saved — a file picker that uploads a document instead
+of asking for an absolute path, and the `estimate --despesas` calculator for the
+simplified regime's taxable income. Every write still goes through the same vault,
+the same validation and the same append-only audit log, and `ARCHITECTURE.md` keeps
+the command-by-command equivalence table.
 
 Still to add:
 

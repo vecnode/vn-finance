@@ -458,6 +458,36 @@ test('the panel is served as correct Portuguese, with no encoding damage', async
   });
 });
 
+test('a warning from the rule pack is printed on one page, not on two', async () => {
+  // The validator's problems and the pack's own "todo" list are the subject of
+  // "Regras e fontes". They used to be printed there and again under "Diagnóstico",
+  // so the same four warnings and nineteen notes showed up twice in one panel. A
+  // duplicated list is invisible to node:test, so the guard is structural: the pack
+  // prints its own lists once, and the diagnostic points at that page instead.
+  await withServer(async (server) => {
+    const js = await (await fetch(`http://${HOST}:${server.port}/app.js`)).text();
+
+    assert.equal(
+      (js.match(/notes\(rules\.todo\)/g) ?? []).length,
+      1,
+      'a lista "todo" do pacote tem de ser impressa uma só vez, em Regras e fontes',
+    );
+    assert.ok(
+      !js.includes('Por verificar na fonte citada'),
+      'o Diagnóstico voltou a imprimir a lista que pertence a Regras e fontes',
+    );
+    assert.ok(
+      !js.includes('notes(packProblems'),
+      'o Diagnóstico voltou a imprimir os avisos do validador do pacote',
+    );
+    assert.match(
+      js,
+      /com o detalhe em <a href="#regras">/,
+      'o Diagnóstico tem de apontar para a página que explica os avisos do pacote',
+    );
+  });
+});
+
 test('an invoice whose treatment and VAT rate contradict each other is refused', async () => {
   await withServer(async (server) => {
     const post = (body: Record<string, unknown>): Promise<Response> =>

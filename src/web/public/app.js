@@ -2150,6 +2150,25 @@ function renderDiagnostico(model) {
             notes(missingInputs) +
             '<p class="tnote">A aplicação não adivinha estes valores: sem eles há verificações que simplesmente não correm.</p>');
 
+  // The validator's warnings and the pack's own "todo" list are the subject of
+  // "Regras e fontes", which prints both in full. Printing them here too put the
+  // same four warnings and nineteen notes on two pages at once, so the diagnostic
+  // states the count and links to the page that explains it. Errors still print
+  // inline: a warning does not stop a calculation, an error does.
+  const packErrors = packProblems.filter((problem) => problem.level === 'error');
+  const packWarningCount = packProblems.length - packErrors.length;
+  const reviewPoints = (model.rules?.todo ?? []).length;
+  const packAuditNote =
+    packWarningCount === 0 && reviewPoints === 0
+      ? ''
+      : '<p class="tnote">' +
+        esc(packWarningCount) +
+        (packWarningCount === 1 ? ' aviso do validador' : ' avisos do validador') +
+        (reviewPoints === 0
+          ? ''
+          : ' e ' + esc(reviewPoints) + (reviewPoints === 1 ? ' ponto por confirmar' : ' pontos por confirmar')) +
+        ', com o detalhe em <a href="#regras">Regras e fontes</a>.</p>';
+
   const packBlock =
     (freshness === null
       ? ''
@@ -2160,14 +2179,12 @@ function renderDiagnostico(model) {
       ? ''
       : ` · ${esc((summary.nullConstants ?? []).length)} constantes sem valor (os cálculos que dependem delas são recusados, não estimados)`) +
     '.</p>' +
-    notes(packProblems.slice(0, 20).map((problem) => `${problem.path} — ${problem.message}`), packProblems.some((p) => p.level === 'error') ? 'danger' : 'warn') +
+    notes(packErrors.slice(0, 20).map((problem) => `${problem.path} — ${problem.message}`), 'danger') +
+    packAuditNote +
     (packHealth.length === 0
       ? ''
       : '<p class="subhead mt-12">Saúde do pacote de regras</p>' +
-        notes(packHealth.map((flag) => `${flag.title} — ${String(flag.detail).split('\n')[0] ?? ''}`))) +
-    ((model.rules?.todo ?? []).length === 0
-      ? ''
-      : '<p class="subhead mt-12">Por verificar na fonte citada</p>' + notes(model.rules.todo));
+        notes(packHealth.map((flag) => `${flag.title} — ${String(flag.detail).split('\n')[0] ?? ''}`)));
 
   return (
     '<section class="block" id="diagnostico" aria-label="Diagnóstico">' +

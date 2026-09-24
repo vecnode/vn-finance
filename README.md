@@ -23,10 +23,10 @@ self-employed professional, focus on CIRS category B.
 git clone <this repository> vn-finance
 cd vn-finance
 npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 164 tests
+npm run verify       # strict typecheck + 168 tests
 ```
 
-`npm run verify` is the gate. It should end with `# pass 164` and `# fail 0`.
+`npm run verify` is the gate. It should end with `# pass 168` and `# fail 0`.
 
 ```bash
 node src/cli.ts          # or: npm run dev — opens the local panel in your browser
@@ -34,39 +34,27 @@ node src/cli.ts          # or: npm run dev — opens the local panel in your bro
 
 ```bash
 node src/cli.ts doctor
-```
 
-```bash
 node src/cli.ts agenda                  # next 90 days, then the rest of the year
 node src/cli.ts agenda --horizon 180    # a wider plan
 node src/cli.ts agenda --all            # include completed, N/A and history
 node src/cli.ts agenda --json           # machine readable
-```
 
-```bash
 node src/cli.ts flags
 node src/cli.ts flags --json
-```
 
-```bash
 node src/cli.ts ledger add --base 1200 --client "ACME, Lda." --nif 501234560
 node src/cli.ts ledger add --base 4200 --client "Helsinki Labs Oy" --country FI
 node src/cli.ts ledger add --base 900 --client "Studio Mira" --retention 0 --paid
 node src/cli.ts ledger list
-```
 
-```bash
 node src/cli.ts ledger import ~/Downloads/fatura-recibo-2026-014.pdf
 node src/cli.ts ledger import fatura.pdf --dry-run   # read it, write nothing
-```
 
-```bash
 node src/cli.ts estimate                                  # per quarter + reserve
 node src/cli.ts estimate --quarter 3                      # one quarter
 node src/cli.ts estimate --despesas 5000                  # + the IRS tax base
-```
 
-```bash
 node src/cli.ts vault add ~/Documents/comprovativo-iva-t3.pdf \
   --kind comprovativo --obligation iva.dp.trimestral
 node src/cli.ts vault list

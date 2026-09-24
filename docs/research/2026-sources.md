@@ -271,7 +271,7 @@ From the **OCC Guia Prático, August 2026** (PDF extracted locally):
 6. Document retention for IVA is now **10 years** (DL 49/2025), not 4 — while the IRS proof obligation
    remains 4 years.
 7. Additional obligations encoded beyond the required list: `iva.recapitulativa.trimestral`,
-   `ss.declaracaoAnual`, `iva.declaracaoAlteracoes`.
+   `iva.recapitulativa.mensalPorVolume`, `ss.declaracaoAnual`, `iva.declaracaoAlteracoes`.
 8. `iva.periodicRegime.quarterlyCeiling` / `monthlyAbove` = **65 000 000 cents (650 000 €)** — art. 41.º
    n.º 1 CIVA, both thresholds at the same value, with the quarterly regime unavailable above it.
 
@@ -291,7 +291,7 @@ Every `null` left in the pack, and why:
 | `ies` `legalBasis` | `[]` | Only the official 2026 date (15 JUL) was verified; the CIRC/ordinance basis was not confirmed. |
 | `iva.pagamento.*` `legalBasis` | only the DL 125/2021 flexibility note | The CIVA article fixing the day-25 payment deadline was not confirmed; the deadline rests on the AT folheto and the 2026 calendar. |
 | `irs.retencoesPagamento` | `verification: "partial"` | Rates verified in art. 101.º; the article fixing the delivery deadline (day 20 of the following month) was not confirmed in a code text. |
-| `iva.recapitulativa` 31 AGO 2026 | recorded, unexplained | The date is in the official calendar with no note; the legal basis (a despacho or a rule specific to the recapitulativa) was not identified. |
+| `iva.recapitulativa` 31 AGO 2026 | recorded, unexplained | The date is in the official calendar with no note; the legal basis (a despacho or a rule specific to the recapitulativa) was not identified. The **frequency**, by contrast, is now settled — see below. |
 | Despacho n.º 68/2026 (12/05) | not attached | Note e) on the declarative page and note c) on the payment page, but no row/marker was found in the published tables. PDF not retrieved (only the linked URL). |
 | `saft.mensal` | `verification: "partial"` | The calendar has no separate SAF-T row; its 2026 dates were transposed from the invoice-communication row (same day-5 deadline). Whether real-time webservice communicators are dispensed from the monthly SAF-T file — and whether the Portal das Finanças dispensa (which *is* in the AT folheto) covers it — needs confirmation. Also, DL 198/2012 art. 3.º n.º 2 in the copy consulted still reads day 25. |
 | withholding on intellectual/industrial property (16,5 %) and EBF art. 58.º-A (20 %) | not encoded | The required structure has only three withholding keys. Documented here for a future pack version. |
@@ -299,4 +299,36 @@ Every `null` left in the pack, and why:
 | art. 53.º transition thresholds 15 000 € / 18 750 € | not encoded | Real and officially published (AT folheto), but the structure has no key; should be added before the app implements the exemption. |
 | ±25 % relevant-income option (art. 164.º CRC) | not encoded | Documented in §10; no key in the required structure. |
 | non-resident 25 % withholding | encoded | Art. 71.º n.º 4 a) read in the official text, but application to concrete cases (treaty relief, permanent establishment) needs human review. |
-| `efatura.validacaoDespesas` art. 78.º-B | referenced only | Read only by remission from art. 31.º n.º 15 a); the article itself was not fetched. |
+| `efatura.validacaoDespesas` art. 78.º-B | referenced only | Read only by remission from art. 31.º n.º 15 a); the article itself was not fetched.
+
+## Resolved after the first pack integration
+
+### Declaração recapitulativa — frequency (RITI art. 30.º)
+
+Read directly in the AT's consolidated RITI on 2026-09-24
+(`info.portaldasfinancas.gov.pt/.../RITI_2021/Paginas/riti030.aspx`), and added to the pack as source
+`at-riti-art30`:
+
+- **n.º 1 a)** — monthly, until day 20 of the following month, for taxpayers under CIVA art. 41.º
+  n.º 1 **a)**: the monthly IVA regime.
+- **n.º 1 b)** — quarterly, until day 20 after the quarter ends, for taxpayers under art. 41.º n.º 1 **b)**.
+- **n.º 2** — notwithstanding b), those taxpayers file **monthly** when the intra-community operations of
+  art. 23.º n.º 1 c) in the current quarter, or in any of the four previous ones, **exceed 50 000 €**.
+- **n.º 4** — the obligation exists only for periods in which those operations actually occurred.
+
+This closed a real defect in pack 2026.1.0. `iva.recapitulativa` was keyed on
+`activity.intraCommunityOperations` alone, with no regime condition, so a quarterly-regime taxpayer with
+intra-community services was scheduled for **both** the monthly and the quarterly series at once — a
+combination art. 30.º never produces. The panel accordingly reported an urgent "declaração
+recapitulativa mensal em atraso" for a filing that was not due. From 2026.1.1 the monthly rule requires
+the monthly regime, the quarterly rule requires the quarterly regime, and
+`iva.recapitulativa.mensalPorVolume` carries the n.º 2 override.
+
+The override turns on a declared profile field, `activity.intraCommunityOperationsAbove50k`, because the
+ledger holds no quarterly breakdown of intra-community turnover by client country to compute it from.
+Undeclared is treated as neither "no" nor "yes": n.º 1 b) is the base rule, so the quarterly frequency
+applies until someone declares the exception — which is exactly what the pack's `ne true` test encodes.
+
+Still open, and recorded in the pack's `todo` rather than guessed: whether an art. 53.º exempt taxpayer
+providing intra-community services is obliged to file the recapitulativa at all. The three rules
+therefore require a monthly or quarterly IVA regime. |

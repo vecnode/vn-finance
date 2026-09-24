@@ -116,7 +116,7 @@ export function sanitiseDocumentName(fileName: string): string {
 }
 
 export function resolveDataDir(explicit?: string, env: NodeJS.ProcessEnv = process.env): string {
-  const dir = resolveDataDirUnchecked(explicit, env);
+  const dir = resolveVaultLocation(explicit, env).dir;
   if (env['VN_FINANCE_ALLOW_IN_REPO'] !== '1') {
     const risk = checkDataDirRisk(dir);
     if (risk.level === 'fatal' && risk.message !== null) throw new Error(risk.message);
@@ -124,10 +124,16 @@ export function resolveDataDir(explicit?: string, env: NodeJS.ProcessEnv = proce
   return dir;
 }
 
-function resolveDataDirUnchecked(explicit: string | undefined, env: NodeJS.ProcessEnv): string {
-  if (explicit !== undefined && explicit.trim() !== '') return resolve(explicit);
-  const fromEnv = env['VN_FINANCE_DATA_DIR'];
-  if (fromEnv !== undefined && fromEnv.trim() !== '') return resolve(fromEnv);
+/**
+ * Where the vault lives when nobody said otherwise.
+ *
+ * `~/.vn-finance` is a fine default for a developer and a bad one for everybody
+ * else: it is a hidden folder in the home directory, which is to say a folder the
+ * person who owns the data cannot find. That is why the location is REMEMBERED
+ * once it has been chosen (see below) and why the panel opens on a chooser rather
+ * than on a path it invented.
+ */
+export function defaultDataDir(env: NodeJS.ProcessEnv = process.env): string {
   if (process.platform === 'win32') {
     const home = env['USERPROFILE'] ?? homedir();
     return join(home, '.vn-finance');
@@ -135,6 +141,193 @@ function resolveDataDirUnchecked(explicit: string | undefined, env: NodeJS.Proce
   const xdg = env['XDG_DATA_HOME'];
   const base = xdg !== undefined && xdg.trim() !== '' ? xdg : join(homedir(), '.local', 'share');
   return join(base, 'vn-finance');
+}
+
+/** The small file that remembers the folder someone picked. Never inside a vault. */
+export function vaultPointerPath(env: NodeJS.ProcessEnv = process.env): string {
+  return join(defaultDataDir(env), 'vault-location.json');
+}
+
+export interface VaultPointer {
+  path: string;
+  chosenAt: string;
+  /** Which interface chose it, for the audit line. */
+  by: string;
+}
+
+export type VaultLocationSource = 'flag' | 'env' | 'pointer' | 'default';
+
+export interface ResolvedVault {
+  dir: string;
+  source: VaultLocationSource;
+  pointerPath: string;
+  pointer: VaultPointer | null;
+}
+
+export function readVaultPointer(env: NodeJS.ProcessEnv = process.env): VaultPointer | null {
+  const file = vaultPointerPath(env);
+  if (!existsSync(file)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(file, 'utf8')) as Partial<VaultPointer>;
+    if (typeof parsed.path !== 'string' || parsed.path.trim() === '') return null;
+    return {
+      path: parsed.path,
+      chosenAt: typeof parsed.chosenAt === 'string' ? parsed.chosenAt : '',
+      by: typeof parsed.by === 'string' ? parsed.by : 'desconhecido',
+    };
+  } catch {
+    // A corrupt pointer is not a reason to lose access to the data: it is ignored,
+    // and the resolution falls back to the default, which the panel can then offer
+    // to change again.
+    return null;
+  }
+}
+
+/** Write the pointer via a temporary file and a rename, like every other write. */
+export function writePointerFile(file: string, pointer: VaultPointer): void {
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(`${file}.tmp`, `${JSON.stringify(pointer, null, 2)}\n`, 'utf8');
+  renameSync(`${file}.tmp`, file);
+}
+
+/** Remember the chosen folder. */
+export function writeVaultPointer(
+  dir: string,
+  by: string,
+  at = new Date().toISOString(),
+  env: NodeJS.ProcessEnv = process.env,
+): VaultPointer {
+  const pointer: VaultPointer = { path: resolve(dir), chosenAt: at, by };
+  writePointerFile(vaultPointerPath(env), pointer);
+  return pointer;
+}
+
+/**
+ * Which folder is the vault, and WHY it is that one.
+ *
+ * The order is explicit-before-implicit at every step: a flag on this run wins
+ * over the environment, which wins over the remembered choice, which wins over
+ * the default. The panel shows which of the four applied, because "your vault is
+ * ~/.vn-finance" and "you chose this folder" are different claims and only one of
+ * them is worth reminding someone about.
+ */
+export function resolveVaultLocation(
+  explicit?: string,
+  env: NodeJS.ProcessEnv = process.env,
+): ResolvedVault {
+  const pointerPath = vaultPointerPath(env);
+  if (explicit !== undefined && explicit.trim() !== '') {
+    return { dir: resolve(explicit), source: 'flag', pointerPath, pointer: null };
+  }
+  const fromEnv = env['VN_FINANCE_DATA_DIR'];
+  if (fromEnv !== undefined && fromEnv.trim() !== '') {
+    return { dir: resolve(fromEnv), source: 'env', pointerPath, pointer: null };
+  }
+  const pointer = readVaultPointer(env);
+  if (pointer !== null) {
+    return { dir: resolve(pointer.path), source: 'pointer', pointerPath, pointer };
+  }
+  return { dir: defaultDataDir(env), source: 'default', pointerPath, pointer: null };
+}
+
+// ---------------------------------------------------------------------------
+// Choosing a folder, from inside the panel
+// ---------------------------------------------------------------------------
+
+export interface DirectoryEntry {
+  name: string;
+  path: string;
+  /** Already looks like a vault: it holds a profile, a ledger or archived files. */
+  isVault: boolean;
+}
+
+export interface DirectoryListing {
+  path: string;
+  parent: string | null;
+  exists: boolean;
+  /** Shortcuts to start from, so the picker does not open on an empty string. */
+  roots: Array<{ label: string; path: string }>;
+  entries: DirectoryEntry[];
+  /** Refused here for the same reason the vault refuses it: a repo can be published. */
+  risk: DataDirRisk;
+  error: string | null;
+}
+
+/** The obvious places to put a folder, in the order a person would look for them. */
+export function startingPoints(env: NodeJS.ProcessEnv = process.env): Array<{ label: string; path: string }> {
+  const home = process.platform === 'win32' ? (env['USERPROFILE'] ?? homedir()) : homedir();
+  const candidates: Array<{ label: string; path: string }> = [
+    { label: 'Ambiente de trabalho', path: join(home, 'Desktop') },
+    { label: 'Documentos', path: join(home, 'Documents') },
+    { label: 'Transferências', path: join(home, 'Downloads') },
+    { label: 'Pasta pessoal', path: home },
+  ];
+  const points = candidates.filter((candidate) => existsSync(candidate.path));
+
+  if (process.platform === 'win32') {
+    for (const letter of 'CDEFGHIJKLMNOPQRSTUVWXYZ') {
+      const root = `${letter}:\\`;
+      if (existsSync(root)) points.push({ label: `Unidade ${letter}:`, path: root });
+    }
+  } else if (existsSync('/')) {
+    points.push({ label: 'Raiz do sistema', path: '/' });
+  }
+  return points;
+}
+
+/**
+ * List the SUB-DIRECTORIES of a path, for the folder chooser in the panel.
+ *
+ * Directories only, and never their contents: the chooser exists so somebody can
+ * point at a folder, and a listing that also returned file names would hand a
+ * page — any page that ever leaked the session token — a way to enumerate the
+ * disk. The vault path itself is already readable from the model; this is the one
+ * extra thing the picker needs and no more.
+ */
+export function browseDirectories(target: string | null, env: NodeJS.ProcessEnv = process.env): DirectoryListing {
+  const roots = startingPoints(env);
+  const fallback = roots[0]?.path ?? defaultDataDir(env);
+  const path = resolve(target === null || target.trim() === '' ? fallback : target);
+  const listing: DirectoryListing = {
+    path,
+    parent: dirname(path) === path ? null : dirname(path),
+    exists: existsSync(path),
+    roots,
+    entries: [],
+    risk: checkDataDirRisk(path),
+    error: null,
+  };
+
+  if (!listing.exists) {
+    listing.error = 'Esta pasta não existe. Podes criá-la aqui ou escolher outra.';
+    return listing;
+  }
+
+  try {
+    for (const entry of readdirSync(path, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name.startsWith('.')) continue;
+      const child = join(path, entry.name);
+      listing.entries.push({
+        name: entry.name,
+        path: child,
+        isVault: existsSync(join(child, PROFILE_FILE)) || existsSync(join(child, DOCUMENTS_DIR)),
+      });
+    }
+  } catch (cause) {
+    listing.error = `Não foi possível ler esta pasta: ${(cause as Error).message}`;
+  }
+  listing.entries.sort((left, right) => left.name.localeCompare(right.name, 'pt'));
+  return listing;
+}
+
+/** `true` when the folder already holds vault data, so choosing it is not destructive. */
+export function looksLikeVault(dir: string): boolean {
+  return (
+    existsSync(join(dir, PROFILE_FILE)) ||
+    existsSync(join(dir, DOCUMENTS_DIR)) ||
+    existsSync(join(dir, LEDGER_INVOICES))
+  );
 }
 
 export interface AuditEvent {
@@ -253,7 +446,7 @@ export class Vault {
    */
   addDocument(
     absolutePath: string,
-    meta: { kind?: string; obligationId?: string | null } = {},
+    meta: { kind?: string; obligationId?: string | null; invoiceId?: string | null } = {},
   ): { file: string; sha256: string } {
     if (!existsSync(absolutePath)) {
       throw new Error(`ficheiro não encontrado: ${absolutePath}`);
@@ -279,7 +472,7 @@ export class Vault {
   addDocumentBytes(
     bytes: Buffer,
     fileName: string,
-    meta: { kind?: string; obligationId?: string | null } = {},
+    meta: { kind?: string; obligationId?: string | null; invoiceId?: string | null } = {},
   ): { file: string; sha256: string } {
     if (bytes.length === 0) throw new Error('o ficheiro recebido está vazio.');
     this.ensure();
@@ -293,7 +486,7 @@ export class Vault {
   private indexDocument(
     stored: string,
     sha256: string,
-    meta: { kind?: string; obligationId?: string | null },
+    meta: { kind?: string; obligationId?: string | null; invoiceId?: string | null },
     originalPath: string | null,
   ): { file: string; sha256: string } {
     const index = this.readJson<Array<Record<string, unknown>>>('documents/index.json', []);
@@ -304,6 +497,10 @@ export class Vault {
       addedAt: new Date().toISOString(),
       kind: meta.kind ?? 'outro',
       obligationId: meta.obligationId ?? null,
+      // Set when the document IS a fatura-recibo that was read into the ledger, so
+      // the archive and the ledger entry point at each other instead of merely
+      // existing side by side.
+      invoiceId: meta.invoiceId ?? null,
     });
     this.writeJson('documents/index.json', index);
     this.appendAudit({ action: 'document.added', detail: stored });
@@ -315,6 +512,58 @@ export class Vault {
     this.appendAudit({ action: 'obligation.completed', detail: record.id });
   }
 
+  /**
+   * Point an archived document at the ledger entry it became.
+   *
+   * The document is archived first and the invoice is recorded second, because the
+   * invoice record wants to name the file that proves it exists. This closes the
+   * loop in the other direction, so the panel can answer "which invoice is this
+   * PDF?" as well as "which PDF is this invoice?".
+   */
+  linkDocumentToInvoice(file: string, invoiceId: string): boolean {
+    const index = this.readJson<Array<Record<string, unknown>>>('documents/index.json', []);
+    const entry = index.find((candidate) => candidate['file'] === file);
+    if (entry === undefined) return false;
+    entry['invoiceId'] = invoiceId;
+    this.writeJson('documents/index.json', index);
+    this.appendAudit({ action: 'document.linked', detail: `${file} → ${invoiceId}` });
+    return true;
+  }
+
+  /** An indexed document, by the `documents/…` name the index uses. */
+  findDocument(file: string): { file: string; sha256: string; absolute: string } | null {
+    const index = this.readJson<Array<Record<string, unknown>>>('documents/index.json', []);
+    const entry = index.find((candidate) => candidate['file'] === file);
+    if (entry === undefined) return null;
+    // The stored name is taken from the INDEX, never from the caller, so a name
+    // that arrived over the wire cannot escape the documents folder.
+    const base = String(entry['file'] ?? '').split(/[\\/]/).pop() ?? '';
+    if (base === '') return null;
+    return {
+      file: String(entry['file'] ?? ''),
+      sha256: typeof entry['sha256'] === 'string' ? entry['sha256'] : '',
+      absolute: this.path(DOCUMENTS_DIR, base),
+    };
+  }
+
+  /**
+   * The indexed document with this content hash, if it is already archived.
+   *
+   * Its purpose is the duplicate: the same PDF handed over twice is the same
+   * document, and filing it twice would append a second invoice for one piece of
+   * income. Content addressing is what makes the question answerable at all.
+   */
+  findDocumentByHash(sha256: string): { file: string; sha256: string; invoiceId: string | null } | null {
+    const index = this.readJson<Array<Record<string, unknown>>>('documents/index.json', []);
+    const entry = index.find((candidate) => candidate['sha256'] === sha256);
+    if (entry === undefined) return null;
+    return {
+      file: String(entry['file'] ?? ''),
+      sha256,
+      invoiceId: typeof entry['invoiceId'] === 'string' ? entry['invoiceId'] : null,
+    };
+  }
+
   appendAudit(event: Omit<AuditEvent, 'at'>, at = new Date().toISOString()): void {
     this.appendJsonl(AUDIT_LOG, { ...event, at });
   }
@@ -322,6 +571,11 @@ export class Vault {
   /** Content hash, so a document in the vault can be proven unchanged. */
   hashFile(absolutePath: string): string {
     return createHash('sha256').update(readFileSync(absolutePath)).digest('hex');
+  }
+
+  /** The same hash for bytes that arrived over the wire or were just read back. */
+  hashBytes(bytes: Buffer): string {
+    return createHash('sha256').update(bytes).digest('hex');
   }
 
   describe(): { dir: string; files: number; bytes: number } {

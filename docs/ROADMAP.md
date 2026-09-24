@@ -94,6 +94,31 @@ simplified regime's taxable income. Every write still goes through the same vaul
 the same validation and the same append-only audit log, and `ARCHITECTURE.md` keeps
 the command-by-command equivalence table.
 
+That calculator has since left the panel, and the hand-typed invoice form with it.
+Both asked for something the vault could not prove — an expense figure nothing
+records, and an invoice with no document behind it — and the panel now has one door
+into the ledger: the `fatura-recibo` PDF, imported, read, checked and confirmed.
+The two capabilities remain on the command line, and `ARCHITECTURE.md` lists them as
+deliberate omissions rather than letting them read as oversights.
+
+Two things followed from using it. **The folder is now chosen, not assumed**: on a
+first run with an empty vault the panel asks where the cofre should live, offers a
+navigator limited to directories, remembers the answer in
+`~/.vn-finance/vault-location.json` and can open the folder in the file manager —
+because `~/.vn-finance` is a folder the person who owns the data cannot find, and a
+data store nobody can find is a data store nobody backs up. And **the panel became
+a set of pages rather than one long scroll**: each subject has its own tab and its
+own address (`#painel`, `#agenda`, `#iva`, `#cofre`, …), so a tab can be linked and
+the back button works, and the dashboard is the first one. IVA and IRS were one
+seven-column table and are now two pages, because "what I hand the State", "what my
+clients already handed it for me" and "the base next year's assessment uses" are
+three questions and a single table answered none of them clearly.
+
+The typography changed with them. The first version fitted a whole tax year into
+13px with 9.5px uppercase micro-labels, which is not dense, it is unreadable.
+Nothing a person has to read is below 12px now, page titles are the largest text on
+screen, and every page opens with one sentence saying why it exists.
+
 Still to add:
 
 - **A printable year pack** — agenda, ledger summary, document checklist and
@@ -111,11 +136,23 @@ as the command line.
 
 ---
 
-## M5 — Import instead of typing
+## M5 — Import instead of typing · **started**
 
-- SAF-T (PT) XML import of issued invoices, and e-fatura CSV/XML export import.
-- PDF invoice extraction, locally first (text layer). If the text layer fails,
-  the file is NOT uploaded anywhere: the failure is reported as a task for you.
+- **Done: a `fatura-recibo` PDF.** A text-layer reader in `src/core/pdf.ts` and a
+  form parser in `src/core/receipt.ts` read the document, check its own arithmetic
+  (base + IVA + stamp duty = total, total − retention = payable, rate × base = IVA),
+  archive the PDF in the vault under its hash and register the invoice in the
+  ledger — after the person confirms the reading in the panel. Nothing is
+  uploaded, there is no OCR, and a document whose issuer is not the profile's NIF
+  is refused rather than recorded as income. CLI: `vnfin ledger import <pdf>`.
+- Still to do: SAF-T (PT) XML import of issued invoices, and e-fatura CSV/XML
+  export import.
+- Still to do, and blocking the other direction: the **expense ledger**. Until it
+  exists, an invoice somebody issued *to* the taxpayer is archived and explained
+  rather than recorded, because there is nowhere correct to put it.
+- If the text layer fails (a scan, an image-only PDF, a font with no character
+  map), the file is NOT uploaded anywhere and NOT guessed at: it stays archived in
+  the vault and the failure is reported as a task for you.
 - Opening an obligation's page in your own browser stays your action, not the
   application's. The pack cites the URL; nothing here contacts it.
 

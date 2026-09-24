@@ -49,13 +49,24 @@ local server goes wrong:
 | Injected script | The panel renders values that came from the vault, including client names | A strict CSP allows no inline script, no inline style and no external resource, so an injected `<script>` cannot run, and the front end writes text rather than HTML. |
 | Cross-site request forgery | A form on another page could POST to loopback | The token header cannot be set cross-origin, and with no CORS there is no preflight to approve. There is no cookie, so there is no session to ride. |
 | A hostile file upload | The panel accepts bytes from the browser, and a file name is attacker-controlled input | The body cap (32 MiB) is enforced while reading, so an oversized upload is refused rather than buffered; the name is reduced to its last path segment and sanitised before it is joined to the vault directory; the stored name is the file's own SHA-256 plus that name, so content cannot masquerade as another document. |
+| **Filesystem enumeration through the folder chooser** | The panel can list directories so that a folder can be chosen without typing a path | The route returns **sub-directories only, never file names**, and it is behind the same session token as every other `/api` call. Anyone holding the token could already read any file by absolute path through the document route, so this adds no capability that did not exist — but it is the one route that describes the *shape* of the disk, and it is deliberately limited to directory names for that reason. |
+| **A process spawned with attacker-controlled arguments** | Opening the vault folder in the file manager runs an external program | The command is fixed per platform (`explorer.exe`, `open`, `xdg-open`) and the argument is the vault's own path from the server's state, never a value from the request. `POST /api/vault/reveal` takes no body. |
 | A stolen API key through the panel | The key travels from the browser to the local server | It crosses loopback only, behind the session token, is never returned to the browser (the model carries a mask), is never written to the audit log, and is held in process memory unless the user supplies a passphrase to encrypt it into the vault. |
 
 What the panel explicitly does **not** do: it never binds to `0.0.0.0`, it opens no
 port on your network, it sends no CORS headers, it sets no cookie, and it fetches
 nothing from outside. These guards, and the writes the panel performs, are covered by
 tests rather than the happy path alone (`src/web/server.test.ts`,
-`src/web/profile-api.test.ts`).
+`src/web/profile-api.test.ts`, `src/web/receipt-api.test.ts`).
+
+**Reading a `fatura-recibo` PDF happens entirely on this machine.** The upload goes
+to the loopback server, the text is extracted by `src/core/pdf.ts` with `node:zlib`
+and nothing else, and no part of the document — not the text, not the figures, not
+the file — is sent anywhere. The reader has no network code path at all, and the
+panel copies the file into the vault before it reports what it read, so a document
+that cannot be parsed is still kept rather than discarded. If you use the optional
+assistant for nothing else, note that a PDF you import has no path into it: the
+rule-pack update request is built from the rule pack alone (§5).
 
 The residual risk is the one stated in the next section: the vault itself is not
 encrypted at rest, so the panel changes the *reachability* of your data, not its
@@ -195,6 +206,7 @@ two it did.
 | The wrong obligation is trusted | Verification flags, discrepancy reporting, provisional marking, golden test | Low, and the failure is visible rather than silent |
 | A backup leaks | Backups are the vault; same controls apply | Medium until encrypted export (M3) |
 | The tool is trusted too much | Disclaimers in pack, CLI and UI; nothing is filed | Medium — a social risk, mitigated by design honesty rather than technology |
+| A PDF is read wrongly and a wrong figure is recorded | The reader reports what it could not find instead of filling the gap, the document is checked against its own arithmetic before anything is written, and every difference between the reading and the confirmed record is kept in the audit log | **Low, but not zero** — the person still has to look at the confirmation card. A figure that is present in the document and misread is the case the checks exist to catch, and a document whose totals disagree with itself is refused rather than recorded |
 
 The risk that is *not* on this list, deliberately: there is no risk of a server-side
 breach, because there is no server. That is the main reason this project is built

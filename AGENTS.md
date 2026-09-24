@@ -31,6 +31,14 @@ Concretely, when you add capability:
 Never tell a browser-only user to run a terminal command. If a step can only be done
 on the command line today, that is a bug to close, not a note to add.
 
+**The panel is a set of pages**, one per subject, routed by the URL hash
+(`#painel`, `#agenda`, `#cofre`, …). The single list is `PAGES` at the top of
+`app.js`; the sidebar in `index.html` and the narrow-screen tab strip are both
+driven from it, so a new page is an entry in `PAGES`, a `data-page` link in the
+sidebar, a branch in `render()`'s dispatch, and nothing else. New capability
+belongs on the page of its subject — not appended to the bottom of the dashboard,
+which is how the panel became one long scroll in the first place.
+
 ## Hard invariants — do not break these
 
 - **No tax logic in the web layer.** `src/web/**` and `src/web/public/app.js` may
@@ -64,16 +72,17 @@ on the command line today, that is a bug to close, not a note to add.
 
 | Path | What lives there |
 | --- | --- |
-| `src/core/` | The domain: money, dates, calendar, obligations, rules, profile, estimates, flags, NIF |
+| `src/core/` | The domain: money, dates, calendar, obligations, rules, profile, estimates, flags, NIF, the PDF reader and the `fatura-recibo` parser |
 | `src/core/*.test.ts` | Unit tests for the domain, run by `npm test` |
-| `src/store/vault.ts` | The vault: profile, append-only ledger and audit, document index, data-dir risk |
+| `src/core/receipt-fixture.ts` | The invented PDFs the reader and parser tests parse; no real invoice is ever committed |
+| `src/store/vault.ts` | The vault: profile, append-only ledger and audit, document index, data-dir risk, the remembered vault location, the folder chooser's directory listing |
 | `src/ai/` | The bounded assistant: DeepSeek client, keyring, redaction, the update proposal flow |
-| `src/cli.ts` | The command line over the same core (`init`, `doctor`, `agenda`, `flags`, `rules`, `estimate`, `ledger`, `vault`, `ai-key`, `update`, `web`) |
+| `src/cli.ts` | The command line over the same core (`init`, `doctor`, `agenda`, `flags`, `rules`, `estimate`, `ledger`, `ledger import`, `vault`, `vault where`, `vault set`, `ai-key`, `update`, `web`) |
 | `src/web/report.ts` | `buildDashboard` — the single view model the panel renders |
 | `src/web/server.ts` | The local HTTP server, its routes and its security guards |
 | `src/web/public/` | The panel: `index.html`, `app.css`, `app.js` (no build step) |
 | `src/rules/pt/2026.json` | The versioned rule pack: constants, obligations, sources, verification status |
-| `design/` | The reviewed panel mockup, kept as the visual reference |
+| `design/` | The reviewed panel mockup: the reference for structure and colour. The panel has deliberately diverged from it on type size — see the header of `app.css` |
 | `docs/` | Domain reference, privacy model, proposal, roadmap, research notes |
 
 ## Commands
@@ -98,7 +107,10 @@ Notes:
   the whole panel. `node --check src/web/public/app.js` is a fast sanity check.
 - This is developed on Windows; `pwsh` is the shell. The vault defaults to
   `~/.vn-finance` (`%USERPROFILE%\.vn-finance`), and a vault must never live inside
-  this repository — the store refuses that outright.
+  this repository — the store refuses that outright. The folder actually in use is
+  remembered in `~/.vn-finance/vault-location.json`; precedence is
+  `--vault`/`--data-dir` → `VN_FINANCE_DATA_DIR` → that pointer → the default. Tests
+  pass `vaultPointerFile` so they never write to the real home directory.
 
 ## Conventions
 

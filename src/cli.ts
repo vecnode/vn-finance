@@ -17,7 +17,7 @@
  */
 
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { platform } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -25,12 +25,15 @@ import { parseArgs } from 'node:util';
 import { buildAgenda, upcoming } from './core/calendar.ts';
 import { formatPtDate, parseIso, todayInLisbon } from './core/dates.ts';
 import {
+  applyBp,
   formatBpAsCoefficient,
   formatBpAsPercent,
   formatEur,
   parseEurToCents,
   type Cents,
 } from './core/money.ts';
+import { extractPdfText, looksLikePdf } from './core/pdf.ts';
+import { invoiceFromReceipt, parseReceipt } from './core/receipt.ts';
 import {
   createDefaultProfile,
   missingProfileInputs,
@@ -65,7 +68,15 @@ import {
   type UpdateProposal,
 } from './ai/update.ts';
 import type { ObligationInstance } from './core/types.ts';
-import { Vault, checkDataDirRisk, resolveDataDir } from './store/vault.ts';
+import {
+  Vault,
+  checkDataDirRisk,
+  looksLikeVault,
+  resolveDataDir,
+  resolveVaultLocation,
+  writeVaultPointer,
+  type ResolvedVault,
+} from './store/vault.ts';
 
 const VERSION = '0.1.0';
 
@@ -147,6 +158,8 @@ interface Context {
   year: number;
   today: string;
   json: boolean;
+  /** Where the vault folder came from, so `vault where` can explain the choice. */
+  location: ResolvedVault;
 }
 
 function resolvePackPath(explicit: string | undefined, requestedYear: number): { path: string; year: number } {
@@ -800,21 +813,161 @@ function commandLedger(values: Values, context: Context): void {
     return;
   }
 
+  if (action === 'import') {
+    commandLedgerImport(values, context);
+    return;
+  }
+
   fail(`ação desconhecida para ledger: ${action}`);
+}
+
+/**
+ * Read a `fatura-recibo` PDF into the ledger — the same two steps the panel
+ * performs, with the same core functions behind them.
+ *
+ * `--dry-run` stops after the reading, which is the honest way to try this on a
+ * document whose layout the parser may not know: the fields are printed, nothing
+ * is written, and an empty reading is a visible result rather than a silent one.
+ */
+function commandLedgerImport(values: Values, context: Context): void {
+  const target = str(values, 'file');
+  if (target === undefined) fail('ledger import exige o caminho do PDF. Exemplo: vnfin ledger import fatura.pdf');
+  const absolute = resolve(target);
+  if (!existsSync(absolute)) fail(`ficheiro não encontrado: ${absolute}`);
+
+  const bytes = readFileSync(absolute);
+  if (!looksLikePdf(bytes)) fail(`${absolute} não é um PDF.`);
+
+  const profile = context.vault.loadProfile();
+  if (profile === null) fail('não existe perfil neste cofre. Corre `vnfin init` primeiro.');
+
+  const draft = parseReceipt(extractPdfText(bytes));
+  out(bold('Leitura do documento'));
+  for (const field of draft.fields) {
+    out(`  ${pad(field.label, 22)} ${field.value === null ? yellow('não encontrado') : field.value}`);
+  }
+  if (draft.checks.length > 0) {
+    out();
+    out(bold('Verificações'));
+    for (const check of draft.checks) {
+      out(`  ${check.ok ? green('✓') : red('✗')} ${check.label} ${dim(check.detail)}`);
+    }
+  }
+  for (const problem of draft.problems) out(`  ${red('!')} ${problem}`);
+
+  if (bool(values, 'dry-run')) {
+    out();
+    out(dim('--dry-run: nada foi escrito. Retira a opção para arquivar o PDF e registar a fatura.'));
+    return;
+  }
+
+  context.vault.ensure();
+  const added = context.vault.addDocumentBytes(bytes, absolute.split(/[\\/]/).pop() ?? 'fatura.pdf', {
+    kind: 'fatura',
+  });
+  const { pack } = loadRulePack(resolvePackPath(str(values, 'rules'), context.year).path);
+  const result = invoiceFromReceipt({
+    draft,
+    pack,
+    profile,
+    confirmed: {},
+    id: `inv_${Date.now().toString(36)}`,
+    documentFile: added.file,
+    fallbackNumber: `FR ${context.year}/${String(context.vault.loadInvoices().length + 1).padStart(3, '0')}`,
+  });
+
+  if (result.invoice === null) {
+    // The PDF stays in the vault: it is a document somebody chose to keep, and
+    // keeping it was never the part that could be wrong.
+    out();
+    out(`${yellow('PDF guardado no cofre')} ${added.file}`);
+    fail(result.problems.join('\n  '));
+  }
+
+  context.vault.appendInvoice(result.invoice);
+  context.vault.linkDocumentToInvoice(added.file, result.invoice.id);
+  context.vault.appendAudit({
+    action: 'receipt.recorded',
+    detail: `${result.invoice.number} · ${added.file}`,
+  });
+
+  for (const warning of result.warnings) out(`  ${yellow('aviso')} ${warning}`);
+  for (const divergence of result.divergences) out(`  ${yellow('corrigido')} ${divergence}`);
+  out();
+  out(`${green('fatura registada')} ${bold(result.invoice.number)}  ${dim(`(${added.file})`)}`);
+  out(`  data            ${result.invoice.date}`);
+  out(`  cliente         ${result.invoice.clientName}`);
+  out(`  base            ${formatEur(result.invoice.baseCents)}`);
+  out(`  IVA             ${formatEur(applyBp(result.invoice.baseCents, result.invoice.ivaRateBp))} ${dim(`(${formatBpAsPercent(result.invoice.ivaRateBp)})`)}`);
+  out(`  retenção        ${formatEur(applyBp(result.invoice.baseCents, result.invoice.retentionBp))} ${dim(`(${formatBpAsPercent(result.invoice.retentionBp)})`)}`);
+  out();
+  out(dim('  O PDF ficou no cofre, com o hash no nome, e a entrada do índice aponta para esta fatura.'));
 }
 
 function commandVault(values: Values, context: Context): void {
   const action = str(values, 'action') ?? 'list';
-  if (action === 'list') {
-    const index = context.vault.readJson<Array<{ file: string; sha256: string; addedAt: string }>>(
-      'documents/index.json',
-      [],
+  if (action === 'list' || action === 'where') {
+    const index = context.vault.readJson<
+      Array<{ file: string; sha256: string; addedAt: string; invoiceId?: string | null }>
+    >('documents/index.json', []);
+    const location = context.location;
+    out(`${bold('Cofre')} ${context.vault.dir}`);
+    out(
+      dim(
+        location.source === 'pointer'
+          ? `  escolhido na pasta indicada (${location.pointer?.by ?? '?'} · ${location.pointer?.chosenAt.slice(0, 10) ?? '?'})`
+          : location.source === 'env'
+            ? '  vem da variável VN_FINANCE_DATA_DIR'
+            : location.source === 'flag'
+              ? '  vem de --data-dir / --vault nesta execução'
+              : '  é a pasta por omissão (~/.vn-finance): escolhe outra com `vnfin vault set <pasta>`',
+      ),
     );
+    out(dim(`  ponto de situação guardado em ${location.pointerPath}`));
+    if (action === 'where') return;
+
     if (index.length === 0) {
-      out(dim('Cofre vazio. Usa `vnfin vault add <ficheiro>`.'));
+      out();
+      out(dim('Cofre vazio. Usa `vnfin vault add <ficheiro>` ou importa uma fatura com `vnfin ledger import`.'));
       return;
     }
-    for (const entry of index) out(`  ${entry.addedAt.slice(0, 10)}  ${entry.sha256.slice(0, 12)}  ${entry.file}`);
+    out();
+    for (const entry of index) {
+      const linked = entry.invoiceId === null || entry.invoiceId === undefined ? '' : dim(` → ${entry.invoiceId}`);
+      out(`  ${entry.addedAt.slice(0, 10)}  ${entry.sha256.slice(0, 12)}  ${entry.file}${linked}`);
+    }
+    return;
+  }
+  if (action === 'set') {
+    const target = str(values, 'file') ?? str(values, 'data-dir');
+    if (target === undefined) {
+      fail('vault set exige a pasta. Exemplo: vnfin vault set "C:\\Users\\eu\\Desktop\\vn-finance"');
+    }
+    const absolute = resolve(target);
+    if (existsSync(absolute) && !statSync(absolute).isDirectory()) {
+      fail(`${absolute} é um ficheiro, não uma pasta.`);
+    }
+    const risk = checkDataDirRisk(absolute);
+    if (risk.level === 'fatal' && risk.message !== null) fail(risk.message);
+
+    const previous = context.vault.dir;
+    const vault = new Vault(absolute);
+    vault.ensure();
+    writeVaultPointer(absolute, 'linha de comandos');
+    vault.appendAudit({ action: 'vault.opened', detail: absolute });
+    if (previous !== vault.dir && looksLikeVault(previous)) {
+      new Vault(previous).appendAudit({ action: 'vault.left', detail: absolute });
+    }
+
+    out(`${green('cofre definido')} ${absolute}`);
+    out(dim(`  O painel e os comandos passam a usar esta pasta. O ponto de situação fica em ${context.location.pointerPath}.`));
+    if (risk.level === 'warning' && risk.message !== null) out(`${yellow('aviso')} ${risk.message}`);
+    const profile = vault.loadProfile();
+    out(
+      profile === null
+        ? dim('  A pasta está vazia de perfil: o painel pede os dados do contribuinte na primeira abertura.')
+        : dim(`  Perfil encontrado: ${profile.name} · NIF ${maskNif(profile.nif)}.`),
+    );
     return;
   }
   if (action === 'add') {
@@ -1147,6 +1300,7 @@ async function commandWeb(values: Values, context: Context): Promise<void> {
     year: context.year,
     packPath: packPath.path,
     port: num(values, 'port') ?? 7717,
+    dataDirSource: context.location.source,
   });
   context.vault.appendAudit({ action: 'web.started', detail: `porta ${running.port}` });
 
@@ -1155,6 +1309,20 @@ async function commandWeb(values: Values, context: Context): Promise<void> {
   out(bold('Painel local') + dim('  ·  só neste computador'));
   out();
   out(`  ${cyan(running.url)}`);
+  out();
+  out(`${dim('  cofre')}  ${context.vault.dir}`);
+  if (context.location.source === 'default' && !looksLikeVault(context.vault.dir)) {
+    out(
+      dim(
+        '  Esta é a pasta por omissão e ainda está vazia. O painel abre com o escolhedor de pasta:\n' +
+          '  escolhe onde o cofre deve viver (por exemplo, no Ambiente de Trabalho) e ele é criado lá.',
+      ),
+    );
+  } else if (context.location.source === 'default') {
+    out(dim('  Pasta por omissão. Podes mudá-la no painel, na secção «Cofre de documentos».'));
+  } else {
+    out(dim('  Pasta escolhida por ti; `vnfin vault where` explica de onde vem.'));
+  }
   out();
   if (profile === null) {
     out(yellow('  Ainda não existe perfil neste cofre.'));
@@ -1225,13 +1393,14 @@ ${bold('COMANDOS')}
   flags         Alertas, riscos e tarefas em falta (calculados por código)
   rules         Lista as regras e as fontes citadas por cada uma
   estimate      Calcula IVA, Segurança Social e reserva a partir do livro de faturas
-  ledger        Lista ou registra faturas  (ledger list | ledger add)
-  vault         Arquiva documentos com hash  (vault list | vault add <ficheiro>)
+  ledger        Lista, registra ou importa faturas  (ledger list | ledger add | ledger import <pdf>)
+  vault         Onde vive o cofre e o que lá está  (vault where | vault set <pasta> | vault list | vault add <ficheiro>)
   ai-key        Gere a chave DeepSeek  (ai-key status | ai-key set)
   update        Atualiza os valores que mudam com o tempo  (--send, depois --approve)
 
 ${bold('OPÇÕES GLOBAIS')}
-  --data-dir <dir>    Onde vive o cofre (por omissão ~/.vn-finance)
+  --data-dir <dir>    Onde vive o cofre (por omissão ~/.vn-finance; ver "vault where")
+  --vault <dir>       O mesmo que --data-dir, com o nome que o painel usa
   --year <ano>        Ano fiscal a considerar (por omissão, o ano corrente)
   --rules <ficheiro>  Pacote de regras alternativo
   --json              Saída legível por máquina
@@ -1241,6 +1410,9 @@ ${bold('OPÇÕES POR COMANDO')}
   web       --port <porta>        Porta local (por omissão 7717)
             --no-open             Não abrir o navegador automaticamente
   init      --nif --name --iva    Dados do contribuinte (o painel também os pede)
+  ledger import <pdf>             Lê uma fatura-recibo em PDF, arquiva o ficheiro no
+                                  cofre e registra a fatura no livro
+            --dry-run             Só mostra o que foi lido; não escreve nada
   estimate  --quarter <1-4>       Só um trimestre
             --despesas <valor>    Despesas elegíveis, para o rendimento tributável do IRS
             --as-of <AAAA-MM-DD>  Data de apuramento
@@ -1250,6 +1422,10 @@ ${bold('OPÇÕES POR COMANDO')}
 ${bold('EXEMPLOS')}
   vnfin                          # painel local; o perfil cria-se no primeiro ecrã
   vnfin web --no-open            # idem, sem abrir o navegador
+  vnfin vault set "C:\\Users\\eu\\Desktop\\vn-finance"   # escolher a pasta do cofre
+  vnfin vault where              # onde está o cofre, e porque é essa a pasta
+  vnfin ledger import fatura.pdf --dry-run   # ler o PDF sem escrever nada
+  vnfin ledger import fatura.pdf             # arquivar o PDF e registar a fatura
   vnfin agenda --horizon 120
   vnfin flags
   vnfin ledger add --base 1200 --client "ACME, Lda." --nif 501234567
@@ -1306,8 +1482,10 @@ async function main(): Promise<void> {
       approve: { type: 'boolean' },
       verified: { type: 'boolean' },
       'no-open': { type: 'boolean' },
+      'dry-run': { type: 'boolean' },
 
       'data-dir': { type: 'string' },
+      vault: { type: 'string' },
       year: { type: 'string' },
       rules: { type: 'string' },
 
@@ -1366,11 +1544,17 @@ async function main(): Promise<void> {
   }
 
   const year = num(argv, 'year') ?? parseIso(todayInLisbon()).year;
+  // `--vault` is the name the panel uses for the same thing, so both spellings
+  // reach the same resolver. `--data-dir` stays because it is in every existing
+  // script and in the README.
+  const requestedVault = str(argv, 'vault') ?? str(argv, 'data-dir');
+  const location = resolveVaultLocation(requestedVault);
   const context: Context = {
-    vault: new Vault(resolveDataDir(str(argv, 'data-dir'))),
+    vault: new Vault(resolveDataDir(requestedVault)),
     year,
     today: todayInLisbon(),
     json: bool(argv, 'json'),
+    location,
   };
 
   // Without a command the panel is what starts, and the panel is where the
@@ -1394,6 +1578,7 @@ async function main(): Promise<void> {
       return;
     case 'ledger':
       argv['action'] = positionals[1] ?? 'list';
+      argv['file'] = str(argv, 'file') ?? positionals[2];
       commandLedger(argv, context);
       return;
     case 'vault':

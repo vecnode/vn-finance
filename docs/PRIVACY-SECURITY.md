@@ -6,6 +6,9 @@ generic SaaS product. There is no server to breach, and that is the point. But
 "local" is not automatically "safe", and this document says exactly what is
 protected, what is not, and what the user has to bring.
 
+For how to report a vulnerability, and what is in and out of scope, see
+[`../SECURITY.md`](../SECURITY.md).
+
 ---
 
 ## 1. What is being protected
@@ -20,7 +23,8 @@ protected, what is not, and what the user has to bring.
 
 ## 2. Trust boundaries
 
-![AI privacy flow](dsh-resource://diagram/library/vn-finance-ai-privacy-flow)
+The flow of a rule-pack update — the only request that ever leaves this machine —
+is drawn in [`../README.md`](../README.md#architecture).
 
 Two boundaries exist, and only two:
 
@@ -233,13 +237,19 @@ local-first.
 The claims in this document are all checkable against the repository:
 
 ```bash
-grep -rn "await fetch(" src/    # exactly one hit, in src/ai/deepseek.ts
-grep -n "dependencies" package.json   # no runtime dependencies
-npm run verify                  # typecheck + 91 tests, including the panel guards
+# Exactly one call that leaves this machine. The other `fetch` calls in the tree
+# are the browser talking to the loopback panel, or tests talking to their own
+# server, and both are excluded here:
+grep -rn "await fetch(" src --include='*.ts' --exclude='*.test.ts' --exclude-dir=public
+
+grep -n "dependencies" package.json   # no runtime dependency block
+npm run verify                  # typecheck + 168 tests, including the panel guards
 node src/cli.ts update          # lists the rule variables; sends nothing
 node src/cli.ts vault list      # what is in the vault, with hashes
 node src/cli.ts doctor          # what the tool knows and what is missing
 node src/cli.ts web             # and then check the response headers on 127.0.0.1
 ```
 
-A security document that cannot be checked is a marketing document.
+A security document that cannot be checked is a marketing document. If a claim on
+this page stops being true, that is a bug in the document and worth reporting as
+one — see [`../SECURITY.md`](../SECURITY.md) for how.

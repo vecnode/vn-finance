@@ -90,11 +90,64 @@ ai/deepseek.key               the encrypted API key, if you set one
 rules/proposals-<year>.json   a pending rule update, before you approve it
 ```
 
-Architecture, and the AI boundary in detail:
+## Architecture
 
-![Architecture](dsh-resource://diagram/library/vn-finance-architecture)
+Two interfaces over one deterministic core, one optional AI layer, and a single
+arrow that leaves this machine.
 
-![AI privacy flow](dsh-resource://diagram/library/vn-finance-ai-privacy-flow)
+**The layers.**
+
+```mermaid
+flowchart LR
+    subgraph UI["Interfaces"]
+        CLI["CLI vnfin"]
+        WEB["Painel local<br/>127.0.0.1 e token"]
+        APP["App Tauri<br/>mais tarde"]
+    end
+    subgraph CORE["Núcleo determinístico"]
+        CAL["Motor de obrigações"]
+        EST["Cálculos IVA SS IRS"]
+        RULES[("Pacote de regras<br/>pt/2026.json")]
+        VAULT[("Cofre local<br/>JSONL e ficheiros")]
+    end
+    subgraph AI["Camada de IA opcional"]
+        RED["Gateway de redação"]
+        DS["DeepSeek API"]
+    end
+    CLI --> CAL
+    WEB --> CAL
+    APP --> CAL
+    CLI --> EST
+    WEB --> EST
+    CAL --> RULES
+    CAL --> VAULT
+    EST --> RULES
+    EST --> VAULT
+    CLI --> RED
+    WEB --> RED
+    RED -->|só após aprovação| DS
+```
+
+**The only request that ever leaves this machine: the rule pack, and nothing else.**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Utilizador
+    participant P as Pacote de regras
+    participant G as Gateway de redação
+    participant D as DeepSeek
+    U->>P: vnfin update
+    P->>G: Nomes de variáveis e valores atuais
+    Note over U,P: Sem dados pessoais no pedido
+    G->>D: Payload de lei pública
+    D-->>G: JSON com valores e fontes
+    G->>G: Valida unidade e ordem de grandeza
+    G->>P: Grava proposta no cofre local
+    Note over U,P: O pacote não é alterado
+    U->>P: Aprova como por confirmar
+    Note over U: Só uma pessoa confirma
+```
 
 ## Licence
 

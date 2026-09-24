@@ -43,7 +43,7 @@ import type {
   RuleSource,
   TaxProfile,
 } from '../core/types.ts';
-import { checkDataDirRisk, type Vault } from '../store/vault.ts';
+import { checkDataDirRisk, looksLikeVault, vaultPointerPath, type Vault, type VaultLocationSource } from '../store/vault.ts';
 import { MIN_PASSPHRASE_LENGTH } from '../ai/keyring.ts';
 
 /**
@@ -75,6 +75,18 @@ export interface DashboardMeta {
    */
   nodeVersion: string;
   dataDirRisk: { level: 'none' | 'warning' | 'fatal'; gitRoot: string | null; message: string | null };
+  /**
+   * Where the vault folder came from, and whether it holds anything yet.
+   *
+   * The panel needs both in order to decide whether to ask. A folder somebody
+   * chose is not worth asking about again; the default `~/.vn-finance` on an empty
+   * vault is exactly the situation where a hidden folder in the home directory
+   * becomes somebody's permanent data store without them ever seeing it.
+   */
+  dataDirSource: VaultLocationSource;
+  dataDirPointerPath: string;
+  /** The folder already holds a profile, a ledger or archived documents. */
+  vaultInUse: boolean;
 }
 
 /**
@@ -104,6 +116,8 @@ export interface VaultEntry {
   addedAt: string;
   kind: string;
   obligationId: string | null;
+  /** The ledger invoice this document IS, when it was imported as a fatura-recibo. */
+  invoiceId: string | null;
 }
 
 export interface UpdateState {
@@ -193,6 +207,8 @@ export interface DashboardInput {
   horizonDays?: number;
   apiKeyAvailable: boolean;
   apiKeySource: string;
+  /** Where the vault folder came from, as resolved at startup. */
+  dataDirSource?: VaultLocationSource;
   /** The masked key, when there is one. Never the key itself. */
   apiKeyMasked?: string | null;
   /** Why a stored key could not be used, when that is the case. */
@@ -213,6 +229,7 @@ function readVaultEntries(vault: Vault): VaultEntry[] {
     addedAt: String(entry['addedAt'] ?? ''),
     kind: String(entry['kind'] ?? 'outro'),
     obligationId: typeof entry['obligationId'] === 'string' ? entry['obligationId'] : null,
+    invoiceId: typeof entry['invoiceId'] === 'string' ? entry['invoiceId'] : null,
   }));
 }
 
@@ -271,6 +288,9 @@ export function buildDashboard(input: DashboardInput): DashboardModel {
       packPath: loaded.path,
       nodeVersion: process.version,
       dataDirRisk: checkDataDirRisk(vault.dir),
+      dataDirSource: input.dataDirSource ?? 'flag',
+      dataDirPointerPath: vaultPointerPath(),
+      vaultInUse: looksLikeVault(vault.dir) || profile !== null || invoices.length > 0,
     },
     guarantees: GUARANTEES,
     defaults: {

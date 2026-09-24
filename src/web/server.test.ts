@@ -413,8 +413,13 @@ test('the stylesheet does not stretch a checkbox to the width of its field', asy
     assert.ok(checkbox !== undefined, 'a caixa de seleção tem de ter uma regra própria');
     assert.match(
       checkbox.body,
-      /width:15px/,
-      'a caixa de seleção tem de ter tamanho próprio, não o da linha',
+      /width:\s*\d+px/,
+      'a caixa de seleção tem de ter tamanho próprio em pixels, não o da linha',
+    );
+    assert.doesNotMatch(
+      checkbox.body,
+      /width:\s*100%/,
+      'a caixa de seleção nunca pode ocupar a largura da linha: foi isso que empurrou os rótulos para fora',
     );
   });
 });

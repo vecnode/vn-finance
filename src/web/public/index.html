@@ -26,57 +26,61 @@
 
     <nav class="nav" aria-label="Secções do painel">
       <p class="nav-g">Geral</p>
-      <a class="nav-i on" href="#painel" aria-current="page">
+      <a class="nav-i" href="#painel" data-page="painel" title="Indicadores do ano, enquadramento e alertas">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg></span>
-        <span class="lbl">Painel</span>
+        <span class="lbl">Resumo</span>
       </a>
-      <a class="nav-i" href="#agenda">
+      <a class="nav-i" href="#agenda" data-page="agenda" title="O que a lei obriga e quando">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="1.4"/><path d="M2 6.6h12M5.6 1.6v2.8M10.4 1.6v2.8"/></svg></span>
         <span class="lbl">Agenda fiscal</span>
         <span class="cnt" id="cnt-agenda">—</span>
       </a>
 
       <p class="nav-g">Faturação e obrigações</p>
-      <a class="nav-i" href="#recibos">
+      <a class="nav-i" href="#recibos" data-page="recibos" title="As faturas e recibos que emitiste">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.6 1.6h5.4l3.4 3.4v9.4H3.6z"/><path d="M8.8 1.6v3.6h3.6"/><path d="M5.6 8.6h4.8M5.6 11h3"/></svg></span>
-        <span class="lbl">Recibos emitidos</span>
+        <span class="lbl">Faturas emitidas</span>
         <span class="cnt" id="cnt-recibos">—</span>
       </a>
-      <a class="nav-i" href="#ss">
+      <a class="nav-i" href="#ss" data-page="ss" title="Contribuições trimestrais, passo a passo">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1.6l5.4 2v5c0 3-2.3 5.1-5.4 6.1-3.1-1-5.4-3.1-5.4-6.1v-5z"/></svg></span>
         <span class="lbl">Segurança Social</span>
       </a>
-      <a class="nav-i" href="#iva-irs">
+      <a class="nav-i" href="#iva" data-page="iva" title="IVA liquidado por trimestre">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><path d="M12.6 3.4l-9.2 9.2"/></svg></span>
         <span class="lbl">IVA</span>
         <span class="cnt" id="cnt-iva">—</span>
       </a>
-      <a class="nav-i" href="#iva-irs">
+      <a class="nav-i" href="#irs" data-page="irs" title="Retenções sofridas, reserva e rendimento tributável">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="3" y="1.6" width="10" height="12.8" rx="1.2"/><path d="M5.4 4.6h5.2M5.4 8h1.6M9 8h1.6M5.4 10.8h1.6M9 10.8h1.6"/></svg></span>
         <span class="lbl">IRS</span>
         <span class="cnt" id="cnt-irs">—</span>
       </a>
 
       <p class="nav-g">Arquivo e apoio</p>
-      <a class="nav-i" href="#cofre">
+      <a class="nav-i" href="#cofre" data-page="cofre" title="Onde vivem os ficheiros, e importar faturas em PDF">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2.4" y="6.6" width="11.2" height="7.8" rx="1.4"/><path d="M5.4 6.6V5a2.6 2.6 0 015.2 0v1.6"/></svg></span>
         <span class="lbl">Cofre de documentos</span>
         <span class="cnt" id="cnt-cofre">—</span>
       </a>
-      <a class="nav-i" href="#regras">
+      <a class="nav-i" href="#regras" data-page="regras" title="Que lei está por trás de cada número">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 3.6S6.5 2 3 2v11c3.5 0 5 1.6 5 1.6S9.5 13 13 13V2c-3.5 0-5 1.6-5 1.6z"/><path d="M8 3.6v11"/></svg></span>
         <span class="lbl">Regras &amp; fontes</span>
         <span class="cnt" id="cnt-regras">—</span>
       </a>
-      <a class="nav-i" href="#diagnostico">
+      <a class="nav-i" href="#diagnostico" data-page="diagnostico" title="Perfil, cofre, pacote de regras e chave">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4.2M8 11.2v.4"/></svg></span>
         <span class="lbl">Diagnóstico e chave</span>
         <span class="cnt" id="cnt-diag">—</span>
       </a>
-      <a class="nav-i" href="#assistente">
+      <a class="nav-i" href="#assistente" data-page="assistente" title="A única função que usa a internet">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1.6l1.6 4.4L14 7.6l-4.4 1.6L8 13.6 6.4 9.2 2 7.6l4.4-1.6z"/></svg></span>
         <span class="lbl">Atualizar regras</span>
         <span class="cnt off" id="cnt-assistente">—</span>
+      </a>
+      <a class="nav-i" href="#about" data-page="about" title="O que esta aplicação não faz">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4.2M8 4.6v.4"/></svg></span>
+        <span class="lbl">About</span>
       </a>
     </nav>
 
@@ -141,6 +145,11 @@
             <span class="today-tag" id="today-tag">—</span>
           </span>
         </div>
+
+        <!-- Separadores: a mesma lista da barra lateral, para ecrãs estreitos onde
+             ela não cabe. Preenchido a partir da tabela de páginas em app.js, para
+             as duas navegações não poderem divergir. -->
+        <nav class="tabbar" id="tabbar" aria-label="Secções do painel"></nav>
       </div>
     </header>
 
@@ -167,6 +176,16 @@
       <button type="button" class="btn btn-sm" data-act="close-profile" aria-label="Fechar o formulário de perfil">Fechar</button>
     </div>
     <div class="modal-body" id="profile-modal-body"></div>
+  </div>
+</div>
+
+<div class="overlay noprint" id="vault-overlay" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="vault-modal-title" id="vault-modal">
+    <div class="modal-head">
+      <h2 id="vault-modal-title">Escolher a pasta do cofre</h2>
+      <button type="button" class="btn btn-sm" data-act="close-vault-picker" aria-label="Fechar o escolhedor de pasta">Fechar</button>
+    </div>
+    <div class="modal-body" id="vault-picker-body"></div>
   </div>
 </div>
 

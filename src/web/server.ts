@@ -24,13 +24,16 @@
  */
 
 import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { extname, resolve, sep } from 'node:path';
+import { extname, isAbsolute, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { todayInLisbon } from '../core/dates.ts';
 import { estimateIrsSimplifiedBase, type Invoice, type VatTreatment } from '../core/estimate.ts';
+import { extractPdfText, looksLikePdf } from '../core/pdf.ts';
+import { invoiceFromReceipt, parseReceipt, type ReceiptConfirmation } from '../core/receipt.ts';
 import {
   IRS_REGIMES,
   IVA_REGIMES,
@@ -59,7 +62,16 @@ import {
   parseUpdateResponse,
   type UpdateProposal,
 } from '../ai/update.ts';
-import { Vault, sanitiseDocumentName } from '../store/vault.ts';
+import {
+  Vault,
+  browseDirectories,
+  checkDataDirRisk,
+  looksLikeVault,
+  sanitiseDocumentName,
+  vaultPointerPath,
+  writePointerFile,
+  type VaultLocationSource,
+} from '../store/vault.ts';
 import { buildDashboard, type DashboardModel } from './report.ts';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
@@ -107,6 +119,15 @@ export interface WebServerOptions {
   port?: number;
   token?: string;
   model?: string;
+  /** Where the current vault folder was chosen from, for the panel's own account of it. */
+  dataDirSource?: VaultLocationSource;
+  /**
+   * The file that remembers a folder picked in the panel.
+   *
+   * Passed in rather than derived so tests never write to the real home directory;
+   * in normal use it is `~/.vn-finance/vault-location.json`.
+   */
+  vaultPointerFile?: string;
 }
 
 export interface RunningWebServer {
@@ -118,6 +139,11 @@ export interface RunningWebServer {
 }
 
 interface RequestContext {
+  /**
+   * The vault, which the panel may REPLACE: choosing a folder is a first-class
+   * action, and the process that is serving the panel is the only thing that can
+   * act on it. Everything else in the process reads the current one.
+   */
   vault: Vault;
   version: string;
   year: number;
@@ -125,6 +151,8 @@ interface RequestContext {
   token: string;
   model: string;
   allowedHosts: Set<string>;
+  dataDirSource: VaultLocationSource;
+  vaultPointerFile: string;
   /**
    * A key the person using the panel supplied in the browser, held for the life
    * of this process only. It is never written to the vault in plaintext and never
@@ -170,6 +198,7 @@ function buildModel(context: RequestContext, pendingProposal?: UpdateProposal | 
     // becomes wrong.
     today: todayInLisbon(),
     version: context.version,
+    dataDirSource: context.dataDirSource,
     apiKeyAvailable: key.key !== null,
     apiKeySource: key.source,
     apiKeyMasked: key.key === null ? null : maskKey(key.key),
@@ -364,6 +393,11 @@ const API_ROUTES: Record<string, 'GET' | 'POST'> = {
   '/api/obligations/complete': 'POST',
   '/api/documents': 'POST',
   '/api/documents/upload': 'POST',
+  '/api/vault': 'POST',
+  '/api/vault/browse': 'GET',
+  '/api/vault/reveal': 'POST',
+  '/api/receipts/upload': 'POST',
+  '/api/receipts/record': 'POST',
   '/api/estimate/irs': 'POST',
   '/api/ai-key': 'POST',
   '/api/ai-key/unlock': 'POST',
@@ -371,6 +405,9 @@ const API_ROUTES: Record<string, 'GET' | 'POST'> = {
   '/api/update/apply': 'POST',
   '/api/update/discard': 'POST',
 };
+
+/** Routes whose body is bytes rather than JSON. */
+const BINARY_ROUTES: ReadonlySet<string> = new Set(['/api/documents/upload', '/api/receipts/upload']);
 
 // ---------------------------------------------------------------------------
 // Route handlers
@@ -718,6 +755,313 @@ function optionalQuery(url: URL, key: string, max: number): string | null {
   return value.trim();
 }
 
+// ---------------------------------------------------------------------------
+// Where the vault lives
+// ---------------------------------------------------------------------------
+
+/**
+ * The folders the chooser may offer, one level at a time.
+ *
+ * Directories only: the picker needs to know what can be entered, and a listing
+ * that also returned file names would give any page holding the session token a
+ * way to read the shape of the disk. The vault's own path is the only filesystem
+ * fact the panel is entitled to, and it is already in the model.
+ */
+function handleVaultBrowse(url: URL): Record<string, unknown> {
+  const requested = optionalQuery(url, 'path', 1024);
+  const listing = browseDirectories(requested);
+  return {
+    ok: true,
+    path: listing.path,
+    parent: listing.parent,
+    exists: listing.exists,
+    roots: listing.roots,
+    entries: listing.entries,
+    risk: listing.risk,
+    error: listing.error,
+    looksLikeVault: looksLikeVault(listing.path),
+  };
+}
+
+/**
+ * Choose the folder the vault lives in — creating it when it is not there yet.
+ *
+ * Three things are deliberate here:
+ *   - the folder is REMEMBERED, so the next run finds the data instead of opening
+ *     an empty default and looking like it lost it;
+ *   - a vault inside this application's repository is refused for the reason the
+ *     store refuses it everywhere: a `git add -A` would publish it;
+ *   - switching away from a vault is recorded in BOTH vaults. The one being left
+ *     gets the "closed" line, so its audit trail explains why it stops there.
+ */
+function handleVaultChoose(context: RequestContext, body: Record<string, unknown>): Record<string, unknown> {
+  const requested = requireString(body, 'path', 1024);
+  if (!isAbsolute(requested)) {
+    throw new HttpError(400, 'indica o caminho completo da pasta (por exemplo C:\\Users\\…\\vn-finance).');
+  }
+  const target = resolve(requested);
+
+  const risk = checkDataDirRisk(target);
+  if (risk.level === 'fatal') throw new HttpError(400, risk.message ?? 'pasta não permitida.');
+
+  if (existsSync(target) && !statSync(target).isDirectory()) {
+    throw new HttpError(400, `${target} é um ficheiro, não uma pasta.`);
+  }
+
+  const previous = context.vault;
+  const vault = new Vault(target);
+  vault.ensure();
+  const samePlace = previous.dir === vault.dir;
+  const previousHadData = looksLikeVault(previous.dir);
+
+  writePointerFile(context.vaultPointerFile, {
+    path: target,
+    chosenAt: new Date().toISOString(),
+    by: 'painel',
+  });
+
+  context.vault = vault;
+  context.dataDirSource = 'pointer';
+  vault.appendAudit({ action: 'vault.opened', detail: target });
+  if (!samePlace && previousHadData) {
+    previous.appendAudit({ action: 'vault.left', detail: target });
+  }
+
+  const notes: string[] = [];
+  if (!samePlace && previousHadData) {
+    notes.push(
+      `O painel passou a mostrar ${target}. O cofre anterior (${previous.dir}) ficou onde estava, ` +
+        'com todos os dados: nada foi apagado nem movido.',
+    );
+  }
+  if (risk.level === 'warning' && risk.message !== null) notes.push(risk.message);
+
+  return { ok: true, model: buildModel(context), vault: target, notes };
+}
+
+/**
+ * Open the vault folder in the machine's file manager.
+ *
+ * This is the answer to "where does it keep the files?": a path in a header is
+ * easy to read and easy to disbelieve, and a folder that opens in Explorer is not.
+ * The command is fixed per platform and the path is the vault's own, never a
+ * value from the request.
+ */
+function handleVaultReveal(context: RequestContext): Record<string, unknown> {
+  const dir = context.vault.dir;
+  const [command, args] =
+    process.platform === 'win32'
+      ? ['explorer.exe', [dir]]
+      : process.platform === 'darwin'
+        ? ['open', [dir]]
+        : ['xdg-open', [dir]];
+  try {
+    const child = spawn(command, args, { stdio: 'ignore', detached: true });
+    child.on('error', () => {});
+    child.unref();
+  } catch (cause) {
+    throw new HttpError(400, `não foi possível abrir a pasta: ${(cause as Error).message}`);
+  }
+  return { ok: true, opened: dir };
+}
+
+// ---------------------------------------------------------------------------
+// Fatura-recibo PDFs
+// ---------------------------------------------------------------------------
+
+/**
+ * Read a PDF, archive it, and say what was read.
+ *
+ * The order is archive-then-report on purpose. The file itself is the document
+ * the person chose to keep, and keeping it cannot be wrong; what CAN be wrong is
+ * the reading of it, which is why nothing is written to the ledger here. The
+ * archive happens even when the parse finds nothing, so a scanned receipt still
+ * ends up in the vault instead of being thrown away by a failed reading.
+ */
+async function handleReceiptUpload(
+  context: RequestContext,
+  request: IncomingMessage,
+  url: URL,
+): Promise<Record<string, unknown>> {
+  const name = sanitiseDocumentName(url.searchParams.get('name') ?? 'fatura-recibo.pdf');
+  const bytes = await readBinaryBody(request, MAX_UPLOAD_BYTES);
+  if (bytes.length === 0) throw new HttpError(400, 'o ficheiro recebido está vazio.');
+  if (!looksLikePdf(bytes)) {
+    throw new HttpError(400, 'o ficheiro não é um PDF. Para guardar outro tipo de documento, usa «Guardar documento no cofre».');
+  }
+
+  let added: { file: string; sha256: string };
+  const sha256 = context.vault.hashBytes(bytes);
+  const already = context.vault.findDocumentByHash(sha256);
+  if (already !== null && already.invoiceId !== null) {
+    // The same PDF, twice, would be two invoices for one piece of income. Content
+    // addressing is what makes that answerable, so it is answered here instead of
+    // leaving the ledger to be corrected by hand later.
+    throw new HttpError(
+      409,
+      `este PDF já está no cofre e já foi registado como fatura (${already.invoiceId}). ` +
+        'Se o documento foi emitido duas vezes, usa "Nova fatura-recibo" e registra a segunda à mão.',
+    );
+  }
+  try {
+    // Re-uploading a document that is archived but not yet registered reuses the
+    // archive rather than adding a second index entry for the same bytes.
+    added =
+      already === null
+        ? context.vault.addDocumentBytes(bytes, name, { kind: 'fatura' })
+        : { file: already.file, sha256: already.sha256 };
+  } catch (cause) {
+    throw new HttpError(400, (cause as Error).message);
+  }
+
+  const pdf = extractPdfText(bytes);
+  const draft = parseReceipt(pdf);
+  context.vault.appendAudit({
+    action: 'receipt.parsed',
+    detail: `${name} · ${draft.problems.length} problemas · ${draft.fields.filter((field) => field.value !== null).length} campos lidos`,
+  });
+
+  const profile = context.vault.loadProfile();
+  const issuerMatchesProfile =
+    profile === null || draft.issuer.nif === null
+      ? null
+      : draft.issuer.nif.replace(/\D/g, '') === profile.nif.replace(/\D/g, '');
+
+  return {
+    ok: true,
+    model: buildModel(context),
+    added,
+    draft,
+    issuerMatchesProfile,
+    bytes: bytes.length,
+  };
+}
+
+/**
+ * Write the confirmed reading into the ledger.
+ *
+ * The document is re-read HERE, from the copy in the vault, and the fields that
+ * arrived from the browser are treated as what they are: the person's
+ * CONFIRMATION of the reading, not the source of it. That is what makes the
+ * divergences in the audit trail meaningful — "the document said this, and the
+ * record says that" is only a fact if both sides were read independently.
+ */
+function handleReceiptRecord(context: RequestContext, body: Record<string, unknown>): Record<string, unknown> {
+  const profile = context.vault.loadProfile();
+  if (profile === null) {
+    throw new HttpError(409, 'não existe perfil neste cofre. Abre o painel e preenche o formulário de perfil.');
+  }
+
+  const documentFile = requireString(body, 'documentFile', 400);
+  const document = context.vault.findDocument(documentFile);
+  if (document === null) {
+    throw new HttpError(400, `o documento "${documentFile}" não está indexado neste cofre.`);
+  }
+
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(document.absolute);
+  } catch {
+    throw new HttpError(400, 'o ficheiro do documento já não está no cofre.');
+  }
+  if (document.sha256 !== '' && context.vault.hashBytes(bytes) !== document.sha256) {
+    throw new HttpError(
+      409,
+      'o ficheiro no cofre já não corresponde ao que foi arquivado (hash diferente). Regista a fatura à mão.',
+    );
+  }
+
+  const draft = parseReceipt(extractPdfText(bytes));
+
+  const confirmed: ReceiptConfirmation = {};
+  const text = (key: string, max: number): string | null => optionalString(body, key, max);
+  const cents = (key: string): number | null | undefined => optionalCents(body, key);
+  const bp = (key: string): number | null | undefined => {
+    const value = optionalCents(body, key);
+    if (value === undefined || value === null) return value;
+    if (value > 10_000) throw new HttpError(400, `campo "${key}" está fora do intervalo de uma percentagem.`);
+    return value;
+  };
+
+  const number = text('number', 40);
+  if (number !== null) confirmed.number = number;
+  const date = text('date', 10);
+  if (date !== null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new HttpError(400, 'a data da fatura tem de estar em formato AAAA-MM-DD.');
+    }
+    confirmed.date = date;
+  }
+  const clientName = text('clientName', 120);
+  if (clientName !== null) confirmed.clientName = clientName;
+  const clientNif = text('clientNif', 20);
+  if (clientNif !== null) confirmed.clientNif = clientNif;
+  const clientCountry = text('clientCountry', 3);
+  if (clientCountry !== null) confirmed.clientCountry = clientCountry.toUpperCase();
+  const description = text('description', 300);
+  if (description !== null) confirmed.description = description;
+  const atcud = text('atcud', 40);
+  if (atcud !== null) confirmed.atcud = atcud;
+
+  const baseCents = cents('baseCents');
+  if (baseCents !== undefined) confirmed.baseCents = baseCents;
+  const ivaRateBp = bp('ivaRateBp');
+  if (ivaRateBp !== undefined) confirmed.ivaRateBp = ivaRateBp;
+  const retentionBp = bp('retentionBp');
+  if (retentionBp !== undefined) confirmed.retentionBp = retentionBp;
+
+  const treatment = text('vatTreatment', 24);
+  if (treatment !== null) {
+    if (!VAT_TREATMENTS.includes(treatment as VatTreatment)) {
+      throw new HttpError(400, 'tratamento de IVA inválido nesta fatura.');
+    }
+    confirmed.vatTreatment = treatment as VatTreatment;
+  }
+  const status = text('status', 12);
+  if (status !== null) {
+    if (!(INVOICE_STATUSES as readonly string[]).includes(status)) {
+      throw new HttpError(400, 'estado de fatura inválido.');
+    }
+    confirmed.status = status as Invoice['status'];
+  }
+
+  const loaded = loadCurrentPack(context);
+  const invoices = context.vault.loadInvoices();
+  const result = invoiceFromReceipt({
+    draft,
+    pack: loaded.pack,
+    profile,
+    confirmed,
+    id: `inv_${Date.now().toString(36)}_${randomBytes(3).toString('hex')}`,
+    documentFile: document.file,
+    fallbackNumber: `FR ${context.year}/${String(invoices.length + 1).padStart(3, '0')}`,
+  });
+
+  if (result.invoice === null) {
+    throw new HttpError(400, result.problems.join(' '));
+  }
+
+  // The ledger entry is appended, then the archive entry is pointed at it, then a
+  // single audit line records what the document said versus what was registered.
+  context.vault.appendInvoice(result.invoice);
+  context.vault.linkDocumentToInvoice(document.file, result.invoice.id);
+  context.vault.appendAudit({
+    action: 'receipt.recorded',
+    detail:
+      `${result.invoice.number} · ${document.file}` +
+      (result.divergences.length === 0 ? '' : ` · corrigido: ${result.divergences.join('; ')}`),
+  });
+
+  return {
+    ok: true,
+    model: buildModel(context),
+    invoice: result.invoice,
+    warnings: result.warnings,
+    divergences: result.divergences,
+    draft,
+  };
+}
+
 /**
  * The taxable base of the simplified regime, computed from an expense figure the
  * panel asks for.
@@ -991,6 +1335,8 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
     model: options.model ?? DEFAULT_MODEL,
     allowedHosts: new Set(),
     runtimeKey: null,
+    dataDirSource: options.dataDirSource ?? 'flag',
+    vaultPointerFile: options.vaultPointerFile ?? vaultPointerPath(),
   };
 
   async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
@@ -1023,10 +1369,16 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
 
     requireToken(request, context);
 
-    // The one route whose body is not JSON, because it is the file itself. It is
-    // dispatched before the JSON reader rather than inside the switch below.
-    if (path === '/api/documents/upload') {
-      sendJson(response, 200, await handleDocumentUpload(context, request, url));
+    // The routes whose body is the file itself, dispatched before the JSON reader
+    // rather than inside the switch below.
+    if (BINARY_ROUTES.has(path)) {
+      sendJson(
+        response,
+        200,
+        path === '/api/receipts/upload'
+          ? await handleReceiptUpload(context, request, url)
+          : await handleDocumentUpload(context, request, url),
+      );
       return;
     }
 
@@ -1035,6 +1387,10 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
         const profile = context.vault.loadProfile();
         if (profile === null) throw new HttpError(409, 'não existe perfil para exportar.');
         sendJson(response, 200, { ok: true, exportedAt: new Date().toISOString(), profile });
+        return;
+      }
+      if (path === '/api/vault/browse') {
+        sendJson(response, 200, handleVaultBrowse(url));
         return;
       }
       sendJson(response, 200, { ok: true, model: buildModel(context) });
@@ -1073,6 +1429,15 @@ export async function startWebServer(options: WebServerOptions): Promise<Running
         return;
       case '/api/documents':
         sendJson(response, 200, await handleDocument(context, body));
+        return;
+      case '/api/vault':
+        sendJson(response, 200, handleVaultChoose(context, body));
+        return;
+      case '/api/vault/reveal':
+        sendJson(response, 200, handleVaultReveal(context));
+        return;
+      case '/api/receipts/record':
+        sendJson(response, 200, handleReceiptRecord(context, body));
         return;
       case '/api/estimate/irs':
         sendJson(response, 200, handleIrsEstimate(context, body));

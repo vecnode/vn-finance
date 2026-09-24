@@ -22,11 +22,14 @@ const API = {
   profile: '/api/profile',
   profileImport: '/api/profile/import',
   profileExport: '/api/profile/export',
-  invoices: '/api/invoices',
   complete: '/api/obligations/complete',
   documents: '/api/documents',
   documentsUpload: '/api/documents/upload',
-  irsEstimate: '/api/estimate/irs',
+  vault: '/api/vault',
+  vaultBrowse: '/api/vault/browse',
+  vaultReveal: '/api/vault/reveal',
+  receiptsUpload: '/api/receipts/upload',
+  receiptsRecord: '/api/receipts/record',
   aiKey: '/api/ai-key',
   aiKeyUnlock: '/api/ai-key/unlock',
   updateSend: '/api/update/send',
@@ -41,20 +44,155 @@ const API = {
 const state = {
   token: '',
   model: null,
+  /* Que página está aberta, e a âncora dentro dela (quando houve uma). */
+  page: 'painel',
+  anchor: null,
   filter: 'year',
   preview: false,
   nifRevealed: false,
-  ledger: { pt: null, foreign: null },
   /* O formulário de perfil abre sozinho na primeira utilização — quando o cofre
      ainda não tem perfil — e fica disponível no botão "Perfil" a partir daí. */
   profileOpen: false,
   profilePrompted: false,
-  /* O resultado do cálculo do rendimento tributável do IRS: vive no estado
-     porque é uma resposta do servidor a um valor que não é guardado em lado
-     nenhum. Muda quando muda o valor, e desaparece quando a página recarrega. */
-  irs: null,
-  irsInput: 0,
+  /* O escolhedor de pasta do cofre: a listagem vive no estado porque é uma
+     resposta do servidor a uma navegação, e não faz parte do modelo fiscal. */
+  vault: { open: false, listing: null, error: null, busy: false, asked: false },
+  /* O resultado da leitura de um PDF: enquanto existir, a secção do cofre mostra
+     o formulário de confirmação em vez de o esconder. Vive no estado porque a
+     leitura é do servidor e o painel não a recalcula. */
+  receipt: null,
 };
+
+/* --------------------------------------------------------------------------
+   Páginas — os separadores do painel
+
+   Cada separador é uma PÁGINA, não uma âncora numa página comprida: renderiza-se
+   só o que pertence ao separador ativo. A razão é a de sempre neste projeto —
+   quem abre isto pela primeira vez não sabe o que é uma "declaração periódica",
+   e uma página comprida com dez secções todas abertas não ensina: obriga a
+   procurar. Uma página por assunto, com um título e uma frase, ensina.
+
+   A rota vive no `hash` do endereço (`#agenda`, `#cofre`, …), o que dá três
+   coisas de graça: ligações diretas para um separador, o botão "voltar" do
+   navegador a funcionar, e nenhuma alteração no servidor — o modelo continua a
+   ser um só payload, e o painel decide o que mostrar dele.
+   -------------------------------------------------------------------------- */
+
+const PAGES = [
+  {
+    id: 'painel',
+    label: 'Resumo',
+    subtitle: 'Indicadores do exercício, enquadramento fiscal e alertas',
+  },
+  { id: 'agenda', label: 'Agenda fiscal', subtitle: 'O que a lei obriga, e quando' },
+  { id: 'recibos', label: 'Faturas emitidas', subtitle: 'Os documentos que emitiste neste exercício' },
+  { id: 'ss', label: 'Segurança Social', subtitle: 'A contribuição do trimestre, passo a passo' },
+  { id: 'iva', label: 'IVA', subtitle: 'O IVA liquidado, por trimestre' },
+  { id: 'irs', label: 'IRS', subtitle: 'Retenções sofridas, reserva e rendimento tributável' },
+  {
+    id: 'cofre',
+    label: 'Cofre de documentos',
+    subtitle: 'Onde vivem os ficheiros, o que está arquivado e as faturas em PDF',
+  },
+  { id: 'regras', label: 'Regras e fontes', subtitle: 'A lei citada por trás de cada número' },
+  {
+    id: 'diagnostico',
+    label: 'Diagnóstico e chave',
+    subtitle: 'Perfil, cofre, pacote de regras e chave da API',
+  },
+  { id: 'assistente', label: 'Atualizar regras', subtitle: 'A única função que usa a internet' },
+  // A última de propósito: não é uma página de trabalho, é a promessa que
+  // sustenta as outras todas. Estava em rodapé, em todos os separadores, onde
+  // ninguém a lê duas vezes; aqui lê-se quando se quer saber o que a aplicação
+  // não faz.
+  { id: 'about', label: 'About', subtitle: 'O que esta aplicação não faz' },
+];
+
+/**
+ * Páginas cujo conteúdo é sobre os teus números.
+ *
+ * Sem perfil não há enquadramento, não há agenda e não há estimativas — e o
+ * painel prefere dizer isso a mostrar zeros que parecem dados. As outras páginas
+ * (o cofre, as regras, o diagnóstico) funcionam sem perfil e continuam a
+ * responder.
+ */
+const PROFILE_PAGES = new Set(['agenda', 'recibos', 'ss', 'iva', 'irs']);
+
+/**
+ * Âncoras que continuam a ser ligações válidas.
+ *
+ * "Porquê" numa linha da agenda aponta para o enquadramento, e o formulário de
+ * fatura tem um id próprio: as duas coisas passam a significar "vai à página X e
+ * desce até aqui", para que uma ligação escrita antes dos separadores continue a
+ * levar ao mesmo sítio.
+ */
+const ANCHOR_PAGE = { enquadramento: 'painel' };
+
+function pageById(id) {
+  return PAGES.find((page) => page.id === id) ?? PAGES[0];
+}
+
+/** A rota pedida por um hash, já validada contra a lista de páginas. */
+function routeFor(hash) {
+  const raw = String(hash ?? '').replace(/^#\/?/, '');
+  if (raw === '') return { page: 'painel', anchor: null };
+  if (PAGES.some((page) => page.id === raw)) return { page: raw, anchor: null };
+  const owner = ANCHOR_PAGE[raw];
+  // Um hash desconhecido cai no Resumo, em vez de deixar um ecrã vazio.
+  return owner === undefined ? { page: 'painel', anchor: null } : { page: owner, anchor: raw };
+}
+
+function currentRoute() {
+  return routeFor(window.location.hash);
+}
+
+/**
+ * Ir para uma página.
+ *
+ * Escreve o hash (é o que torna o separador uma ligação e faz o botão "voltar"
+ * funcionar) e aplica a rota JÁ, sem esperar pelo evento `hashchange`: o evento
+ * é assíncrono, e um clique que só produz efeito no instante seguinte parece
+ * avariado. A duplicação é evitada em `applyRoute`, que compara com o que está
+ * aplicado.
+ */
+function navigate(page, anchor = null) {
+  const target = `${anchor === null ? page : anchor}`;
+  if (window.location.hash !== `#${target}`) window.location.hash = `#${target}`;
+  applyRoute({ page, anchor });
+  if (anchor === null) window.scrollTo({ top: 0 });
+}
+
+function applyRoute(route) {
+  const page = pageById(route.page);
+  state.page = page.id;
+  state.anchor = route.anchor;
+  setActiveNav(page.id);
+  if (state.model !== null) render(state.model);
+  if (route.anchor !== null) {
+    const target = document.getElementById(route.anchor);
+    if (target !== null) target.scrollIntoView({ block: 'start' });
+  }
+}
+
+/** Marca o separador ativo nas duas navegações: a barra lateral e a de baixo. */
+function setActiveNav(id) {
+  for (const link of document.querySelectorAll('[data-page]')) {
+    const on = link.dataset.page === id;
+    link.classList.toggle('on', on);
+    if (on) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+}
+
+/** A barra de separadores dos ecrãs estreitos, gerada da mesma lista. */
+function renderTabbar() {
+  const host = document.getElementById('tabbar');
+  if (host === null || host.childElementCount === PAGES.length) return;
+  host.innerHTML = PAGES.map(
+    (page) =>
+      `<a class="tab" href="#${esc(page.id)}" data-page="${esc(page.id)}" title="${esc(page.subtitle)}">${esc(page.label)}</a>`,
+  ).join('');
+}
 
 /* --------------------------------------------------------------------------
    Vocabulário fixo (etiquetas de valores do contrato — não é lógica fiscal)
@@ -97,48 +235,6 @@ const FILTERS = [
   { id: 'na', label: 'Não aplicáveis' },
 ];
 
-/* Clientes: o grupo de cada país existe para pré-selecionar o tratamento de IVA
-   e a retenção no formulário. É uma pré-seleção visível e editável, não um
-   cálculo: o valor gravado é sempre o que estiver no formulário. */
-const COUNTRIES = [
-  { code: 'PT', name: 'Portugal', group: 'pt' },
-  { code: 'ES', name: 'Espanha', group: 'ue' },
-  { code: 'FR', name: 'França', group: 'ue' },
-  { code: 'DE', name: 'Alemanha', group: 'ue' },
-  { code: 'IT', name: 'Itália', group: 'ue' },
-  { code: 'NL', name: 'Países Baixos', group: 'ue' },
-  { code: 'BE', name: 'Bélgica', group: 'ue' },
-  { code: 'LU', name: 'Luxemburgo', group: 'ue' },
-  { code: 'IE', name: 'Irlanda', group: 'ue' },
-  { code: 'AT', name: 'Áustria', group: 'ue' },
-  { code: 'DK', name: 'Dinamarca', group: 'ue' },
-  { code: 'SE', name: 'Suécia', group: 'ue' },
-  { code: 'FI', name: 'Finlândia', group: 'ue' },
-  { code: 'PL', name: 'Polónia', group: 'ue' },
-  { code: 'CZ', name: 'Chéquia', group: 'ue' },
-  { code: 'SK', name: 'Eslováquia', group: 'ue' },
-  { code: 'HU', name: 'Hungria', group: 'ue' },
-  { code: 'RO', name: 'Roménia', group: 'ue' },
-  { code: 'BG', name: 'Bulgária', group: 'ue' },
-  { code: 'HR', name: 'Croácia', group: 'ue' },
-  { code: 'SI', name: 'Eslovénia', group: 'ue' },
-  { code: 'EE', name: 'Estónia', group: 'ue' },
-  { code: 'LV', name: 'Letónia', group: 'ue' },
-  { code: 'LT', name: 'Lituânia', group: 'ue' },
-  { code: 'CY', name: 'Chipre', group: 'ue' },
-  { code: 'MT', name: 'Malta', group: 'ue' },
-  { code: 'GR', name: 'Grécia', group: 'ue' },
-  { code: 'GB', name: 'Reino Unido', group: 'terceiros' },
-  { code: 'CH', name: 'Suíça', group: 'terceiros' },
-  { code: 'NO', name: 'Noruega', group: 'terceiros' },
-  { code: 'US', name: 'Estados Unidos', group: 'terceiros' },
-  { code: 'CA', name: 'Canadá', group: 'terceiros' },
-  { code: 'BR', name: 'Brasil', group: 'terceiros' },
-  { code: 'AO', name: 'Angola', group: 'terceiros' },
-  { code: 'MZ', name: 'Moçambique', group: 'terceiros' },
-  { code: 'CV', name: 'Cabo Verde', group: 'terceiros' },
-  { code: '__outro__', name: 'Outro país', group: 'terceiros' },
-];
 
 /* --------------------------------------------------------------------------
    Formatação. Nada aqui calcula imposto: converte unidades para leitura.
@@ -385,17 +481,12 @@ async function send(path, body) {
   if (model === null || typeof model !== 'object') {
     throw new ApiError('A resposta do servidor não incluiu o modelo atualizado.');
   }
-  // O cálculo do IRS é uma resposta a um estado que acabou de mudar: manter o
-  // número antigo ao lado de um livro de recibos novo seria mostrar uma conta
-  // que já não é verdade.
-  state.irs = null;
   applyModel(model);
   return data;
 }
 
 function applyModel(model) {
   state.model = model;
-  computeLedgerDefaults(model.invoices ?? []);
   const scroll = window.scrollY;
   render(model);
   window.scrollTo(0, scroll);
@@ -432,6 +523,27 @@ function showError(message) {
     `<div><p class="b-t">O servidor local recusou o pedido</p><p class="b-d">${esc(message)}</p></div>` +
     '<div class="b-a"><button type="button" class="btn btn-sm" data-act="retry">Tentar de novo</button>' +
     '<button type="button" class="btn btn-sm btn-tertiary" data-act="dismiss-error">Fechar</button></div>' +
+    '</div>';
+  host.scrollIntoView({ block: 'nearest' });
+}
+
+/**
+ * Um aviso não é um erro, e o painel não pode tratá-los como a mesma coisa.
+ *
+ * O mesmo sítio no ecrã serve os dois, mas com o peso visual certo: uma nota
+ * diz "repara nisto" sem dizer "algo falhou". A distinção importa quando o
+ * aviso é, por exemplo, a explicação que o próprio documento dá para não ter
+ * havido retenção — isso não é uma falha de nada.
+ */
+function showNotice(message, kind = 'info') {
+  const host = document.getElementById('aviso');
+  if (host === null) return;
+  host.innerHTML =
+    `<div class="banner ${kind === 'warn' ? 'banner-warn' : 'banner-info'}">` +
+    `<span class="sev ${kind === 'warn' ? 'sev-media' : 'sev-info'}"><span class="g" aria-hidden="true">${kind === 'warn' ? '●' : 'ℹ'}</span> ${kind === 'warn' ? 'Atenção' : 'Nota'}</span>` +
+    `<div><p class="b-t">${kind === 'warn' ? 'Vale a pena confirmar' : 'Ficou registado assim'}</p>` +
+    `<p class="b-d">${escLines(message)}</p></div>` +
+    '<div class="b-a"><button type="button" class="btn btn-sm btn-tertiary" data-act="dismiss-error">Fechar</button></div>' +
     '</div>';
   host.scrollIntoView({ block: 'nearest' });
 }
@@ -490,12 +602,22 @@ function fonteBadge(instance) {
   return { cls: 'badge est', text: 'calculada' };
 }
 
-function sectionHead(title, hint) {
+/**
+ * O cabeçalho de uma secção: título, o que se faz ali, e a frase que explica
+ * porque é que a secção existe.
+ *
+ * `hint` é o dado do momento (quantos registos, que período); `lead` é a
+ * explicação em português corrente. Separá-los é o que permite ler a página de
+ * cima para baixo sem descodificar micro-etiquetas: primeiro o que é, depois o
+ * número.
+ */
+function sectionHead(title, hint, lead) {
   return (
     '<div class="block-head">' +
     `<h2>${esc(title)}</h2>` +
     (hint ? `<span class="hint">${hint}</span>` : '') +
-    '</div>'
+    '</div>' +
+    (lead ? `<p class="lead">${lead}</p>` : '')
   );
 }
 
@@ -573,19 +695,22 @@ function renderChrome(model) {
   const profile = model.profile;
   const summary = model.pack?.summary ?? {};
   const counts = model.flagSummary ?? { urgent: 0, attention: 0, info: 0, total: 0 };
+  const page = pageById(state.page);
 
-  document.title = `vn-finance · Painel ${meta.year}`;
-  setText('tb-sub', `Exercício ${meta.year} · trabalhador independente · CIRS categoria B`);
+  renderTabbar();
+  setActiveNav(page.id);
+  document.title = `vn-finance · ${page.label} · ${meta.year}`;
+  setText('tb-sub', `${page.label} — ${page.subtitle}`);
   setText('chip-ano', String(meta.year));
   setText('chip-iva', profile === null ? 'IVA —' : `IVA ${ivaRegimeLabel(profile.iva?.regime)}`);
   setText('chip-irs', profile === null ? 'IRS —' : `IRS ${irsRegimeLabel(profile.irs?.regime)}`);
   setText('today-tag', `${ptDate(meta.today)} · hoje`);
-  setText('print-line', `vn-finance · painel · exercício ${meta.year} · ${ptDate(meta.today)} · dados apenas neste computador`);
+  setText('print-line', `vn-finance · ${page.label} · exercício ${meta.year} · ${ptDate(meta.today)} · dados apenas neste computador`);
 
   const dir = document.getElementById('chip-dir');
   if (dir !== null) {
     dir.title = String(meta.dataDir ?? '');
-    dir.innerHTML = `Pasta de dados: <span class="mono">${esc(meta.dataDir)}</span>`;
+    dir.innerHTML = `Cofre: <span class="mono">${esc(meta.dataDir)}</span>`;
   }
 
   const nifNode = document.getElementById('nif-val');
@@ -684,10 +809,19 @@ function renderChrome(model) {
    2. Faixa de alerta + alertas fiscais
    -------------------------------------------------------------------------- */
 
-function renderAlertBlock(model) {
+/**
+ * A faixa de alerta — e a lista de alertas, que só pertence ao Resumo.
+ *
+ * Nas outras páginas aparece apenas quando há algo urgente. Repetir um "sem
+ * alertas" verde em dez separadores tornaria o aviso em decoração, e decoração é
+ * exactamente o que deixa de ser lida quando passa a importar.
+ */
+function renderAlertBlock(model, options = {}) {
+  const onSummary = (options.page ?? 'painel') === 'painel';
   const today = model.meta.today;
   const flags = model.flags ?? [];
   const summary = model.flagSummary ?? { urgent: 0, attention: 0, info: 0, total: 0 };
+  if (!onSummary && summary.urgent === 0) return '';
   const agenda = model.agenda ?? [];
 
   const next30 = agenda.filter((instance) => {
@@ -708,6 +842,19 @@ function renderAlertBlock(model) {
     `<span class="dot" aria-hidden="true">·</span><span>${missingDocs.length} ${missingDocs.length === 1 ? 'documento em falta' : 'documentos em falta'} no cofre</span>` +
     `<span class="dot" aria-hidden="true">·</span><span>${summary.urgent} urgentes · ${summary.attention} de atenção · ${summary.info} informativos</span>`;
 
+  /*
+   * As ações são construídas uma vez: a faixa aparece no Resumo e — quando há
+   * algo urgente — nas outras páginas, e nas outras páginas leva também a ligação
+   * para a lista completa, que só existe no Resumo.
+   */
+  const actions =
+    '<div class="ab-actions">' +
+    '<button type="button" class="btn btn-primary" data-act="scroll-agenda">Ver o plano</button>' +
+    (onSummary
+      ? ''
+      : `<span class="ab-link">${summary.urgent} ${summary.urgent === 1 ? 'urgente' : 'urgentes'} · lista completa no <a href="#painel">Resumo</a></span>`) +
+    '</div>';
+
   let strip;
   if (top === null) {
     strip =
@@ -717,7 +864,7 @@ function renderAlertBlock(model) {
       '<p class="ab-title">Sem alertas fiscais ativos</p>' +
       `<p class="ab-meta">${counts}</p>` +
       '</div>' +
-      '<div class="ab-actions"><button type="button" class="btn btn-primary" data-act="scroll-agenda">Ver o plano</button></div>' +
+      actions +
       '</div>';
   } else {
     const severity =
@@ -734,7 +881,7 @@ function renderAlertBlock(model) {
       `<p class="ab-meta"><span>${escLines(top.detail)}</span></p>` +
       `<p class="ab-meta">${counts}</p>` +
       '</div>' +
-      '<div class="ab-actions"><button type="button" class="btn btn-primary" data-act="scroll-agenda">Ver o plano</button></div>' +
+      actions +
       '</div>';
   }
 
@@ -783,6 +930,12 @@ function renderAlertBlock(model) {
       ) +
       `<ul class="alerts">${rows}</ul>` +
       '</section>';
+  }
+
+  // Nas outras páginas a faixa aponta para o Resumo, onde está a lista completa
+  // com a base legal de cada alerta.
+  if (!onSummary) {
+    return `<section class="block" aria-label="Alertas urgentes">${strip}</section>`;
   }
 
   return `<section class="block" aria-label="Faixa de alerta">${strip}</section>${list}`;
@@ -865,6 +1018,8 @@ function renderKpis(model) {
     sectionHead(
       'Indicadores do exercício',
       `Acumulado a ${ptDate(meta.today)} · base: faturação registada no cofre local`,
+      'Um resumo do ano até hoje. Nenhum destes valores é uma previsão: todos saem das faturas que ' +
+        'registaste e das constantes do pacote de regras, e cada um diz em que se baseia.',
     ) +
     `<div class="kpis">${html}</div>` +
     (invoices.length === 0
@@ -1035,6 +1190,9 @@ function renderEnquadramento(model) {
     sectionHead(
       'Enquadramento fiscal (CAE e CIRS)',
       `Cartão de identidade da atividade · início em ${ptDate(activity.startDate)}`,
+      'É a tua situação declarada às Finanças, e é o que decide que obrigações aparecem na agenda. ' +
+        'Corrigir aqui um valor muda a agenda; deixar um valor em branco faz a aplicação dizer que não ' +
+        'consegue avaliar essa parte, em vez de a assumir.',
     ) +
     `<dl class="defs">${defsHtml}</dl>` +
     problems +
@@ -1173,6 +1331,8 @@ function renderAgenda(model) {
     sectionHead(
       `Agenda fiscal ${model.meta.year}`,
       `${total} obrigações · ${doneCount} concluídas · ${openCount} em aberto · prazos do pacote de regras pt/${esc(model.meta.packVersion)}`,
+      'Cada linha é uma obrigação que a lei portuguesa impõe a quem trabalha por conta própria, com a data ' +
+        'e a base legal de onde vem. A aplicação não entrega nem paga nada: serve para não haver surpresas.',
     ) +
     toolbar +
     tableWrap(
@@ -1264,6 +1424,16 @@ function invoiceTotals(invoice) {
   return { iva, retention, net: invoice.baseCents + iva - retention };
 }
 
+/*
+ * A lista das faturas emitidas.
+ *
+ * Esta página MOSTRA o que entrou pelo Cofre: uma fatura nasce de um documento —
+ * o PDF da fatura-recibo, arquivado com o seu hash e conferido linha a linha — e
+ * não de um formulário preenchido à mão. Havia aqui um formulário "Nova
+ * fatura-recibo" com quarenta campos de país, tratamento e taxas; era uma segunda
+ * porta para a mesma sala, e a única porta que não deixava prova nenhuma do que
+ * foi registado. Ficou uma porta só.
+ */
 function renderRecibos(model) {
   const meta = model.meta;
   const year = String(meta.year);
@@ -1271,24 +1441,17 @@ function renderRecibos(model) {
   const invoices = all.filter((invoice) => String(invoice.date ?? '').startsWith(year));
   const others = all.length - invoices.length;
 
-  const tool =
-    '<div class="tool noprint">' +
-    '<span class="tool-r">' +
-    '<button type="button" class="btn btn-primary" data-act="open-invoice">Nova fatura-recibo</button>' +
-    '</span>' +
-    '<span class="legend" aria-label="Origem das colunas">' +
-    '<i>IVA, retenção e líquido derivados das taxas registadas em cada recibo</i>' +
-    '</span>' +
-    '</div>';
-
   const empty =
     invoices.length === 0
-      ? emptyState(
-          'Nada registado',
-          all.length === 0
-            ? 'Não há recibos no cofre local. Regista o primeiro com o formulário abaixo.'
-            : `Não há recibos de ${year}. Existem ${others} recibos de outros exercícios no cofre.`,
-        )
+      ? '<div class="empty"><strong>Nada registado em ' +
+        esc(year) +
+        '</strong>' +
+        (all.length === 0
+          ? 'Ainda não há faturas neste cofre. Uma fatura entra aqui pelo documento que a prova: abre o ' +
+            'Cofre de documentos, importa o PDF da fatura-recibo, confere o que foi lido e confirma.'
+          : `Existem ${others} registos de outros exercícios no cofre, que não são apresentados aqui.`) +
+        '<div class="acts mt-10"><a class="btn btn-primary" href="#cofre">Importar uma fatura em PDF</a></div>' +
+        '</div>'
       : '';
 
   let table = '';
@@ -1343,11 +1506,11 @@ function renderRecibos(model) {
       `<td class="n">${eur(iva)}</td>` +
       `<td class="n">${eur(retention)}</td>` +
       `<td class="n">${eur(net)}</td>` +
-      '<td colspan="2">Derivado das taxas registadas em cada recibo</td>' +
+      '<td colspan="2">Derivado das taxas de cada documento</td>' +
       '</tr>';
 
     table = tableWrap(
-      `Recibos emitidos em ${year}: número, data, cliente, base, IVA, retenção, líquido, estado e comprovativo.`,
+      `Faturas e recibos emitidos em ${year}: número, data, cliente, base, IVA, retenção, líquido, estado e comprovativo.`,
       '<th scope="col">N.º</th><th scope="col">Data</th><th scope="col">Cliente</th>' +
         '<th scope="col" class="n">Base</th><th scope="col" class="n">IVA</th><th scope="col" class="n">Retenção</th>' +
         '<th scope="col" class="n">Líquido</th><th scope="col">Estado</th><th scope="col">Comprovativo</th>',
@@ -1357,105 +1520,25 @@ function renderRecibos(model) {
 
   const footer =
     '<div class="tfoot">' +
-    `<span>${invoices.length} recibos de ${year}${others > 0 ? ` · ${others} registos de outros exercícios não apresentados` : ''}</span>` +
-    '<span>O líquido é <span class="mono">base + IVA − retenção</span>, calculado a partir das taxas registadas em cada recibo.</span>' +
+    `<span>${invoices.length} ${invoices.length === 1 ? 'documento' : 'documentos'} de ${year}${others > 0 ? ` · ${others} registos de outros exercícios não apresentados` : ''}</span>` +
+    '<span>O líquido é <span class="mono">base + IVA − retenção</span>, calculado a partir das taxas de cada documento.</span>' +
     '</div>';
 
   return (
-    '<section class="block" id="recibos" aria-label="Recibos emitidos">' +
+    '<section class="block" id="recibos" aria-label="Faturas emitidas">' +
     sectionHead(
-      `Recibos emitidos (${year})`,
+      `Faturas e recibos emitidos (${year})`,
       invoices.length === 0
         ? 'Sem faturação registada neste exercício'
-        : `${invoices.length} documentos · base ${eur(invoices.reduce((t, i) => t + i.baseCents, 0))}`,
+        : `${invoices.length} ${invoices.length === 1 ? 'documento' : 'documentos'} · base ${eur(invoices.reduce((t, i) => t + i.baseCents, 0))}`,
+      'As faturas que importaste no <a href="#cofre">Cofre de documentos</a> aparecem aqui. É desta lista ' +
+        'que saem quase todos os números do painel: o IVA a entregar, a contribuição para a Segurança ' +
+        'Social e o rendimento tributável do IRS. Cada linha traz o documento que a prova.',
     ) +
-    tool +
-    invoiceForm(model) +
     empty +
     table +
     footer +
     '</section>'
-  );
-}
-
-function invoiceForm(model) {
-  const meta = model.meta;
-  const ptDefaults = state.ledger.pt ?? {};
-  const treatmentDefault =
-    model.profile?.iva?.regime === 'isento_art53' ? 'isento_art53' : 'iva_pt';
-
-  const options = COUNTRIES.map(
-    (country) =>
-      `<option value="${esc(country.code)}" data-group="${esc(country.group)}"${country.code === 'PT' ? ' selected' : ''}>${esc(country.name)}</option>`,
-  ).join('');
-
-  const treatments = Object.entries(TREATMENT_LABEL)
-    .map(
-      ([value, label]) =>
-        `<option value="${esc(value)}"${value === treatmentDefault ? ' selected' : ''}>${esc(label)}</option>`,
-    )
-    .join('');
-
-  const statuses = [
-    { value: 'issued', label: 'Emitido' },
-    { value: 'paid', label: 'Pago' },
-    { value: 'pending', label: 'Pendente' },
-  ]
-    .map(
-      (status) =>
-        `<option value="${esc(status.value)}"${status.value === 'issued' ? ' selected' : ''}>${esc(status.label)}</option>`,
-    )
-    .join('');
-
-  return (
-    '<details class="disclosure noprint" id="nova-fatura">' +
-    '<summary>Nova fatura-recibo<span class="cnt off">registo local</span></summary>' +
-    '<div class="d-body">' +
-    '<form data-form="invoice" novalidate>' +
-    '<div class="form-grid">' +
-    '<div class="field"><label for="f-number">Número do documento</label>' +
-    '<input id="f-number" name="number" type="text" autocomplete="off" placeholder="FR 2026/001">' +
-    '<small>Deixa vazio para não fixar número.</small></div>' +
-    '<div class="field"><label for="f-date">Data de emissão</label>' +
-    `<input id="f-date" name="date" type="date" value="${esc(meta.today)}" required></div>` +
-    '<div class="field"><label for="f-client">Nome do cliente</label>' +
-    '<input id="f-client" name="clientName" type="text" autocomplete="off" required></div>' +
-    '<div class="field"><label for="f-nif">NIF do cliente</label>' +
-    '<input id="f-nif" name="clientNif" type="text" inputmode="numeric" autocomplete="off" placeholder="opcional"></div>' +
-    '<div class="field"><label for="f-country">País do cliente</label>' +
-    `<select id="f-country" name="clientCountry">${options}</select>` +
-    '<small>Pré-seleciona o tratamento de IVA e a retenção a partir do grupo do país.</small></div>' +
-    '<div class="field" id="f-country-other-wrap" hidden><label for="f-country-other">Código do país (ISO)</label>' +
-    '<input id="f-country-other" name="clientCountryOther" type="text" autocomplete="off" maxlength="2" placeholder="XX"></div>' +
-    '<div class="field full"><label for="f-desc">Descrição dos serviços</label>' +
-    '<input id="f-desc" name="description" type="text" autocomplete="off" placeholder="opcional"></div>' +
-    '<div class="field"><label for="f-base">Base de incidência (€)</label>' +
-    '<input id="f-base" name="baseCents" type="text" inputmode="decimal" autocomplete="off" placeholder="1 200,50" required>' +
-    '<small>Escreve em euros; o painel converte para cêntimos antes de enviar.</small></div>' +
-    '<div class="field"><label for="f-iva">Taxa de IVA (%)</label>' +
-    `<input id="f-iva" name="ivaRateBp" type="text" inputmode="decimal" autocomplete="off" value="${esc(bpToInput(ptDefaults.ivaBp))}" placeholder="23" required>` +
-    '<small>Percentagem; o painel converte para pontos base.</small></div>' +
-    '<div class="field"><label for="f-treatment">Tratamento de IVA</label>' +
-    `<select id="f-treatment" name="vatTreatment">${treatments}</select></div>` +
-    '<div class="field"><label for="f-ret">Retenção na fonte (%)</label>' +
-    `<input id="f-ret" name="retentionBp" type="text" inputmode="decimal" autocomplete="off" value="${esc(bpToInput(ptDefaults.retentionBp))}" placeholder="25">` +
-    '<small>Percentagem; zero significa sem retenção.</small></div>' +
-    '<div class="field"><label for="f-atcud">ATCUD</label>' +
-    '<input id="f-atcud" name="atcud" type="text" autocomplete="off" placeholder="opcional"></div>' +
-    '<div class="field"><label for="f-status">Estado do pagamento</label>' +
-    `<select id="f-status" name="status">${statuses}</select></div>` +
-    '<div class="field"><span class="lbl">Comprovativo</span>' +
-    '<label class="check" for="f-proof"><input id="f-proof" name="paymentProofInVault" type="checkbox"> <span>O comprovativo de recebimento já está no cofre</span></label>' +
-    '</div>' +
-    '</div>' +
-    '<div class="form-actions">' +
-    '<button type="submit" class="btn btn-primary">Registar recibo</button>' +
-    '<span class="note">A pré-seleção de IVA e retenção vem do perfil e dos recibos já registados: confirma-a antes de gravar.</span>' +
-    '</div>' +
-    '<div data-role="form-message"></div>' +
-    '</form>' +
-    '</div>' +
-    '</details>'
   );
 }
 
@@ -1528,7 +1611,10 @@ function renderSs(model) {
     '<section class="block" id="ss" aria-label="Segurança Social">' +
     sectionHead(
       `Segurança Social — ${quarter.quarter}.º trimestre ${quarter.year}`,
-      'Cálculo da contribuição do trimestre, passo a passo, a partir da faturação registada',
+      'Contribuição do trimestre, passo a passo, a partir da faturação registada',
+      'A contribuição não incide sobre tudo o que faturas: incide sobre uma percentagem do rendimento de ' +
+        'serviços, e é paga em três meses. Cada passo do cálculo aparece com o valor que usou, para se ' +
+        'poder conferir em vez de acreditar.',
     ) +
     `<div class="ss"><div>${chain}${instalmentBlock}</div>${side}</div>` +
     (quarter.totals?.invoiceCount === 0
@@ -1539,161 +1625,378 @@ function renderSs(model) {
 }
 
 /* --------------------------------------------------------------------------
-   8. IVA e IRS
+   8. IVA e IRS — duas páginas, um só modelo
+
+   Estavam juntos numa secção com uma tabela de sete colunas, e era essa a
+   confusão: o IVA é dinheiro que ENTREGAS ao Estado todos os trimestres, a
+   retenção é IRS que os clientes já entregaram POR TI, e o rendimento tributável
+   é a base do IRS do ano seguinte. São três perguntas diferentes, e cada uma
+   merece a sua página. Nada disto calcula nada de novo: as duas páginas leem os
+   mesmos relatórios trimestrais do modelo.
    -------------------------------------------------------------------------- */
 
-function renderIvaIrs(model) {
-  const quarters = model.quarters ?? [];
-  const reserve = model.reserve ?? { lowCents: 0, highCents: 0, basis: [], limitations: [] };
+function quarterTotals(quarters) {
+  const totals = { base: 0, iva: 0, retention: 0, invoices: 0, ss: 0 };
+  for (const quarter of quarters) {
+    totals.base += quarter.totals?.baseCents ?? 0;
+    totals.iva += quarter.totals?.ivaLiquidadoCents ?? 0;
+    totals.retention += quarter.totals?.retencaoSofridaCents ?? 0;
+    totals.invoices += quarter.totals?.invoiceCount ?? 0;
+    totals.ss += quarter.socialSecurity?.contributionCents ?? 0;
+  }
+  return totals;
+}
 
+function renderIva(model) {
+  const quarters = model.quarters ?? [];
   if (quarters.length === 0) {
     return (
-      '<section class="block" id="iva-irs" aria-label="IVA e IRS">' +
-      sectionHead('IVA e IRS', 'Relatórios trimestrais do exercício') +
+      '<section class="block" id="iva" aria-label="IVA">' +
+      sectionHead('IVA', 'IVA liquidado por trimestre') +
       emptyState('Nada registado', 'O modelo não incluiu relatórios trimestrais.') +
       '</section>'
     );
   }
 
-  let base = 0;
-  let iva = 0;
-  let retention = 0;
-  let invoiceCount = 0;
-  let ss = 0;
-
+  const totals = quarterTotals(quarters);
   const rows = quarters
-    .map((quarter) => {
-      base += quarter.totals?.baseCents ?? 0;
-      iva += quarter.totals?.ivaLiquidadoCents ?? 0;
-      retention += quarter.totals?.retencaoSofridaCents ?? 0;
-      invoiceCount += quarter.totals?.invoiceCount ?? 0;
-      ss += quarter.socialSecurity?.contributionCents ?? 0;
-      return (
+    .map(
+      (quarter) =>
         '<tr>' +
         `<td>${esc(quarter.quarter)}.º trimestre</td>` +
         `<td class="d">${ptDate(quarter.start)} – ${ptDate(quarter.end)}</td>` +
         `<td class="n">${esc(quarter.totals?.invoiceCount ?? 0)}</td>` +
         `<td class="n">${eur(quarter.totals?.baseCents ?? 0)}</td>` +
         `<td class="n">${eur(quarter.totals?.ivaLiquidadoCents ?? 0)}</td>` +
-        `<td class="n">${eur(quarter.totals?.retencaoSofridaCents ?? 0)}</td>` +
-        `<td class="n">${eur(quarter.socialSecurity?.contributionCents ?? 0)}</td>` +
-        '</tr>'
-      );
-    })
+        '</tr>',
+    )
     .join('');
 
-  const totals =
+  const totalRow =
     '<tr class="tot">' +
     '<td colspan="2">Total do exercício</td>' +
-    `<td class="n">${invoiceCount}</td>` +
-    `<td class="n">${eur(base)}</td>` +
-    `<td class="n">${eur(iva)}</td>` +
-    `<td class="n">${eur(retention)}</td>` +
-    `<td class="n">${eur(ss)}</td>` +
+    `<td class="n">${totals.invoices}</td>` +
+    `<td class="n">${eur(totals.base)}</td>` +
+    `<td class="n">${eur(totals.iva)}</td>` +
     '</tr>';
 
   return (
-    '<section class="block" id="iva-irs" aria-label="IVA e IRS">' +
+    '<section class="block" id="iva" aria-label="IVA">' +
     sectionHead(
-      'IVA e IRS',
-      `Relatórios trimestrais de ${model.meta.year} · o motor para no rendimento tributável, por desenho`,
+      'IVA',
+      `IVA liquidado em ${model.meta.year} · ${eur(totals.iva)}`,
+      'O IVA é a parte da fatura que não é tua: recebes do cliente e entregas ao Estado. ' +
+        'O valor é a soma do IVA das faturas que registaste em cada trimestre, e o prazo de entrega está ' +
+        'na Agenda fiscal.',
     ) +
     tableWrap(
-      'Relatórios trimestrais de IVA e Segurança Social, com base, IVA liquidado, retenção sofrida e contribuição estimada.',
+      'IVA liquidado por trimestre: documentos, base tributável e IVA.',
       '<th scope="col">Trimestre</th><th scope="col">Período</th><th scope="col" class="n">Documentos</th>' +
-        '<th scope="col" class="n">Base</th><th scope="col" class="n">IVA liquidado</th>' +
-        '<th scope="col" class="n">Retenção sofrida</th><th scope="col" class="n">Contribuição SS</th>',
-      rows + totals,
+        '<th scope="col" class="n">Base tributável</th><th scope="col" class="n">IVA liquidado</th>',
+      rows + totalRow,
     ) +
-    '<p class="tnote">Os valores de IVA e de retenção são somas dos recibos registados em cada trimestre. ' +
-    'A contribuição da Segurança Social é a estimativa do motor local para o trimestre.</p>' +
-    `<div class="panel mt-10 panel-pad">` +
+    '<p class="tnote">Sem registo de faturas não há IVA a entregar — e é por isso que esta página aparece a ' +
+    'zero numa instalação nova. A declaração periódica entrega-se mesmo com zero, e o prazo está na agenda. ' +
+    'Se estás isento pelo art. 53.º do CIVA, não liquidas IVA nenhum: esta página fica sem valores a entregar.</p>' +
+    '</section>'
+  );
+}
+
+function renderIrs(model) {
+  const quarters = model.quarters ?? [];
+  const reserve = model.reserve ?? { lowCents: 0, highCents: 0, basis: [], limitations: [] };
+
+  if (quarters.length === 0) {
+    return (
+      '<section class="block" id="irs" aria-label="IRS">' +
+      sectionHead('IRS', 'Rendimento tributável do exercício') +
+      emptyState('Nada registado', 'O modelo não incluiu relatórios trimestrais.') +
+      '</section>'
+    );
+  }
+
+  const totals = quarterTotals(quarters);
+  const rows = quarters
+    .map(
+      (quarter) =>
+        '<tr>' +
+        `<td>${esc(quarter.quarter)}.º trimestre</td>` +
+        `<td class="d">${ptDate(quarter.start)} – ${ptDate(quarter.end)}</td>` +
+        `<td class="n">${eur(quarter.totals?.baseCents ?? 0)}</td>` +
+        `<td class="n">${eur(quarter.totals?.retencaoSofridaCents ?? 0)}</td>` +
+        '</tr>',
+    )
+    .join('');
+
+  const totalRow =
+    '<tr class="tot">' +
+    '<td colspan="2">Total do exercício</td>' +
+    `<td class="n">${eur(totals.base)}</td>` +
+    `<td class="n">${eur(totals.retention)}</td>` +
+    '</tr>';
+
+  return (
+    '<section class="block" id="irs" aria-label="IRS">' +
+    sectionHead(
+      'IRS',
+      `Rendimento de ${model.meta.year} · ${eur(totals.retention)} já retidos na fonte`,
+      'A retenção na fonte não é um imposto a mais: é IRS que o teu cliente entregou ao Estado em teu nome, ' +
+        'e que é creditado no acerto final. O rendimento tributável é a base sobre a qual esse acerto vai ' +
+        'incidir — não é o imposto a pagar, porque as taxas do art. 68.º do CIRS não são aplicadas aqui.',
+    ) +
+    tableWrap(
+      'Base tributável e retenção na fonte, por trimestre.',
+      '<th scope="col">Trimestre</th><th scope="col">Período</th>' +
+        '<th scope="col" class="n">Rendimento</th><th scope="col" class="n">Retenção sofrida</th>',
+      rows + totalRow,
+    ) +
+    `<div class="panel mt-12 panel-pad">` +
     '<p class="subhead">Reserva recomendada</p>' +
     `<p class="dl-inline"><span class="kpi-v sm">${eur(reserve.lowCents)} – ${eur(reserve.highCents)}</span><span class="badge est">estimativa</span></p>` +
+    '<p class="tnote">Quanto deste rendimento convém manter de lado para o IRS e a Segurança Social do próximo ' +
+    'ano. É um intervalo, e não um valor: a reserva é uma decisão de tesouraria, não um cálculo fiscal.</p>' +
     ((reserve.basis ?? []).length === 0
       ? ''
       : `<p class="tnote">Base: ${(reserve.basis ?? []).map((item) => esc(item)).join(' · ')}</p>`) +
     notes(reserve.limitations) +
     '</div>' +
-    '<p class="tnote">Não há, em lado nenhum deste painel, um valor final de IRS a pagar: o modelo para no rendimento tributável e as ' +
-    'limitações acima dizem porquê. Qualquer apuramento final exige as taxas do ano e as deduções, e é matéria de um contabilista certificado.</p>' +
-    irsCalculator(model) +
+    '<p class="tnote">Esta página mostra as retenções que já te foram feitas e quanto convém reservar. O ' +
+    'apuramento do rendimento tributável a partir das despesas documentadas — que exige decidir o que é ' +
+    'elegível, um juízo e não um cálculo — não está aqui: as despesas ainda não fazem parte do modelo. ' +
+    'Não há, em lado nenhum deste painel, um valor final de IRS a pagar, porque o motor para no rendimento ' +
+    'tributável e as taxas do art. 68.º do CIRS não são aplicadas. Qualquer apuramento final exige as taxas ' +
+    'do ano e as deduções, e é matéria de um contabilista certificado.</p>' +
+    '</section>'
+  );
+}
+
+/*
+ * O apuramento do rendimento tributável a partir das despesas documentadas saiu
+ * do painel: as despesas ainda não fazem parte do modelo — não há onde as
+ * registar, nem onde as guardar — e uma caixa de texto que pede um número que
+ * nada no cofre conhece é um formulário a mais, não uma capacidade a mais.
+ * A conta continua no núcleo (`estimateIrsSimplifiedBase`) e na linha de
+ * comandos (`vnfin estimate --despesas`); volta ao painel quando as despesas
+ * forem um registo como as faturas são, e não um valor escrito de cada vez.
+ */
+
+/* --------------------------------------------------------------------------
+   9. Cofre de documentos
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   Onde vive o cofre.
+
+   O cofre é uma pasta: o perfil, os recibos, os documentos e o registo de
+   auditoria vivem lá dentro, e mais nada. Duas coisas dependem de a pessoa saber
+   isto — onde estão os dados, e como os copiar — por isso a pasta é mostrada,
+   pode ser aberta no gestor de ficheiros e pode ser mudada a partir daqui. Uma
+   pasta que ninguém escolheu e ninguém vê não é um cofre: é um sítio onde os
+   dados calharam de ficar.
+   -------------------------------------------------------------------------- */
+
+/** true quando ainda ninguém escolheu a pasta e ela não tem nada dentro. */
+function needsVaultChoice(model) {
+  const meta = model.meta ?? {};
+  return meta.dataDirSource === 'default' && meta.vaultInUse !== true && !state.vault.asked;
+}
+
+function renderVaultSetup(model) {
+  const path = String(model.meta?.dataDir ?? '');
+  return (
+    '<section class="block" id="cofre-setup" aria-label="Escolher a pasta do cofre">' +
+    sectionHead('Primeiro: onde deve viver o cofre', 'Nada foi escrito ainda') +
+    '<div class="onboard">' +
+    '<h2>Escolhe uma pasta deste computador para guardar os teus dados</h2>' +
+    '<p>O <strong>cofre</strong> é uma pasta tua. Lá dentro ficam o perfil, as faturas registadas, ' +
+    'os PDF e comprovativos que arquivares, e um registo de tudo o que a aplicação fez. ' +
+    'Nada é enviado para a Internet e não há nenhuma cópia noutro sítio: fazer uma copia de segurança ' +
+    'é copiar esta pasta.</p>' +
+    '<p>Sem escolheres, a aplicação usaria <span class="mono">' + esc(path) + '</span> — uma pasta ' +
+    'escondida na tua pasta pessoal, que é o género de sítio onde os dados ficam e ninguém os encontra. ' +
+    'Uma pasta no Ambiente de Trabalho ou em Documentos é mais fácil de ver, de copiar e de guardar.</p>' +
+    '<div class="acts">' +
+    '<button type="button" class="btn btn-primary" data-act="open-vault-picker">Escolher a pasta do cofre…</button>' +
+    '<button type="button" class="btn" data-act="use-default-vault">Usar a pasta por omissão</button>' +
+    '</div>' +
+    '<p class="sub mt-12">Podes mudar de pasta mais tarde, em <strong>Cofre de documentos</strong>. ' +
+    'Mudar de pasta não apaga nada: o painel passa a mostrar a pasta nova e a antiga fica como está.</p>' +
+    '</div>' +
     '</section>'
   );
 }
 
 /**
- * O rendimento tributável do regime simplificado, a pedido.
+ * O escolhedor de pastas.
  *
- * Esta é a única conta do painel cujo dado de entrada o cofre não pode fornecer:
- * que despesas são elegíveis é um juízo teu. O comando de linha de comandos pede-o
- * com `estimate --despesas`; aqui pede-se no mesmo sítio onde o resultado aparece,
- * e o valor não fica guardado em lado nenhum — nem no cofre, nem no browser.
+ * É uma navegação de pastas dentro do próprio painel, e não a janela do sistema,
+ * por uma razão concreta: uma página não recebe o caminho de uma pasta — só o seu
+ * conteúdo — e o servidor precisa do caminho para escrever lá. Como o servidor é
+ * local, é ele que lista as pastas; o painel só mostra o que ele devolve. Só
+ * pastas, nunca ficheiros.
  */
-function irsCalculator(model) {
-  const estimate = state.irs;
-  const step = (label, value, note = '') =>
-    '<tr>' +
-    `<td>${esc(label)}</td>` +
-    `<td class="n">${value === null || value === undefined ? '<span class="mini">—</span>' : eur(value)}</td>` +
-    `<td class="small">${note === '' ? '' : esc(note)}</td>` +
-    '</tr>';
+/**
+ * O caminho em migalhas clicáveis, com o separador que o caminho usa.
+ *
+ * Windows e POSIX separam pastas de forma diferente e um caminho pode começar
+ * por `C:\`, por `/` ou por uma pasta relativa: juntar segmentos com uma barra
+ * fixa produzia caminhos que não existem no outro sistema, e um caminho que não
+ * existe é uma lista vazia e um botão que não faz nada.
+ */
+function pathCrumbs(path) {
+  const raw = String(path ?? '');
+  const separator = raw.includes('\\') ? '\\' : '/';
+  const segments = raw.split(/[\\/]/).filter((part) => part !== '');
+  const crumbs = [];
+  let walked = '';
 
-  let result = '';
-  if (estimate !== null && estimate !== undefined && state.irsInput !== undefined) {
-    const reference = estimate.documentedExpensesReferenceCents;
-    result =
-      '<p class="subhead mt-12">Cálculo para ' + esc(eur(state.irsInput)) + ' de despesas documentadas</p>' +
-      tableWrap(
-        'Cadeia de cálculo do rendimento tributável do regime simplificado, do rendimento bruto ao rendimento tributável.',
-        '<th scope="col">Passo</th><th scope="col" class="n">Valor</th><th scope="col">Nota</th>',
-        [
-          step('Rendimento de serviços faturado no ano', estimate.grossServiceIncomeCents, 'soma das bases dos recibos do exercício'),
-          step(`× coeficiente ${bpCoefficient(estimate.coefficientBp)}`, estimate.taxableFromCoefficientCents, 'coeficiente do perfil, definido no pacote de regras'),
-          step('Referência de despesas', reference, '15% do rendimento de serviços (art. 31.º n.º 13 do CIRS)'),
-          step('Despesas elegíveis documentadas', estimate.eligibleExpensesCents, 'valor que indicaste'),
-          step('Acréscimo ao rendimento tributável', estimate.additionToTaxableIncomeCents, 'diferença positiva entre a referência e o documentado'),
-          '<tr class="tot">' +
-            '<td>Rendimento tributável</td>' +
-            `<td class="n">${estimate.taxableIncomeCents === null ? '—' : eur(estimate.taxableIncomeCents)}</td>` +
-            '<td class="small">base do IRS; não é o imposto a pagar</td>' +
-            '</tr>',
-        ].join(''),
-      ) +
-      `<p class="tnote">Retenções já sofridas no exercício: ${eur(estimate.withholdingCents)} — são creditadas no IRS final, não descontadas aqui.</p>` +
-      notes(estimate.limitations) +
-      ((estimate.assumptions ?? []).length === 0
-        ? ''
-        : '<p class="subhead mt-12">Pressupostos</p>' +
-          '<div class="notes tight">' +
-          estimate.assumptions
-            .map((item) => `<p><span aria-hidden="true">·</span><span>${esc(item)}</span></p>`)
-            .join('') +
-          '</div>');
+  if (/^[A-Za-z]:$/.test(segments[0] ?? '')) {
+    walked = `${segments.shift()}\\`;
+    crumbs.push({ label: walked, path: walked });
+  } else if (raw.startsWith('/')) {
+    walked = '/';
+    crumbs.push({ label: 'raiz', path: '/' });
   }
-
-  return (
-    '<div class="panel mt-10 panel-pad">' +
-    '<p class="subhead">IRS — rendimento tributável do regime simplificado</p>' +
-    '<p class="tnote">O rendimento de serviços e o coeficiente já estão no modelo; o que falta são as <strong>despesas elegíveis ' +
-    'documentadas</strong>, porque decidir o que é elegível é um juízo teu e não um cálculo. O valor serve para esta conta e não é guardado.</p>' +
-    '<form data-form="irs" novalidate>' +
-    '<div class="form-grid">' +
-    '<div class="field"><label for="irs-desp">Despesas elegíveis documentadas (€)</label>' +
-    '<input id="irs-desp" name="documentedExpenses" type="text" inputmode="decimal" autocomplete="off" placeholder="5 000,00" required>' +
-    '<small>Escreve em euros; o painel converte para cêntimos antes de enviar.</small></div>' +
-    '</div>' +
-    '<div class="form-actions"><button type="submit" class="btn btn-primary">Calcular rendimento tributável</button></div>' +
-    '<div data-role="form-message"></div>' +
-    '</form>' +
-    result +
-    '</div>'
-  );
+  for (const segment of segments) {
+    walked = walked === '' ? segment : walked.endsWith(separator) ? walked + segment : `${walked}${separator}${segment}`;
+    crumbs.push({ label: segment, path: walked });
+  }
+  return crumbs;
 }
 
-/* --------------------------------------------------------------------------
-   9. Cofre de documentos
-   -------------------------------------------------------------------------- */
+/** Junta um nome a uma pasta com o separador certo. */
+function joinPath(base, name) {
+  const path = String(base ?? '');
+  const separator = path.includes('\\') ? '\\' : '/';
+  if (path === '') return name;
+  return path.endsWith(separator) ? `${path}${name}` : `${path}${separator}${name}`;
+}
+
+function renderVaultPicker() {
+  const listing = state.vault.listing;
+  const host = document.getElementById('vault-picker-body');
+  if (host === null) return;
+
+  if (listing === null) {
+    host.innerHTML = state.vault.error === null
+      ? '<p class="loading">A ler as pastas…</p>'
+      : `<div class="banner banner-err"><span class="b-t">Não foi possível ler as pastas</span><span class="b-d">${esc(state.vault.error)}</span></div>`;
+    return;
+  }
+
+  const crumbs = pathCrumbs(listing.path)
+    .map(
+      (crumb, index) =>
+        (index === 0 ? '' : '<span class="crumb-sep" aria-hidden="true">›</span>') +
+        `<button type="button" class="crumb" data-act="vault-go" data-path="${esc(crumb.path)}">${esc(crumb.label)}</button>`,
+    )
+    .join('');
+
+  const roots = (listing.roots ?? [])
+    .map(
+      (root) =>
+        `<button type="button" class="chip-p" data-act="vault-go" data-path="${esc(root.path)}">${esc(root.label)}</button>`,
+    )
+    .join('');
+
+  const entries = (listing.entries ?? [])
+    .map(
+      (entry) =>
+        '<button type="button" class="vp-entry" data-act="vault-go" data-path="' + esc(entry.path) + '">' +
+        '<span class="vp-ico" aria-hidden="true">📁</span>' +
+        `<span class="vp-name">${esc(entry.name)}</span>` +
+        (entry.isVault ? '<span class="badge local">já tem dados</span>' : '') +
+        '</button>',
+    )
+    .join('');
+
+  const risk = listing.risk ?? { level: 'none', message: null };
+  const riskBlock =
+    risk.level === 'none'
+      ? ''
+      : `<div class="banner ${risk.level === 'fatal' ? 'banner-err' : 'banner-info'}">` +
+        `<span class="b-t">${risk.level === 'fatal' ? 'Esta pasta não pode ser o cofre' : 'Atenção a esta pasta'}</span>` +
+        `<span class="b-d">${escLines(risk.message ?? '')}</span></div>`;
+
+  const current = String(listing.path);
+  const canUse = risk.level !== 'fatal';
+  const already = state.model !== null && state.model.meta.dataDir === current;
+
+  host.innerHTML =
+    riskBlock +
+    '<div class="vp-roots" role="group" aria-label="Atalhos">' + roots + '</div>' +
+    '<nav class="vp-crumbs" aria-label="Caminho">' + crumbs + '</nav>' +
+    (listing.error === null
+      ? entries === ''
+        ? '<p class="empty">Esta pasta não tem subpastas. Podes usá-la tal como está, ou criar uma pasta nova aqui.</p>'
+        : '<div class="vp-list" role="list">' + entries + '</div>'
+      : `<p class="empty"><strong>${esc(listing.error)}</strong>Podes criar a pasta aqui em baixo.</p>`) +
+    '<div class="vp-new">' +
+    '<label class="sr-only" for="vp-new-name">Nome da pasta nova</label>' +
+    '<input id="vp-new-name" type="text" autocomplete="off" spellcheck="false" placeholder="nome da pasta nova">' +
+    '<button type="button" class="btn" data-act="vault-new-folder">Criar e usar esta pasta</button>' +
+    '</div>' +
+    '<div class="vp-actions">' +
+    '<span class="vp-target">Cofre em <span class="mono">' + esc(current) + '</span></span>' +
+    `<button type="button" class="btn btn-primary" data-act="vault-use" data-path="${esc(current)}"${canUse ? '' : ' disabled'}>` +
+    (already ? 'Usar esta pasta (a atual)' : 'Criar o cofre nesta pasta') +
+    '</button>' +
+    '</div>';
+}
+
+async function openVaultPicker(path) {
+  state.vault.open = true;
+  const overlay = document.getElementById('vault-overlay');
+  if (overlay !== null) overlay.hidden = false;
+  await loadVaultListing(path);
+}
+
+function closeVaultPicker() {
+  state.vault.open = false;
+  const overlay = document.getElementById('vault-overlay');
+  if (overlay !== null) overlay.hidden = true;
+}
+
+async function loadVaultListing(path) {
+  state.vault.error = null;
+  renderVaultPicker();
+  const query = path === null || path === undefined || path === '' ? '' : `?path=${encodeURIComponent(path)}`;
+  try {
+    const data = await request(`${API.vaultBrowse}${query}`, 'GET');
+    state.vault.listing = data;
+  } catch (error) {
+    state.vault.listing = null;
+    state.vault.error = error instanceof Error ? error.message : String(error);
+  }
+  renderVaultPicker();
+}
+
+/** Escolher (ou criar) a pasta do cofre, e passar a usá-la. */
+async function chooseVault(path) {
+  if (path === null || path === undefined || String(path).trim() === '') {
+    showError('Escolhe uma pasta para o cofre.');
+    return;
+  }
+  const data = await send(API.vault, { path: String(path) });
+  state.vault.asked = true;
+  // Uma leitura de PDF pertence ao cofre onde o ficheiro foi arquivado: mudar de
+  // pasta sem a descartar deixaria um formulário a apontar para um documento que
+  // já não está no cofre em uso.
+  state.receipt = null;
+  closeVaultPicker();
+  const notes = Array.isArray(data.notes) ? data.notes : [];
+  toast(
+    notes.length === 0
+      ? `Cofre: ${String(data.vault ?? path)}`
+      : `Cofre: ${String(data.vault ?? path)} — ${notes[0]}`,
+  );
+  if (notes.length > 1) for (const note of notes.slice(1)) showError(note);
+}
+
+async function revealVault(button) {
+  await withBusy(button, () => send(API.vaultReveal, {}));
+  toast('Pasta do cofre aberta no gestor de ficheiros.');
+}
 
 function renderCofre(model) {
   const vault = model.vault ?? { entries: [], files: 0, bytes: 0 };
@@ -1712,10 +2015,229 @@ function renderCofre(model) {
     '<span class="vault-sum">' +
     `<span>${esc(vault.files)} ${vault.files === 1 ? 'ficheiro' : 'ficheiros'} no cofre · ${bytesLabel(vault.bytes)}</span>` +
     `<span>Índice: ${entries.length} ${entries.length === 1 ? 'entrada' : 'entradas'}</span>` +
-    `<span>Pasta local: <span class="mono">${esc(model.meta.dataDir)}</span></span>` +
     '</span>' +
     '</div>';
 
+  const { upload, form, table } = vaultArchiveForms(entries);
+
+  return (
+    '<section class="block" id="cofre" aria-label="Cofre de documentos">' +
+    sectionHead(
+      'Cofre de documentos',
+      `${entries.length} ${entries.length === 1 ? 'documento indexado' : 'documentos indexados'}`,
+      'Tudo o que arquivares fica nesta pasta, identificado pelo hash do próprio ficheiro, para se poder ' +
+        'provar mais tarde que não mudou. O original nunca é alterado: é feita uma cópia.',
+    ) +
+    vaultLocationCard(model) +
+    head +
+    receiptImport() +
+    (state.receipt === null ? '' : receiptReview(state.receipt)) +
+    upload +
+    form +
+    table +
+    checklistTable(model, documented) +
+    '<p class="tnote">O cofre é uma pasta local indexada com o hash de cada ficheiro. Nada é copiado para a nuvem e o painel nunca envia o conteúdo dos documentos para lado nenhum.</p>' +
+    '</section>'
+  );
+}
+
+/** O cartão que responde a "onde é que isto está?". */
+function vaultLocationCard(model) {
+  const meta = model.meta ?? {};
+  const source = String(meta.dataDirSource ?? 'flag');
+  const origin =
+    source === 'pointer'
+      ? 'Pasta escolhida por ti e lembrada para as próximas vezes.'
+      : source === 'env'
+        ? 'Pasta indicada pela variável de ambiente VN_FINANCE_DATA_DIR.'
+        : source === 'flag'
+          ? 'Pasta indicada na linha de comandos (--vault ou --data-dir).'
+          : 'Pasta por omissão da aplicação, ainda não escolhida por ti.';
+  const risk = meta.dataDirRisk ?? { level: 'none', message: null };
+  return (
+    '<div class="vault-loc">' +
+    '<div class="vl-main">' +
+    '<span class="vl-k">Pasta do cofre</span>' +
+    `<span class="vl-path mono">${esc(meta.dataDir)}</span>` +
+    `<span class="vl-src">${esc(origin)}</span>` +
+    '</div>' +
+    '<div class="vl-acts">' +
+    '<button type="button" class="btn btn-sm" data-act="reveal-vault" title="Abrir esta pasta no Explorador de Ficheiros">Abrir a pasta</button>' +
+    '<button type="button" class="btn btn-sm" data-act="open-vault-picker">Mudar de pasta…</button>' +
+    '</div>' +
+    (risk.level === 'none'
+      ? ''
+      : `<div class="vl-risk ${risk.level === 'fatal' ? 'bad' : 'warn'}">${escLines(risk.message ?? '')}</div>`) +
+    '</div>'
+  );
+}
+
+/** Ler uma fatura-recibo em PDF: o primeiro passo, antes de confirmar. */
+function receiptImport() {
+  return (
+    '<details class="disclosure noprint" open>' +
+    '<summary>Importar uma fatura-recibo em PDF<span class="cnt off">leitura automática + cópia para o cofre</span></summary>' +
+    '<div class="d-body">' +
+    '<form data-form="receipt-upload" novalidate>' +
+    '<div class="form-grid">' +
+    '<div class="field full"><label for="fr-file">Ficheiro PDF da fatura-recibo</label>' +
+    '<input id="fr-file" name="file" type="file" accept="application/pdf,.pdf" required>' +
+    '<small>O PDF é copiado para o cofre (identificado pelo hash, sem alterar o original) e o painel ' +
+    'mostra o que conseguiu ler. Nada entra no livro de faturas antes de confirmares.</small></div>' +
+    '</div>' +
+    '<div class="form-actions">' +
+    '<button type="submit" class="btn btn-primary">Ler o documento</button>' +
+    '<span class="note">A leitura é feita aqui, neste computador. O ficheiro não sai daqui.</span>' +
+    '</div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    '</div>' +
+    '</details>'
+  );
+}
+
+/** O que o servidor leu, lado a lado com o que a pessoa confirma. */
+function receiptReview(receipt) {
+  const draft = receipt.draft ?? {};
+  const added = receipt.added ?? {};
+  const read = (draft.fields ?? [])
+    .map(
+      (field) =>
+        '<div class="rr-row">' +
+        `<span class="rr-k">${esc(field.label)}</span>` +
+        (field.value === null
+          ? '<span class="rr-v missing">não encontrado</span>'
+          : `<span class="rr-v">${esc(field.value)}</span>`) +
+        (field.hint === null || field.hint === undefined ? '' : `<span class="rr-hint">${esc(field.hint)}</span>`) +
+        '</div>',
+    )
+    .join('');
+
+  const checks = (draft.checks ?? [])
+    .map(
+      (check) =>
+        `<li class="chk ${check.ok ? 'ok' : 'bad'}">` +
+        `<span class="g" aria-hidden="true">${check.ok ? '✓' : '✗'}</span>` +
+        `<span><strong>${esc(check.label)}</strong><em>${esc(check.detail)}</em></span>` +
+        '</li>',
+    )
+    .join('');
+
+  const problems = draft.problems ?? [];
+  const blocking = problems.length > 0 || receipt.issuerMatchesProfile === false;
+
+  const field = (name, label, value, hint, extra = '') =>
+    '<div class="field' + (extra === 'full' ? ' full' : '') + '">' +
+    `<label for="rc-${name}">${esc(label)}</label>` +
+    `<input id="rc-${name}" name="${name}" type="text" autocomplete="off" value="${esc(value ?? '')}">` +
+    (hint === null ? '' : `<small>${esc(hint)}</small>`) +
+    '</div>';
+
+  const treatment = draft.ivaRateBp !== null && draft.ivaRateBp > 0 ? 'iva_pt' : 'isento_art53';
+  const treatmentOptions = [
+    ['iva_pt', 'IVA português (23%, 13% ou 6%)'],
+    ['isento_art53', 'Isento pelo art. 53.º do CIVA'],
+    ['autoliquidacao_ue', 'Autoliquidação — cliente noutro país da UE'],
+    ['exportacao', 'Exportação — cliente fora da UE'],
+  ];
+
+  return (
+    '<section class="receipt" aria-label="Conferir a leitura do documento">' +
+    '<div class="rc-head">' +
+    '<h3>Conferir antes de registar</h3>' +
+    `<span class="rc-file mono">${esc(added.file ?? '')}</span>` +
+    '</div>' +
+
+    (blocking
+      ? '<div class="banner banner-err"><span class="b-t">Este documento não pode ser registado tal como está</span>' +
+        '<span class="b-d">' +
+        esc(
+          receipt.issuerMatchesProfile === false
+            ? 'O PDF foi emitido por outra pessoa, não por ti. Uma fatura que recebeste é uma despesa, e o livro de despesas ainda não existe nesta aplicação. O PDF já ficou guardado no cofre.'
+            : problems.join(' '),
+        ) +
+        '</span></div>'
+      : '') +
+
+    '<div class="rc-cols">' +
+    '<div class="rc-read">' +
+    '<h4>O que o documento diz</h4>' +
+    '<div class="rr-grid">' + read + '</div>' +
+    (checks === ''
+      ? ''
+      : '<h4 class="mt-12">Verificações do documento</h4><ul class="checks">' + checks + '</ul>') +
+    '</div>' +
+
+    '<div class="rc-confirm">' +
+    '<h4>O que fica registado</h4>' +
+    '<form data-form="receipt-record" novalidate>' +
+    '<input type="hidden" name="documentFile" value="' + esc(added.file ?? '') + '">' +
+    '<div class="form-grid">' +
+    field('number', 'Número do documento', draft.number, 'Como está no PDF.') +
+    field('date', 'Data de emissão', draft.date, 'Formato AAAA-MM-DD.') +
+    field('clientName', 'Cliente', draft.customer?.name, null) +
+    field('clientNif', 'NIF do cliente', draft.customer?.nif, null) +
+    '<div class="field"><label for="rc-clientCountry">País do cliente</label>' +
+    '<input id="rc-clientCountry" name="clientCountry" type="text" maxlength="2" autocomplete="off" spellcheck="false" value="' +
+    esc(draft.customerCountryHint ?? '') + '">' +
+    '<small>Código de duas letras (PT, ES, FR…). Decide o IVA e a retenção.</small></div>' +
+    field('atcud', 'ATCUD', draft.atcud, 'Código único do documento.') +
+    field(
+      'baseEuros',
+      'Valor ilíquido (euros)',
+      draft.baseCents === null ? '' : centsToInput(draft.baseCents),
+      'Sem IVA. É a base do IVA e da retenção.',
+    ) +
+    field(
+      'ivaPercent',
+      'Taxa de IVA (%)',
+      draft.ivaRateBp === null ? '' : bpToInput(draft.ivaRateBp),
+      'Como está no documento.',
+    ) +
+    field(
+      'retentionPercent',
+      'Retenção na fonte (%)',
+      draft.retentionCents === null || draft.baseCents === null || draft.baseCents === 0
+        ? '0'
+        : bpToInput(Math.round((draft.retentionCents / draft.baseCents) * 10000)),
+      '0 se não houve retenção.',
+    ) +
+    '<div class="field"><label for="rc-vatTreatment">Tratamento de IVA</label>' +
+    '<select id="rc-vatTreatment" name="vatTreatment">' +
+    treatmentOptions
+      .map(
+        ([value, label]) =>
+          `<option value="${value}"${value === treatment ? ' selected' : ''}>${esc(label)}</option>`,
+      )
+      .join('') +
+    '</select></div>' +
+    '<div class="field full"><label for="rc-description">Descrição</label>' +
+    '<input id="rc-description" name="description" type="text" autocomplete="off" value="' +
+    esc(draft.description ?? '') + '"></div>' +
+    '</div>' +
+    '<div class="form-actions">' +
+    '<button type="submit" class="btn btn-primary"' + (blocking ? ' disabled' : '') + '>Registar no livro de faturas</button>' +
+    '<button type="button" class="btn" data-act="discard-receipt">Descartar a leitura</button>' +
+    '<span class="note">' +
+    (draft.declaresPaid === true
+      ? 'O documento diz que foi pago: fica registado como pago, com o PDF como comprovativo.'
+      : 'Se corrigires algum valor, a diferença entre o PDF e o registo fica no registo de auditoria.') +
+    '</span>' +
+    '</div>' +
+    '<div data-role="form-message"></div>' +
+    '</form>' +
+    '</div>' +
+    '</div>' +
+    '</section>'
+  );
+}
+
+/**
+ * Os três blocos do arquivo manual: escolher um ficheiro, indicar um caminho
+ * absoluto para um ficheiro que já está nesta máquina, e a lista do que já lá
+ * está.
+ */
+function vaultArchiveForms(entries) {
   const upload =
     '<details class="disclosure noprint" open>' +
     '<summary>Escolher um ficheiro deste computador<span class="cnt off">o servidor calcula o SHA-256 e copia</span></summary>' +
@@ -1804,25 +2326,13 @@ function renderCofre(model) {
     );
   } else {
     table = emptyState(
-      'Nada registado no cofre',
-      'Ainda não há documentos indexados. Escolhe um comprovativo e guarda-o no cofre para começar a fechar as pendências.',
+      'Ainda não há documentos no cofre',
+      'Guarda aqui um comprovativo, uma guia ou um contrato. Associar o documento à obrigação ' +
+        'correspondente é o que faz o painel deixar de a contar como pendente.',
     );
   }
 
-  return (
-    '<section class="block" id="cofre" aria-label="Cofre de documentos">' +
-    sectionHead(
-      'Cofre de documentos',
-      `${entries.length} entradas indexadas · ficheiros guardados apenas nesta máquina`,
-    ) +
-    head +
-    upload +
-    form +
-    table +
-    checklistTable(model, documented) +
-    '<p class="tnote">O cofre é uma pasta local indexada com o hash de cada ficheiro. Nada é copiado para a nuvem e o painel nunca envia o conteúdo dos documentos para lado nenhum.</p>' +
-    '</section>'
-  );
+  return { upload, form, table };
 }
 
 /**
@@ -1956,6 +2466,9 @@ function renderRegras(model) {
       `Pacote <span class="mono">pt/${esc(model.meta.packVersion)}</span> · ` +
         `${summary.obligations ?? 0} regras (${summary.verified ?? 0} verificadas · ${summary.partial ?? 0} parciais · ` +
         `${(summary.unverified ?? 0) + (summary.stale ?? 0)} por verificar) · ${summary.sources ?? 0} fontes`,
+      'Todo o cálculo desta aplicação sai daqui, e cada regra diz de que lei vem e até onde foi ' +
+        'confirmada. As que ainda não estão verificadas aparecem como tal: um prazo por confirmar é ' +
+        'uma informação, não uma certeza.',
     ) +
     (freshness === null
       ? ''
@@ -2191,6 +2704,9 @@ function renderDiagnostico(model) {
     sectionHead(
       'Diagnóstico',
       'O mesmo que o comando <span class="mono">doctor</span> responde: perfil, pacote de regras, cofre e chave',
+      'Se alguma coisa não estiver a funcionar — um valor em falta, uma pasta em risco, uma chave por ' +
+        'abrir — é aqui que se vê o que se passa. Tudo o que os comandos de terminal diriam está nesta ' +
+        'secção, porque quem usa o painel não deve ter de abrir um terminal para saber isto.',
     ) +
     verdict +
     envTable +
@@ -2368,6 +2884,9 @@ function renderAssistente(model) {
     sectionHead(
       'Atualizar regras',
       'A única função do assistente: propor os valores que a lei muda de ano para ano. Não conversa, não aconselha e não vê os teus dados.',
+      'Os prazos e as taxas mudam todos os anos. Em vez de os escrever à mão no pacote de regras, ' +
+        'podes pedir a um modelo que os proponha — e a proposta fica por confirmar até tu a validares. ' +
+        'É o único momento em que algo sai deste computador, e sai sem nada teu lá dentro.',
     ) +
     '<div class="ia">' +
     '<div class="ia-cfg">' +
@@ -2689,18 +3208,23 @@ function renderOnboarding(model) {
   const problems = model.pack?.problems ?? [];
   return (
     '<section class="block" aria-label="Primeiros passos">' +
-    sectionHead('Primeiros passos', 'O painel não inventa dados') +
+    sectionHead(
+      'Primeiros passos',
+      'O painel não inventa dados',
+      'Faltam os dados que só tu tens: os da tua declaração de início de atividade. Enquanto não ' +
+        'estiverem aqui, a aplicação prefere não mostrar nada a mostrar estimativas inventadas.',
+    ) +
     '<div class="onboard">' +
     '<h2>Ainda não existe perfil neste cofre</h2>' +
-    '<p>O painel lê o perfil, os recibos e o pacote de regras do cofre local. Sem perfil não há enquadramento, não há agenda e não há indicadores — ' +
+    '<p>O painel lê o perfil, as faturas registadas e o pacote de regras do cofre local. Sem perfil não há enquadramento, não há agenda e não há indicadores — ' +
     'e é deliberado que assim seja: um painel que preenche estes valores por estimativa seria um painel em que não se pode confiar.</p>' +
     '<p>O formulário de perfil tem os dados da tua declaração de início de atividade: NIF, nome, regime de IVA e a data de abertura. ' +
     'Sem eles a aplicação não sabe que obrigações te pertencem, e não os adivinha.</p>' +
     '<ul>' +
-    '<li>O cofre fica em <span class="mono">' + esc(model.meta.dataDir) + '</span> e nunca sai deste computador.</li>' +
+    '<li>O cofre fica em <span class="mono">' + esc(model.meta.dataDir) + '</span> e nunca sai deste computador. Podes abrir a pasta e mudá-la na secção «Cofre de documentos».</li>' +
     '<li>O volume de negócios do ano anterior nunca é assumido: sem ele, a aplicação não avalia a isenção do art. 53.º do CIVA e diz que não avalia.</li>' +
     '<li>Um perfil já existente pode ser carregado de um ficheiro <span class="mono">profile.json</span>, no mesmo formulário.</li>' +
-    '<li>Depois do perfil criado, esta página passa a mostrar enquadramento, agenda fiscal, recibos, Segurança Social, IVA e IRS.</li>' +
+    '<li>Depois do perfil criado, esta página passa a mostrar enquadramento, agenda fiscal, faturas, Segurança Social, IVA e IRS.</li>' +
     '</ul>' +
     '<div class="acts">' +
     '<button type="button" class="btn btn-primary" data-act="open-profile">Preencher o perfil</button>' +
@@ -2741,34 +3265,43 @@ function renderNoToken() {
 }
 
 /* --------------------------------------------------------------------------
-   Rodapé
+   Sobre
    -------------------------------------------------------------------------- */
 
-function renderFooter(model) {
+/**
+ * O que a aplicação não faz, numa página em vez de num rodapé.
+ *
+ * A lista não é escrita aqui: vem do modelo, do mesmo sítio de onde a linha de
+ * comandos e a documentação a leem. Se um dia deixar de ser verdade, é uma
+ * avaria num sítio só — e não duas versões da mesma promessa a divergir.
+ */
+function renderAbout(model) {
   const guarantees = model.guarantees ?? [];
-  const checksum = String(model.meta.packChecksum ?? '');
+  const lock =
+    '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2"/>' +
+    '<path d="M5.6 7V5.2a2.4 2.4 0 014.8 0V7"/></svg>';
+
   return (
-    '<footer class="foot">' +
-    '<p class="rule">Regras pt/' +
-    esc(model.meta.packVersion) +
-    ' · verificação ' +
-    esc(checksum.slice(0, 16)) +
-    (checksum === '' ? '' : '…') +
-    ' · fontes citadas em cada regra</p>' +
-    (guarantees.length === 0
-      ? ''
-      : '<p class="subhead mt-8">O que esta aplicação não faz</p>' +
-        '<ul>' +
-        guarantees.map((item) => `<li>${esc(item)}</li>`).join('') +
-        '</ul>') +
-    '<p class="warn">Esta aplicação não substitui um contabilista certificado e não entrega declarações por ti.</p>' +
-    '<p class="local">' +
-    '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.6 7V5.2a2.4 2.4 0 014.8 0V7"/></svg>' +
+    '<section class="block" id="about" aria-label="Sobre esta aplicação">' +
+    sectionHead(
+      'About',
+      null,
+      'Nada desta lista é uma funcionalidade por construir: são decisões, e nenhuma delas depende de ' +
+        'configuração. É também a razão pela qual não há aqui nada para autorizar, sincronizar ou manter ' +
+        'ligado à Internet.',
+    ) +
+    '<p class="subhead">O que esta aplicação não faz</p>' +
+    '<ul class="about-list">' +
+    guarantees.map((item) => `<li>${esc(item)}</li>`).join('') +
+    '</ul>' +
+    '<p class="about-warn">Esta aplicação não substitui um contabilista certificado e não entrega declarações por ti.</p>' +
+    '<p class="about-local">' +
+    lock +
     '<span>Todos os dados residem neste computador · sem telemetria · sem servidores · painel local v' +
     esc(model.meta.version) +
     '</span>' +
     '</p>' +
-    '</footer>'
+    '</section>'
   );
 }
 
@@ -2782,37 +3315,97 @@ function render(model) {
   if (host === null) return;
   host.setAttribute('aria-busy', 'false');
 
+  // Primeiro o sítio onde os dados vivem, depois os dados. Uma instalação nova
+  // que começa a guardar a vida financeira de alguém numa pasta escondida da
+  // pasta pessoal está a tomar uma decisão que não foi de ninguém; por isso a
+  // pergunta vem antes de tudo o resto, e só quando ainda não há nada.
+  if (needsVaultChoice(model)) {
+    state.vault.asked = true;
+    renderProfileModal(model);
+    host.innerHTML = renderVaultSetup(model) + renderDiagnostico(model);
+    return;
+  }
+
   // First run: there is nothing to show until the profile exists, so the form is
   // what opens. Asked once per page, so closing it to read the rules does not
-  // have it spring back on the next render.
+  // have it spring back on the next render — and only on the Resumo page, which
+  // is the normal way in: landing on `#regras` from a link and being covered by a
+  // form is worse than a card that says what is missing.
+  const page = pageById(state.page);
   const hasProfile = model.profile !== null && model.profile !== undefined;
   if (!hasProfile && !state.profilePrompted) {
     state.profilePrompted = true;
-    state.profileOpen = true;
+    if (page.id === 'painel') state.profileOpen = true;
   }
   renderProfileModal(model);
 
-  const html = [renderAlertBlock(model)];
-  if (model.profile === null || model.profile === undefined) {
-    html.push(renderOnboarding(model));
-  } else {
-    html.push(renderKpis(model));
-    html.push(renderEnquadramento(model));
+  const html = [];
+
+  if (!hasProfile && PROFILE_PAGES.has(page.id)) {
+    // Uma página que só mostra zeros é pior do que uma página que explica o que
+    // falta: o painel não inventa um perfil, diz que precisa dele.
+    html.push(renderNeedsProfile(page));
+  } else if (page.id === 'painel') {
+    html.push(renderAlertBlock(model, { page: page.id }));
+    if (hasProfile) {
+      html.push(renderKpis(model));
+      html.push(renderEnquadramento(model));
+    } else {
+      html.push(renderOnboarding(model));
+    }
+  } else if (page.id === 'agenda') {
     html.push(renderAgenda(model));
+  } else if (page.id === 'recibos') {
     html.push(renderRecibos(model));
+  } else if (page.id === 'ss') {
     html.push(renderSs(model));
-    html.push(renderIvaIrs(model));
+  } else if (page.id === 'iva') {
+    html.push(renderIva(model));
+  } else if (page.id === 'irs') {
+    html.push(renderIrs(model));
+  } else if (page.id === 'cofre') {
     html.push(renderCofre(model));
+  } else if (page.id === 'regras') {
     html.push(renderRegras(model));
+  } else if (page.id === 'diagnostico') {
+    html.push(renderDiagnostico(model));
+  } else if (page.id === 'assistente') {
+    html.push(renderAssistente(model));
+  } else if (page.id === 'about') {
+    html.push(renderAbout(model));
   }
-  // Diagnostics and the assistant are shown with or without a profile: "why is
-  // there no profile, and why can I not send anything" are exactly the questions
-  // of a first run, and answering them with a CLI command is what this section
-  // exists to stop doing.
-  html.push(renderDiagnostico(model));
-  html.push(renderAssistente(model));
-  html.push(renderFooter(model));
+
+  // O aviso de alertas urgentes aparece em qualquer página: um prazo em atraso
+  // não deixa de existir por se estar a olhar para outra coisa.
+  if (page.id !== 'painel' && hasProfile) html.unshift(renderAlertBlock(model, { page: page.id }));
+
   host.innerHTML = html.join('');
+}
+
+/**
+ * A página que precisa de um perfil, e o caminho para o criar.
+ *
+ * Substitui os zeros que o modelo devolve quando não há perfil: uma tabela de
+ * trimestres a zero parece um resultado, e não é — é a ausência de um dado que
+ * só a pessoa tem.
+ */
+function renderNeedsProfile(page) {
+  return (
+    '<section class="block" aria-label="Perfil necessário">' +
+    sectionHead(page.label, 'Falta o perfil do contribuinte') +
+    '<div class="onboard">' +
+    `<h2>Esta página precisa do perfil para calcular «${esc(page.label)}»</h2>` +
+    '<p>O IVA, a Segurança Social, a agenda e o rendimento tributável saem todos da mesma base: os dados ' +
+    'da tua declaração de início de atividade e as faturas que registares. Sem perfil, o painel não sabe ' +
+    'a que regime estás sujeito nem que obrigações te pertencem.</p>' +
+    '<p>Não é um erro nem uma avaria: é o painel a recusar-se a mostrar zeros que pareceriam resultados.</p>' +
+    '<div class="acts">' +
+    '<button type="button" class="btn btn-primary" data-act="open-profile">Preencher o perfil</button>' +
+    '<a class="btn" href="#regras">Ver as regras e as fontes</a>' +
+    '</div>' +
+    '</div>' +
+    '</section>'
+  );
 }
 
 /* --------------------------------------------------------------------------
@@ -2866,62 +3459,6 @@ function fieldChecked(form, name) {
   return field !== null && field.checked === true;
 }
 
-/** Ledger -> pré-seleções do formulário. Só olha para o que já está registado. */
-function computeLedgerDefaults(invoices) {
-  const pick = (list) => {
-    if (list.length === 0) return null;
-    const count = (get) => {
-      const map = new Map();
-      for (const invoice of list) {
-        const key = String(get(invoice));
-        map.set(key, (map.get(key) ?? 0) + 1);
-      }
-      return [...map.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    };
-    return {
-      ivaBp: Number(count((invoice) => invoice.ivaRateBp)),
-      retentionBp: Number(count((invoice) => invoice.retentionBp)),
-      treatment: count((invoice) => invoice.vatTreatment),
-    };
-  };
-  const pt = invoices.filter((invoice) => invoice.clientCountry === 'PT');
-  const foreign = invoices.filter((invoice) => invoice.clientCountry !== 'PT');
-  state.ledger = { pt: pick(pt), foreign: pick(foreign) };
-}
-
-function applyCountryDefaults() {
-  const country = document.getElementById('f-country');
-  const other = document.getElementById('f-country-other-wrap');
-  const treatment = document.getElementById('f-treatment');
-  const iva = document.getElementById('f-iva');
-  const retention = document.getElementById('f-ret');
-  if (country === null || treatment === null || iva === null || retention === null) return;
-
-  const isOther = country.value === '__outro__';
-  if (other !== null) other.hidden = !isOther;
-
-  const group = isOther ? 'terceiros' : (country.selectedOptions[0]?.dataset.group ?? 'terceiros');
-  // Defaults come from the rule pack (model.defaults) when there is no history to
-  // learn from. Deriving them from previous invoices alone left the FIRST invoice
-  // of a client group with empty rates, which the API then refused.
-  const pack = state.model?.defaults ?? {};
-  const bps = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
-  if (group === 'pt') {
-    const pt = state.ledger.pt;
-    treatment.value = pt?.treatment ?? (state.model?.profile?.iva?.regime === 'isento_art53' ? 'isento_art53' : 'iva_pt');
-    const fromHistory = pt === null || pt === undefined ? null : bps(pt.ivaBp);
-    const fromPack = treatment.value === 'iva_pt' ? bps(pack.ivaNormalBp) : 0;
-    iva.value = bpToInput(fromHistory ?? fromPack ?? 0);
-    const retentionDefault = pt === null || pt === undefined ? null : bps(pt.retentionBp);
-    retention.value = bpToInput(retentionDefault ?? bps(pack.withholdingResidentBp) ?? 0);
-  } else {
-    const foreign = state.ledger.foreign;
-    treatment.value = foreign?.treatment ?? (group === 'ue' ? 'autoliquidacao_ue' : 'exportacao');
-    iva.value = '0';
-    const foreignDefault = foreign === null || foreign === undefined ? null : bps(foreign.retentionBp);
-    retention.value = bpToInput(foreignDefault ?? 0);
-  }
-}
 
 async function submitProfile(form) {
   const body = {};
@@ -2949,78 +3486,6 @@ async function submitProfile(form) {
   toast('Enquadramento atualizado no cofre local.');
 }
 
-async function submitInvoice(form) {
-  const body = {};
-
-  const number = fieldValue(form, 'number');
-  if (number !== '') body.number = number;
-
-  const date = fieldValue(form, 'date');
-  if (!isIsoDate(date)) {
-    formMessage(form, 'err', 'Data de emissão: usa o formato AAAA-MM-DD do campo de data.');
-    return;
-  }
-  body.date = date;
-
-  const clientName = fieldValue(form, 'clientName');
-  if (clientName === '') {
-    formMessage(form, 'err', 'O nome do cliente é obrigatório.');
-    return;
-  }
-  body.clientName = clientName;
-
-  const clientNif = fieldValue(form, 'clientNif');
-  if (clientNif !== '') body.clientNif = clientNif;
-
-  let country = fieldValue(form, 'clientCountry');
-  if (country === '__outro__') {
-    const other = fieldValue(form, 'clientCountryOther').toUpperCase();
-    if (!/^[A-Z]{2}$/.test(other)) {
-      formMessage(form, 'err', 'Indica o código do país com duas letras (por exemplo US).');
-      return;
-    }
-    country = other;
-  }
-  body.clientCountry = country;
-
-  const description = fieldValue(form, 'description');
-  if (description !== '') body.description = description;
-
-  const base = parseEurosToCents(fieldValue(form, 'baseCents'));
-  if (base === undefined || base === null || base <= 0) {
-    formMessage(form, 'err', 'Base de incidência: escreve um valor em euros maior do que zero, por exemplo 1 200,50.');
-    return;
-  }
-  body.baseCents = base;
-
-  const iva = parsePercentToBp(fieldValue(form, 'ivaRateBp'));
-  if (iva === undefined || iva === null || iva < 0) {
-    formMessage(form, 'err', 'Taxa de IVA: escreve a percentagem, por exemplo 23 ou 0.');
-    return;
-  }
-  body.ivaRateBp = iva;
-
-  const treatment = fieldValue(form, 'vatTreatment');
-  if (treatment !== '') body.vatTreatment = treatment;
-
-  const retention = parsePercentToBp(fieldValue(form, 'retentionBp'));
-  if (retention === undefined || retention < 0) {
-    formMessage(form, 'err', 'Retenção na fonte: escreve a percentagem, por exemplo 25 ou 0.');
-    return;
-  }
-  body.retentionBp = retention === null ? 0 : retention;
-
-  const atcud = fieldValue(form, 'atcud');
-  if (atcud !== '') body.atcud = atcud;
-
-  const status = fieldValue(form, 'status');
-  if (status !== '') body.status = status;
-
-  body.paymentProofInVault = fieldChecked(form, 'paymentProofInVault');
-
-  await send(API.invoices, body);
-  toast('Recibo registado no cofre local.');
-}
 
 async function submitDocument(form) {
   const path = fieldValue(form, 'path');
@@ -3073,6 +3538,105 @@ async function submitDocumentUpload(form) {
       : `Documento no cofre: ${added.file} · sha256 ${String(added.sha256 ?? '').slice(0, 16)}…`,
   );
   if (input !== null) input.value = '';
+}
+
+/* --------------------------------------------------------------------------
+   Fatura-recibo em PDF: enviar, conferir, registar.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Enviar o PDF para leitura.
+ *
+ * Duas coisas acontecem de uma vez, e é de propósito: o ficheiro é arquivado no
+ * cofre (a cópia é sempre segura — é o documento que a pessoa quis guardar) e o
+ * servidor diz o que conseguiu ler. O livro de faturas não é tocado: registrar
+ * uma fatura é uma decisão, e a decisão é o passo seguinte.
+ */
+async function submitReceiptUpload(form) {
+  const input = form.querySelector('input[type="file"]');
+  const file = input === null || input.files === null ? null : input.files[0];
+  if (file === null) {
+    formMessage(form, 'err', 'Escolhe o PDF da fatura-recibo.');
+    return;
+  }
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+    formMessage(form, 'err', 'Este passo lê faturas em PDF. Para outro tipo de ficheiro, usa «Guardar um documento no cofre».');
+    return;
+  }
+
+  const data = await sendBinary(`${API.receiptsUpload}?name=${encodeURIComponent(file.name)}`, file);
+  state.receipt = {
+    draft: data.draft ?? {},
+    added: data.added ?? {},
+    issuerMatchesProfile: data.issuerMatchesProfile ?? null,
+  };
+  if (input !== null) input.value = '';
+  // O modelo já foi aplicado pelo sendBinary: este render acrescenta o cartão de
+  // conferência, que vive no estado.
+  if (state.model !== null) applyModel(state.model);
+  const host = document.getElementById('cofre');
+  if (host !== null) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const found = (state.receipt.draft.fields ?? []).filter((field) => field.value !== null).length;
+  toast(`PDF guardado no cofre. Campos lidos: ${found} de ${(state.receipt.draft.fields ?? []).length}.`);
+}
+
+/** Registar a fatura confirmada: os valores do formulário são a declaração. */
+async function submitReceiptRecord(form) {
+  const documentFile = fieldValue(form, 'documentFile');
+  if (documentFile === '') {
+    formMessage(form, 'err', 'O documento já não está identificado. Lê o PDF outra vez.');
+    return;
+  }
+
+  const body = { documentFile };
+
+  const text = (name) => fieldValue(form, name);
+  if (text('number') !== '') body.number = text('number');
+  if (text('date') !== '') body.date = text('date');
+  if (text('clientName') !== '') body.clientName = text('clientName');
+  if (text('clientNif') !== '') body.clientNif = text('clientNif');
+  if (text('clientCountry') !== '') body.clientCountry = text('clientCountry').toUpperCase().slice(0, 2);
+  if (text('description') !== '') body.description = text('description');
+  if (text('atcud') !== '') body.atcud = text('atcud');
+  if (text('vatTreatment') !== '') body.vatTreatment = text('vatTreatment');
+
+  // As duas conversões que a interface faz, e as únicas: euros -> cêntimos e
+  // percentagem -> pontos base. É o contrato da API a exigi-las.
+  const base = parseEurosToCents(text('baseEuros'));
+  if (base === undefined || base === null || base <= 0) {
+    formMessage(form, 'err', 'Escreve o valor ilíquido em euros, por exemplo 813,01.');
+    return;
+  }
+  body.baseCents = base;
+
+  const iva = text('ivaPercent') === '' ? 0 : parsePercentToBp(text('ivaPercent'));
+  if (iva === undefined || iva === null || iva < 0) {
+    formMessage(form, 'err', 'Escreve a taxa de IVA em percentagem, por exemplo 23.');
+    return;
+  }
+  body.ivaRateBp = iva;
+
+  const retention = text('retentionPercent') === '' ? 0 : parsePercentToBp(text('retentionPercent'));
+  if (retention === undefined || retention === null || retention < 0) {
+    formMessage(form, 'err', 'Escreve a retenção em percentagem, ou 0 se não houve.');
+    return;
+  }
+  body.retentionBp = retention;
+
+  const data = await send(API.receiptsRecord, body);
+  state.receipt = null;
+  if (state.model !== null) applyModel(state.model);
+
+  const invoice = data.invoice ?? {};
+  const divergences = Array.isArray(data.divergences) ? data.divergences : [];
+  const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+  toast(
+    `Fatura ${String(invoice.number ?? '')} registada no livro.` +
+      (divergences.length === 0 ? '' : ` Corrigido em relação ao PDF: ${divergences.join('; ')}`),
+  );
+  // Os avisos do servidor são notas, não erros: dizem o que ficou registado e
+  // porque é que o documento e o registo podem não coincidir ao cêntimo.
+  if (warnings.length > 0) showNotice(warnings.join('\n• '), warnings.length > 1 ? 'warn' : 'info');
 }
 
 /** Um POST cujo corpo são bytes de um ficheiro, e não JSON. */
@@ -3148,26 +3712,29 @@ async function submitAiKey(form, unlockOnly) {
   );
 }
 
-/** O rendimento tributável do IRS: um cálculo, não um registo. Nada é gravado. */
-async function submitIrs(form) {
-  const cents = parseEurosToCents(fieldValue(form, 'documentedExpenses'));
-  if (cents === undefined || cents === null || cents < 0) {
-    formMessage(form, 'err', 'Escreve as despesas elegíveis em euros, por exemplo 5 000,00.');
-    return;
-  }
-  const data = await request(API.irsEstimate, 'POST', { documentedExpensesCents: cents });
-  state.irs = data.estimate ?? null;
-  state.irsInput = cents;
-  if (state.model !== null) applyModel(state.model);
-  // O formulário é reconstruído no render: o valor escrito volta a ele, porque
-  // continua a ser o valor para o qual o resultado apresentado é a resposta.
-  const input = document.getElementById('irs-desp');
-  if (input !== null) input.value = centsToInput(cents);
-  toast('Rendimento tributável calculado. O valor não foi guardado.');
-}
+/* A navegação entre separadores é do endereço, não do JavaScript: uma ligação
+   `#cofre` num alerta, o botão "voltar" do navegador e uma ligação colada noutro
+   sítio têm todas de levar ao mesmo sítio. Por isso o roteador ouve o hash, e os
+   botões que mudam de página limitam-se a escrevê-lo. */
+window.addEventListener('hashchange', () => {
+  const route = currentRoute();
+  if (route.page === state.page && route.anchor === state.anchor) return;
+  applyRoute(route);
+});
 
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
+  // Uma ligação interna é apanhada aqui para a página ser renderizada já, e não
+  // no instante seguinte: o `hashchange` é assíncrono.
+  const link = event.target.closest('a[href^="#"]');
+  if (link !== null && link.getAttribute('href') !== '#') {
+    const resolved = routeFor(String(link.getAttribute('href')));
+    if (resolved.page !== state.page || resolved.anchor !== state.anchor) {
+      event.preventDefault();
+      navigate(resolved.page, resolved.anchor);
+    }
+    return;
+  }
   const trigger = event.target.closest('[data-act]');
   if (trigger === null || trigger.disabled === true) return;
   const act = trigger.dataset.act;
@@ -3205,7 +3772,7 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (act === 'scroll-agenda') {
-    document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    navigate('agenda');
     return;
   }
   if (act === 'filter') {
@@ -3213,20 +3780,9 @@ document.addEventListener('click', (event) => {
     if (state.model !== null) applyModel(state.model);
     return;
   }
-  if (act === 'open-invoice') {
-    const details = document.getElementById('nova-fatura');
-    if (details !== null) {
-      details.open = true;
-      details.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const first = details.querySelector('input,select');
-      if (first !== null) first.focus();
-    }
-    return;
-  }
   if (act === 'preview-update') {
     state.preview = true;
-    if (state.model !== null) applyModel(state.model);
-    document.getElementById('assistente')?.scrollIntoView({ block: 'start' });
+    navigate('assistente');
     return;
   }
   if (act === 'ai-key-forget') {
@@ -3302,6 +3858,61 @@ document.addEventListener('click', (event) => {
     });
     return;
   }
+  if (act === 'open-vault-picker') {
+    const start = state.model === null ? null : state.model.meta.dataDir;
+    void openVaultPicker(start);
+    return;
+  }
+  if (act === 'close-vault-picker') {
+    closeVaultPicker();
+    return;
+  }
+  if (act === 'vault-go') {
+    void loadVaultListing(trigger.dataset.path ?? null);
+    return;
+  }
+  if (act === 'use-default-vault') {
+    const path = state.model === null ? '' : state.model.meta.dataDir;
+    void withBusy(trigger, () => chooseVault(path)).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
+    return;
+  }
+  if (act === 'vault-use') {
+    void withBusy(trigger, () => chooseVault(trigger.dataset.path ?? '')).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
+    return;
+  }
+  if (act === 'vault-new-folder') {
+    const field = document.getElementById('vp-new-name');
+    const name = field === null ? '' : String(field.value).trim();
+    const base = state.vault.listing === null ? '' : String(state.vault.listing.path);
+    if (name === '') {
+      showError('Escreve o nome da pasta nova.');
+      return;
+    }
+    if (/[\\/]/.test(name)) {
+      showError('O nome da pasta nova não pode ter barras.');
+      return;
+    }
+    void withBusy(trigger, () => chooseVault(joinPath(base, name))).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
+    return;
+  }
+  if (act === 'reveal-vault') {
+    void revealVault(trigger).catch((error) => {
+      showError(error instanceof Error ? error.message : String(error));
+    });
+    return;
+  }
+  if (act === 'discard-receipt') {
+    state.receipt = null;
+    if (state.model !== null) applyModel(state.model);
+    toast('Leitura descartada. O PDF continua guardado no cofre.');
+    return;
+  }
   if (act === 'reveal-nif') {
     const nifNode = document.getElementById('nif-val');
     const reveal = document.getElementById('reveal-btn');
@@ -3330,18 +3941,18 @@ document.addEventListener('submit', (event) => {
       ? () => submitProfile(form)
       : kind === 'profile-full'
         ? () => submitProfileFull(form)
-        : kind === 'invoice'
-          ? () => submitInvoice(form)
-          : kind === 'document'
-            ? () => submitDocument(form)
-            : kind === 'document-upload'
-              ? () => submitDocumentUpload(form)
-              : kind === 'ai-key'
-                ? () => submitAiKey(form, false)
-                : kind === 'ai-key-unlock'
-                  ? () => submitAiKey(form, true)
-                  : kind === 'irs'
-                    ? () => submitIrs(form)
+        : kind === 'document'
+          ? () => submitDocument(form)
+          : kind === 'document-upload'
+            ? () => submitDocumentUpload(form)
+            : kind === 'receipt-upload'
+              ? () => submitReceiptUpload(form)
+              : kind === 'receipt-record'
+                ? () => submitReceiptRecord(form)
+                : kind === 'ai-key'
+                  ? () => submitAiKey(form, false)
+                  : kind === 'ai-key-unlock'
+                    ? () => submitAiKey(form, true)
                     : null;
   if (work === null) return;
   void withBusy(button, work).catch((error) => {
@@ -3352,7 +3963,7 @@ document.addEventListener('submit', (event) => {
 
 document.addEventListener('change', (event) => {
   const target = event.target;
-  if (target instanceof HTMLSelectElement && target.id === 'f-country') applyCountryDefaults();
+  // Um `profile.json` escolhido no disco entra pelo mesmo POST do formulário.
   if (target instanceof HTMLInputElement && target.id === 'pf-file') {
     const file = target.files === null ? null : target.files[0];
     target.value = '';
@@ -3370,10 +3981,13 @@ document.addEventListener('change', (event) => {
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
   if (event.target.id === 'profile-overlay') closeProfileModal();
+  if (event.target.id === 'vault-overlay') closeVaultPicker();
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && state.profileOpen) closeProfileModal();
+  if (event.key !== 'Escape') return;
+  if (state.profileOpen) closeProfileModal();
+  else if (state.vault.open) closeVaultPicker();
 });
 
 /* --------------------------------------------------------------------------
@@ -3403,8 +4017,6 @@ async function boot({ silent = false } = {}) {
       throw new ApiError('A resposta do servidor não tem a forma do modelo do painel.');
     }
     clearError();
-    computeLedgerDefaults(model.invoices ?? []);
-    state.irs = null;
     applyModel(model);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -3421,5 +4033,10 @@ async function boot({ silent = false } = {}) {
 }
 
 state.token = bootstrapToken();
+
+/* A página de arranque é a que o endereço pede, e não sempre o Resumo: um
+   separador tem de poder ser guardado nos favoritos e partilhado, e abrir em
+   `#cofre` e aterrar no Resumo tornaria o endereço mentira. */
+applyRoute(currentRoute());
 
 void boot();

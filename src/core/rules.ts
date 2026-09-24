@@ -502,6 +502,19 @@ export interface PackSummary {
   nullConstants: string[];
 }
 
+/**
+ * Whether the pack declares an obligation with this id.
+ *
+ * A document is filed against a rule by name, and that name used to be stored
+ * exactly as it was typed. A typo therefore filed the document against nothing:
+ * no error, no trace, and the obligation it was meant to document stayed
+ * undocumented for ever. Both interfaces ask this before they write the index,
+ * so the check has one home.
+ */
+export function declaresObligation(pack: RulePack, obligationId: string): boolean {
+  return pack.obligations.some((rule) => rule.id === obligationId);
+}
+
 export function summarisePack(loaded: LoadedPack): PackSummary {
   const { pack } = loaded;
   const nulls: string[] = [];

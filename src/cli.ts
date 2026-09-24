@@ -40,6 +40,7 @@ import {
   validateProfile,
 } from './core/profile.ts';
 import {
+  declaresObligation,
   defaultPackPath,
   freshness,
   loadRulePack,
@@ -976,6 +977,15 @@ function commandVault(values: Values, context: Context): void {
     const absolute = resolve(target);
     const kind = str(values, 'kind');
     const obligationId = str(values, 'obligation');
+    // The panel refuses an id the pack does not declare; the command line is an
+    // equivalent interface and must refuse the same thing, or a typo would be
+    // caught in the browser and silently accepted here.
+    if (obligationId !== undefined) {
+      const { pack } = loadRulePack(resolvePackPath(str(values, 'rules'), context.year).path);
+      if (!declaresObligation(pack, obligationId)) {
+        fail(`"${obligationId}" não é um id de regra do pacote em uso. A lista está em \`vnfin rules\`.`);
+      }
+    }
     let added: { file: string; sha256: string };
     try {
       added = context.vault.addDocument(absolute, {

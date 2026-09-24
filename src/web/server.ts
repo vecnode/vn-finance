@@ -41,7 +41,7 @@ import {
   normaliseImportedProfile,
   validateProfile,
 } from '../core/profile.ts';
-import { loadRulePack, resolvePackPath } from '../core/rules.ts';
+import { declaresObligation, loadRulePack, resolvePackPath } from '../core/rules.ts';
 import type { IrsRegime, IvaRegime, LoadedPack, TaxProfile } from '../core/types.ts';
 import {
   MIN_PASSPHRASE_LENGTH,
@@ -447,6 +447,7 @@ function profileDraftFromBody(
   const previous = optionalCents(body, 'turnoverPreviousYearCents');
   const expected = optionalCents(body, 'turnoverCurrentYearExpectedCents');
   const intraCommunityOperations = optionalBool(body, 'intraCommunityOperations');
+  const intraCommunityOperationsAbove50k = optionalBool(body, 'intraCommunityOperationsAbove50k');
   const exports = optionalBool(body, 'exports');
   const startupExemptionActive = optionalBool(body, 'startupExemptionActive');
 
@@ -460,6 +461,7 @@ function profileDraftFromBody(
       ...(previous === undefined ? {} : { turnoverPreviousYearCents: previous }),
       ...(expected === undefined ? {} : { turnoverCurrentYearExpectedCents: expected }),
       ...(intraCommunityOperations === undefined ? {} : { intraCommunityOperations }),
+      ...(intraCommunityOperationsAbove50k === undefined ? {} : { intraCommunityOperationsAbove50k }),
       ...(exports === undefined ? {} : { exports }),
       ...(startupExemptionActive === undefined ? {} : { startupExemptionActive }),
     },
@@ -626,6 +628,8 @@ async function handleProfile(context: RequestContext, body: Record<string, unkno
 
   const eu = optionalBool(body, 'intraCommunityOperations');
   if (eu !== undefined) updated.activity.intraCommunityOperations = eu;
+  const euAbove50k = optionalBool(body, 'intraCommunityOperationsAbove50k');
+  if (euAbove50k !== undefined) updated.activity.intraCommunityOperationsAbove50k = euAbove50k;
   const third = optionalBool(body, 'exports');
   if (third !== undefined) updated.activity.exports = third;
   const startup = optionalBool(body, 'startupExemptionActive');
@@ -731,7 +735,7 @@ async function handleDocumentUpload(
 ): Promise<Record<string, unknown>> {
   const name = sanitiseDocumentName(url.searchParams.get('name') ?? 'documento');
   const kind = optionalQuery(url, 'kind', 40);
-  const obligationId = optionalQuery(url, 'obligationId', 80);
+  const obligationId = checkObligationId(context, optionalQuery(url, 'obligationId', 80));
   const bytes = await readBinaryBody(request, MAX_UPLOAD_BYTES);
   if (bytes.length === 0) throw new HttpError(400, 'o ficheiro recebido está vazio.');
 
@@ -753,6 +757,26 @@ function optionalQuery(url: URL, key: string, max: number): string | null {
   if (value === null || value.trim() === '') return null;
   if (value.length > max) throw new HttpError(400, `parâmetro "${key}" demasiado longo.`);
   return value.trim();
+}
+
+/**
+ * The rule a document is filed against, checked against the pack.
+ *
+ * A free-text field here used to be stored unexamined, so a typo meant the
+ * document silently failed to clear the obligation it was meant to document:
+ * no error, no trace, and a checklist that stayed red for ever. The id either
+ * names a rule in this pack or the request is refused, and the message says so.
+ */
+function checkObligationId(context: RequestContext, obligationId: string | null): string | null {
+  if (obligationId === null) return null;
+  if (!declaresObligation(loadCurrentPack(context).pack, obligationId)) {
+    throw new HttpError(
+      400,
+      `"${obligationId}" não é um id de regra do pacote em uso. Escolhe uma das obrigações listadas ` +
+        'na agenda ou na página do cofre.',
+    );
+  }
+  return obligationId;
 }
 
 // ---------------------------------------------------------------------------
@@ -1168,7 +1192,7 @@ function handleAiKeyUnlock(context: RequestContext, body: Record<string, unknown
 async function handleDocument(context: RequestContext, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const path = requireString(body, 'path', 1024);
   const kind = optionalString(body, 'kind', 40);
-  const obligationId = optionalString(body, 'obligationId', 80);
+  const obligationId = checkObligationId(context, optionalString(body, 'obligationId', 80));
   let added: { file: string; sha256: string };
   try {
     added = context.vault.addDocument(path, {

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-import { checksumOf, freshness, loadRulePack, summarisePack, validateRulePack } from './rules.ts';
+import { checksumOf, declaresObligation, freshness, loadRulePack, summarisePack, validateRulePack } from './rules.ts';
 
 function rawPack(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -196,6 +196,16 @@ test('freshness tells the truth about which year the rules cover', () => {
 
   const future = validateRulePack(rawPack({ year: 2027 })).pack;
   assert.equal(freshness(future, '2026-09-20').status, 'future');
+});
+
+test('an obligation id is only recognised when the pack declares it', () => {
+  const { pack } = validateRulePack(rawPack());
+  assert.equal(declaresObligation(pack, 'iva.dp.mensal'), true);
+  assert.equal(
+    declaresObligation(pack, 'iva.dp.mensal.typo'),
+    false,
+    'um id que o pacote não declara é recusado, para o documento não ficar arquivado contra nada',
+  );
 });
 
 test('the summary counts what is verified and lists what is missing', () => {

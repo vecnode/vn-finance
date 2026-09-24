@@ -573,6 +573,27 @@ function isActionable(instance) {
   return instance.status !== 'done' && instance.status !== 'not_applicable' && instance.status !== 'untracked';
 }
 
+/**
+ * As regras que ainda não têm documento associado, uma por regra.
+ *
+ * Um documento responde por uma regra inteira: `documentedRules` é um conjunto de
+ * ids de regra, e uma obrigação mensal é uma só regra por muitas vezes que caia no
+ * ano. Contar as instâncias da agenda multiplicava o mesmo documento em falta por
+ * doze e dizia à pessoa que tinha trinta e dois documentos para encontrar quando
+ * estavam em causa onze regras — e o número caía cinco de uma vez ao arquivar um
+ * único comprovativo, sem que nada explicasse porquê.
+ */
+function rulesMissingDocumentation(model) {
+  const documented = documentedRules(model);
+  const ids = new Set();
+  for (const instance of model.agenda ?? []) {
+    if (isActionable(instance) && needsDocumentation(instance) && !documented.has(instance.ruleId)) {
+      ids.add(instance.ruleId);
+    }
+  }
+  return ids;
+}
+
 function statusPill(instance, today) {
   switch (instance.status) {
     case 'done':
@@ -780,9 +801,8 @@ function renderChrome(model) {
   setCount('cnt-iva', String(ivaOpen.length), ivaOpen.some((i) => i.status === 'overdue') ? 'due' : ivaOpen.length === 0 ? 'off' : 'soon');
   setCount('cnt-irs', String(irsOpen.length), irsOpen.some((i) => i.status === 'overdue') ? 'due' : irsOpen.length === 0 ? 'off' : 'soon');
 
-  const documented = documentedRules(model);
-  const missingDocs = open.filter((instance) => needsDocumentation(instance) && !documented.has(instance.ruleId));
-  setCount('cnt-cofre', String(missingDocs.length), missingDocs.length > 0 ? 'due' : 'off');
+  const missingDocs = rulesMissingDocumentation(model);
+  setCount('cnt-cofre', String(missingDocs.size), missingDocs.size > 0 ? 'due' : 'off');
 
   setCount('cnt-regras', String(summary.obligations ?? 0), (model.pack?.problems ?? []).length > 0 ? 'soon' : '');
 
@@ -830,16 +850,13 @@ function renderAlertBlock(model, options = {}) {
     return delta >= 0 && delta <= 30;
   });
   const overdue = agenda.filter((instance) => instance.status === 'overdue');
-  const documented = documentedRules(model);
-  const missingDocs = agenda.filter(
-    (instance) => isActionable(instance) && needsDocumentation(instance) && !documented.has(instance.ruleId),
-  );
+  const missingDocs = rulesMissingDocumentation(model);
 
   const top = flags.find((flag) => flag.severity === 'urgent') ?? flags[0] ?? null;
   const counts =
     `<span>${next30.length} ${next30.length === 1 ? 'obrigação' : 'obrigações'} nos próximos 30 dias</span>` +
     (overdue.length > 0 ? `<span class="dot" aria-hidden="true">·</span><span>${overdue.length} em atraso</span>` : '') +
-    `<span class="dot" aria-hidden="true">·</span><span>${missingDocs.length} ${missingDocs.length === 1 ? 'documento em falta' : 'documentos em falta'} no cofre</span>` +
+    `<span class="dot" aria-hidden="true">·</span><span>${missingDocs.size} ${missingDocs.size === 1 ? 'regra sem documentação' : 'regras sem documentação'} no cofre</span>` +
     `<span class="dot" aria-hidden="true">·</span><span>${summary.urgent} urgentes · ${summary.attention} de atenção · ${summary.info} informativos</span>`;
 
   /*
@@ -1163,6 +1180,7 @@ function renderEnquadramento(model) {
       '<small>Alterar o enquadramento é uma decisão declarativa, não um ajuste de cálculo.</small></div>' +
       '<div class="field"><span class="lbl">Clientes fora de Portugal</span>' +
       `<label class="check" for="p-eu"><input id="p-eu" name="intraCommunityOperations" type="checkbox"${activity.intraCommunityOperations === true ? ' checked' : ''}> <span>Presto serviços a clientes da União Europeia (operações intracomunitárias)</span></label>` +
+      `<label class="check" for="p-eu50k"><input id="p-eu50k" name="intraCommunityOperationsAbove50k" type="checkbox"${activity.intraCommunityOperationsAbove50k === true ? ' checked' : ''}> <span>Essas operações passaram 50 000 EUR num trimestre (a declaração recapitulativa passa a mensal, mesmo no regime trimestral)</span></label>` +
       `<label class="check" for="p-ex"><input id="p-ex" name="exports" type="checkbox"${activity.exports === true ? ' checked' : ''}> <span>Presto serviços a clientes fora da União Europeia (exportações)</span></label>` +
       '</div>' +
       '</div>' +
@@ -2002,15 +2020,12 @@ function renderCofre(model) {
   const vault = model.vault ?? { entries: [], files: 0, bytes: 0 };
   const entries = vault.entries ?? [];
   const documented = documentedRules(model);
-  const agenda = model.agenda ?? [];
-  const missing = agenda.filter(
-    (instance) => isActionable(instance) && needsDocumentation(instance) && !documented.has(instance.ruleId),
-  );
+  const missing = rulesMissingDocumentation(model);
 
   const head =
     '<div class="vault-head">' +
-    (missing.length > 0
-      ? `<span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>${missing.length} em falta</span>`
+    (missing.size > 0
+      ? `<span class="pill p-danger"><span class="g" aria-hidden="true">▲</span>${missing.size} ${missing.size === 1 ? 'regra em falta' : 'regras em falta'}</span>`
       : '<span class="pill p-ok"><span class="g" aria-hidden="true">✓</span>Sem pendências conhecidas</span>') +
     '<span class="vault-sum">' +
     `<span>${esc(vault.files)} ${vault.files === 1 ? 'ficheiro' : 'ficheiros'} no cofre · ${bytesLabel(vault.bytes)}</span>` +
@@ -2018,7 +2033,7 @@ function renderCofre(model) {
     '</span>' +
     '</div>';
 
-  const { upload, form, table } = vaultArchiveForms(entries);
+  const { upload, form, table } = vaultArchiveForms(entries, model);
 
   return (
     '<section class="block" id="cofre" aria-label="Cofre de documentos">' +
@@ -2237,7 +2252,35 @@ function receiptReview(receipt) {
  * absoluto para um ficheiro que já está nesta máquina, e a lista do que já lá
  * está.
  */
-function vaultArchiveForms(entries) {
+/**
+ * O campo "obrigação associada" de um documento.
+ *
+ * Era uma caixa de texto a pedir "o id da regra", o que exigia saber de cor que se
+ * escreve `iva.dp.trimestral` — e uma gralha não dava erro nenhum: o documento
+ * ficava no cofre e a regra continuava por documentar, sem que nada o dissesse.
+ * Passa a ser a lista das regras que o pacote declara, com as que continuam sem
+ * documentação à cabeça, porque são essas que a pessoa está ali para resolver.
+ */
+function obligationField(model, idPrefix) {
+  const missing = rulesMissingDocumentation(model);
+  const rules = model.rules?.obligations ?? [];
+  const option = (rule) =>
+    `<option value="${esc(rule.id)}">${esc(rule.id)} — ${esc(rule.title)}</option>`;
+  const open = rules.filter((rule) => missing.has(rule.id)).map(option).join('');
+  const rest = rules.filter((rule) => !missing.has(rule.id)).map(option).join('');
+
+  return (
+    `<div class="field"><label for="${idPrefix}-obligation">Obrigação associada</label>` +
+    `<select id="${idPrefix}-obligation" name="obligationId">` +
+    '<option value="">— sem obrigação associada —</option>' +
+    (open === '' ? '' : `<optgroup label="Sem documentação no cofre">${open}</optgroup>`) +
+    (rest === '' ? '' : `<optgroup label="Outras regras do pacote">${rest}</optgroup>`) +
+    '</select>' +
+    '<small>Associar o documento à regra é o que faz o painel deixar de o contar como em falta.</small></div>'
+  );
+}
+
+function vaultArchiveForms(entries, model) {
   const upload =
     '<details class="disclosure noprint" open>' +
     '<summary>Escolher um ficheiro deste computador<span class="cnt off">o servidor calcula o SHA-256 e copia</span></summary>' +
@@ -2258,9 +2301,7 @@ function vaultArchiveForms(entries) {
     '<option value="contrato">Contrato</option>' +
     '<option value="outro" selected>Outro</option>' +
     '</select></div>' +
-    '<div class="field"><label for="du-obligation">Obrigação associada (id da regra)</label>' +
-    '<input id="du-obligation" name="obligationId" type="text" autocomplete="off" placeholder="opcional · ex. iva.dp.trimestral">' +
-    '<small>Associar o documento à regra é o que faz o painel deixar de o contar como em falta.</small></div>' +
+    obligationField(model, 'du') +
     '</div>' +
     '<div class="form-actions">' +
     '<button type="submit" class="btn btn-primary">Guardar no cofre</button>' +
@@ -2289,9 +2330,7 @@ function vaultArchiveForms(entries) {
     '<option value="contrato">Contrato</option>' +
     '<option value="outro" selected>Outro</option>' +
     '</select></div>' +
-    '<div class="field"><label for="d-obligation">Obrigação associada (id da regra)</label>' +
-    '<input id="d-obligation" name="obligationId" type="text" autocomplete="off" placeholder="opcional · ex. iva.dp.trimestral">' +
-    '<small>Associar o documento à regra é o que faz o painel deixar de o contar como em falta.</small></div>' +
+    obligationField(model, 'd') +
     '</div>' +
     '<div class="form-actions">' +
     '<button type="submit" class="btn btn-primary">Registar no cofre</button>' +
@@ -2989,6 +3028,7 @@ function profileFormHtml(model) {
     '<small>A tua estimativa: é o que permite avisar a meio do ano.</small></div>' +
     '<div class="field full"><span class="lbl">Clientes fora de Portugal</span>' +
     `<label class="check" for="pf-eu"><input id="pf-eu" name="intraCommunityOperations" type="checkbox"${activity.intraCommunityOperations === true ? ' checked' : ''}> <span>Presto serviços a clientes da União Europeia (operações intracomunitárias)</span></label>` +
+    `<label class="check" for="pf-eu50k"><input id="pf-eu50k" name="intraCommunityOperationsAbove50k" type="checkbox"${activity.intraCommunityOperationsAbove50k === true ? ' checked' : ''}> <span>Essas operações passaram 50 000 EUR num trimestre (a declaração recapitulativa passa a mensal, mesmo no regime trimestral)</span></label>` +
     `<label class="check" for="pf-ex"><input id="pf-ex" name="exports" type="checkbox"${activity.exports === true ? ' checked' : ''}> <span>Presto serviços a clientes fora da União Europeia (exportações)</span></label>` +
     `<label class="check" for="pf-ss"><input id="pf-ss" name="startupExemptionActive" type="checkbox"${profile?.ss?.startupExemptionActive === true ? ' checked' : ''}> <span>Estou no período de isenção de contribuições do primeiro ano (Segurança Social)</span></label>` +
     '</div>' +
@@ -3089,6 +3129,7 @@ async function submitProfileFull(form) {
     turnoverPreviousYearCents: previous,
     turnoverCurrentYearExpectedCents: expected,
     intraCommunityOperations: fieldChecked(form, 'intraCommunityOperations'),
+    intraCommunityOperationsAbove50k: fieldChecked(form, 'intraCommunityOperationsAbove50k'),
     exports: fieldChecked(form, 'exports'),
     startupExemptionActive: fieldChecked(form, 'startupExemptionActive'),
   };
@@ -3480,6 +3521,7 @@ async function submitProfile(form) {
   const regime = fieldValue(form, 'ivaRegime');
   if (regime !== '') body.ivaRegime = regime;
   body.intraCommunityOperations = fieldChecked(form, 'intraCommunityOperations');
+  body.intraCommunityOperationsAbove50k = fieldChecked(form, 'intraCommunityOperationsAbove50k');
   body.exports = fieldChecked(form, 'exports');
 
   await send(API.profile, body);

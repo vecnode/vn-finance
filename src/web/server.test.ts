@@ -732,6 +732,46 @@ test('a document chosen in the browser is uploaded, hashed and indexed', async (
   });
 });
 
+/*
+ * The rule id used to be stored exactly as it arrived, so a typo left the
+ * document indexed against nothing: no error, and the checklist it was meant to
+ * clear stayed red for ever. The id names a rule in this pack or it is refused.
+ */
+test('a document filed against a rule id the pack does not declare is refused', async () => {
+  await withServer(async (server, _vault) => {
+    const bytes = Buffer.from('%PDF-1.4 comprovativo de teste\n', 'utf8');
+
+    const invented = await api(server, '/api/documents/upload?name=x.pdf&obligationId=iva.dp.mensal.typo', {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: bytes,
+    });
+    assert.equal(invented.status, 400, 'um id de regra inventado é recusado');
+
+    const real = await api(server, '/api/documents/upload?name=y.pdf&obligationId=iva.dp.trimestral', {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: bytes,
+    });
+    assert.equal(real.status, 200, 'um id de regra do pacote é aceite');
+    const payload = (await real.json()) as { model: DashboardModel };
+    assert.ok(
+      payload.model.vault.entries.some((entry) => entry.obligationId === 'iva.dp.trimestral'),
+      'o documento fica associado à regra que o pacote declara',
+    );
+
+    // The same check guards the path-based form, which shares the field. The
+    // refusal must name the id and not the file, which does not exist either.
+    const byPath = await api(server, '/api/documents', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path: 'C:\\nao\\existe.pdf', obligationId: 'regra.inexistente' }),
+    });
+    assert.equal(byPath.status, 400);
+    assert.match(await byPath.text(), /regra\.inexistente/, 'a recusa nomeia o id que não existe');
+  });
+});
+
 test('the taxable base of the simplified regime is computed on request, and stored nowhere', async () => {
   await withServer(async (server, vault) => {
     await api(server, '/api/invoices', {

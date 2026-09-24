@@ -45,6 +45,8 @@ export interface ProfileInput {
   irsRegime?: IrsRegime;
   coefficientBp?: number;
   intraCommunityOperations?: boolean;
+  /** RITI art. 30.º n.º 2: intra-community operations above 50 000 EUR in a quarter. */
+  intraCommunityOperationsAbove50k?: boolean;
   exports?: boolean;
   hasEmployees?: boolean;
   usesCertifiedInvoicingSoftware?: boolean;
@@ -75,6 +77,7 @@ export interface ProfileDraft {
   residentPT?: boolean;
   isCompany?: boolean;
   intraCommunityOperations?: boolean;
+  intraCommunityOperationsAbove50k?: boolean;
   exports?: boolean;
   startupExemptionActive?: boolean;
 }
@@ -147,6 +150,16 @@ export function buildProfile(
       ...(turnoverPreviousYearCents === undefined ? {} : { turnoverPreviousYearCents }),
       ...(turnoverCurrentYearExpectedCents === undefined ? {} : { turnoverCurrentYearExpectedCents }),
       intraCommunityOperations: draft.intraCommunityOperations ?? current?.activity.intraCommunityOperations ?? false,
+      // Deliberately NOT defaulted to false. Absent means "nobody answered", which
+      // is a different fact from "no", and the recapitulativa frequency cannot be
+      // settled without the answer — see the RITI art. 30.º conditions.
+      ...(draft.intraCommunityOperationsAbove50k === undefined &&
+      current?.activity.intraCommunityOperationsAbove50k === undefined
+        ? {}
+        : {
+            intraCommunityOperationsAbove50k:
+              draft.intraCommunityOperationsAbove50k ?? current?.activity.intraCommunityOperationsAbove50k,
+          }),
       exports: draft.exports ?? current?.activity.exports ?? false,
       hasEmployees: current?.activity.hasEmployees ?? false,
       usesCertifiedInvoicingSoftware: current?.activity.usesCertifiedInvoicingSoftware ?? true,
@@ -187,6 +200,9 @@ export function createDefaultProfile(input: ProfileInput): TaxProfile {
         ? {}
         : { intraCommunityOperations: input.intraCommunityOperations }),
       ...(input.exports === undefined ? {} : { exports: input.exports }),
+      ...(input.intraCommunityOperationsAbove50k === undefined
+        ? {}
+        : { intraCommunityOperationsAbove50k: input.intraCommunityOperationsAbove50k }),
       ...(input.startupExemptionActive === undefined
         ? {}
         : { startupExemptionActive: input.startupExemptionActive }),
@@ -241,6 +257,9 @@ export function normaliseImportedProfile(value: unknown): TaxProfile {
       ? { intraCommunityOperations: activityRecord['intraCommunityOperations'] }
       : {}),
     ...(typeof activityRecord['exports'] === 'boolean' ? { exports: activityRecord['exports'] } : {}),
+    ...(typeof activityRecord['intraCommunityOperationsAbove50k'] === 'boolean'
+      ? { intraCommunityOperationsAbove50k: activityRecord['intraCommunityOperationsAbove50k'] }
+      : {}),
     ...(typeof raw['residentPT'] === 'boolean' ? { residentPT: raw['residentPT'] } : {}),
     ...(typeof raw['isCompany'] === 'boolean' ? { isCompany: raw['isCompany'] } : {}),
     ...(typeof ssRecord['startupExemptionActive'] === 'boolean'

@@ -17,6 +17,7 @@ export const CONDITION_FIELDS: readonly ConditionField[] = [
   'profile.isCompany',
   'activity.categoryB',
   'activity.intraCommunityOperations',
+  'activity.intraCommunityOperationsAbove50k',
   'activity.exports',
   'activity.hasEmployees',
   'activity.usesCertifiedInvoicingSoftware',
@@ -58,6 +59,8 @@ export function readField(profile: TaxProfile, field: ConditionField): unknown {
       return profile.activity.categoryB;
     case 'activity.intraCommunityOperations':
       return profile.activity.intraCommunityOperations;
+    case 'activity.intraCommunityOperationsAbove50k':
+      return profile.activity.intraCommunityOperationsAbove50k;
     case 'activity.exports':
       return profile.activity.exports;
     case 'activity.hasEmployees':

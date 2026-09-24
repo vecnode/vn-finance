@@ -36,6 +36,33 @@ test('a draft with the two declared fields produces a complete profile', () => {
   assert.equal(validateProfile(profile).filter((problem) => problem.level === 'error').length, 0);
 });
 
+/*
+ * RITI art. 30.º n.º 2 is the exception, so n.º 1 b) is the base rule: "not
+ * asked" has to stay distinguishable from "answered no", or an undeclared
+ * taxpayer would be pushed onto the monthly series by a default nobody chose.
+ */
+test('a exceção das operações intracomunitárias não é preenchida por omissão', () => {
+  const undecided = base();
+  assert.equal(
+    undecided.activity.intraCommunityOperationsAbove50k,
+    undefined,
+    'sem resposta, a exceção fica por declarar — não é o mesmo que "não"',
+  );
+
+  const declared = base({ intraCommunityOperationsAbove50k: true });
+  assert.equal(declared.activity.intraCommunityOperationsAbove50k, true);
+
+  const denied = base({ intraCommunityOperationsAbove50k: false });
+  assert.equal(denied.activity.intraCommunityOperationsAbove50k, false, 'uma negação é uma decisão e é gravada');
+
+  // Editing something else must not quietly answer this question either.
+  const edited = buildProfile({ name: 'Outro Nome' }, { current: declared });
+  assert.equal(edited.activity.intraCommunityOperationsAbove50k, true, 'a resposta declarada mantém-se');
+
+  const untouched = buildProfile({ name: 'Outro Nome' }, { current: undecided });
+  assert.equal(untouched.activity.intraCommunityOperationsAbove50k, undefined, 'e a ausência de resposta também');
+});
+
 test('editing a profile keeps what the form did not mention', () => {
   const current = createDefaultProfile({
     nif: NIF,

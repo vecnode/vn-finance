@@ -57,6 +57,8 @@ const FIELD_LABELS: Partial<Record<ConditionField, string>> = {
   'profile.isCompany': 'ser uma sociedade',
   'activity.categoryB': 'ter atividade aberta na categoria B',
   'activity.intraCommunityOperations': 'efetuar operações intracomunitárias',
+  'activity.intraCommunityOperationsAbove50k':
+    'ter operações intracomunitárias acima de 50 000 EUR num trimestre',
   'activity.exports': 'efetuar exportações',
   'activity.hasEmployees': 'ter trabalhadores por conta de outrem',
   'activity.usesCertifiedInvoicingSoftware': 'usar software de faturação certificado',

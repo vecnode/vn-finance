@@ -408,4 +408,67 @@ if (existsSync(realPackPath)) {
     assert.ok(modelo3, 'o pacote tem de conter a obrigação do Modelo 3');
     assert.equal(modelo3.dueDate, '2026-06-30');
   });
+
+  /*
+   * RITI art. 30.º gives one frequency per taxpayer: n.º 1 a) is monthly for the
+   * monthly regime, n.º 1 b) is quarterly for the quarterly regime, and n.º 2
+   * turns the quarterly taxpayer monthly again once the intra-community
+   * operations pass 50 000 EUR in a quarter. The pack used to schedule the
+   * monthly rule on `intraCommunityOperations` alone, so a quarterly taxpayer
+   * got both series at once — a combination the law never produces.
+   */
+  test('as três regras da declaração recapitulativa nunca se aplicam ao mesmo tempo', () => {
+    const pack = loadRulePack(realPackPath).pack;
+    const rules = [
+      'iva.recapitulativa',
+      'iva.recapitulativa.trimestral',
+      'iva.recapitulativa.mensalPorVolume',
+    ].map((id) => {
+      const rule = pack.obligations.find((candidate) => candidate.id === id);
+      assert.ok(rule, `o pacote tem de declarar ${id}`);
+      return rule;
+    });
+
+    const profile = (ivaRegime: 'mensal' | 'trimestral', above50k?: boolean): TaxProfile => {
+      const built = createDefaultProfile({ nif: '123456789', name: 'Contribuinte de Teste', ivaRegime });
+      return {
+        ...built,
+        activity: {
+          ...built.activity,
+          intraCommunityOperations: true,
+          ...(above50k === undefined ? {} : { intraCommunityOperationsAbove50k: above50k }),
+        },
+      };
+    };
+
+    const scenarios: Array<{ label: string; profile: TaxProfile; expected: string }> = [
+      { label: 'regime mensal', profile: profile('mensal'), expected: 'iva.recapitulativa' },
+      {
+        label: 'regime trimestral, exceção por declarar',
+        profile: profile('trimestral'),
+        expected: 'iva.recapitulativa.trimestral',
+      },
+      {
+        label: 'regime trimestral, exceção negada',
+        profile: profile('trimestral', false),
+        expected: 'iva.recapitulativa.trimestral',
+      },
+      {
+        label: 'regime trimestral acima de 50 000 EUR',
+        profile: profile('trimestral', true),
+        expected: 'iva.recapitulativa.mensalPorVolume',
+      },
+    ];
+
+    for (const scenario of scenarios) {
+      const applicable = rules
+        .filter((rule) => appliesTo(scenario.profile, rule.appliesWhen))
+        .map((rule) => rule.id);
+      assert.deepEqual(
+        applicable,
+        [scenario.expected],
+        `${scenario.label}: exatamente uma frequência pode aplicar-se (obtive ${applicable.join(', ') || 'nenhuma'})`,
+      );
+    }
+  });
 }

@@ -1,7 +1,7 @@
 {
   "jurisdiction": "PT",
   "year": 2026,
-  "packVersion": "2026.1.0",
+  "packVersion": "2026.1.1",
   "generatedAt": "2026-09-20",
   "units": {
     "money": "EUR_cents",
@@ -24,6 +24,14 @@
       "title": "Resumo anual - Obrigações de pagamento em 2026 (Calendário Fiscal)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/calendario_fiscal/Pages/Quadro_res_Pag_2026.aspx",
       "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-riti-art30",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "RITI, artigo 30.º - Declaração recapitulativa (prazos e periodicidade), republicação com efeitos a partir de 01/07/2021",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/RITI_2021/Paginas/riti030.aspx",
+      "retrievedAt": "2026-09-24"
     },
     {
       "id": "at-faq-art53-iva",
@@ -698,10 +706,181 @@
       "kind": "communicate",
       "authority": "AT",
       "tax": "IVA",
-      "title": "Declaração recapitulativa de IVA - envio mensal (prestações de serviços a contribuintes de outros Estados-Membros localizadas no pais do adquirente)",
+      "title": "Declaração recapitulativa de IVA - envio mensal (sujeitos passivos do regime mensal, art. 41.º n.º 1 a) do CIVA)",
       "appliesWhen": [
         {
           "field": "activity.intraCommunityOperations",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "mensal"
+        }
+      ],
+      "periodicity": {
+        "type": "monthly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 2,
+          "day": 20
+        },
+        {
+          "month": 3,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 5,
+          "day": 20
+        },
+        {
+          "month": 6,
+          "day": 22
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 8,
+          "day": 31
+        },
+        {
+          "month": 9,
+          "day": 21
+        },
+        {
+          "month": 10,
+          "day": 20
+        },
+        {
+          "month": 11,
+          "day": 20
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "legalBasis": [
+        "RITI art. 30.º n.º 1 alínea a) (envio até ao dia 20 do mês seguinte, contribuintes abrangidos pela alínea a) do n.º 1 do art. 41.º do CIVA)",
+        "RITI art. 30.º n.º 4 (a obrigação só existe nos períodos em que ocorram as operações abrangidas)"
+      ],
+      "sourceIds": [
+        "at-riti-art30",
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração recapitulativa entregue e comprovativo de submissão",
+        "Faturas relativas a prestações intracomunitárias de serviços e prova da localizacao no Estado-Membro do adquirente",
+        "Comprovativos do número de identificação de IVA validado do adquirente (VIES)"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Periodicidade e prazo confirmados no texto do RITI art. 30.º n.º 1 a). Resta por explicar a data de 31 de agosto de 2026, que o calendário da AT não justifica com nota (ver todo)."
+    },
+    {
+      "id": "iva.recapitulativa.trimestral",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração recapitulativa de IVA - envio trimestral",
+      "appliesWhen": [
+        {
+          "field": "activity.intraCommunityOperations",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "trimestral"
+        },
+        {
+          "field": "activity.intraCommunityOperationsAbove50k",
+          "op": "ne",
+          "value": true
+        }
+      ],
+      "periodicity": {
+        "type": "quarterly",
+        "lagMonths": 1
+      },
+      "deadlineRule": {
+        "kind": "day_of_month",
+        "day": 20
+      },
+      "officialDates2026": [
+        {
+          "month": 1,
+          "day": 20
+        },
+        {
+          "month": 4,
+          "day": 20
+        },
+        {
+          "month": 7,
+          "day": 20
+        },
+        {
+          "month": 10,
+          "day": 20
+        }
+      ],
+      "legalBasis": [
+        "RITI art. 30.º n.º 1 alínea b) (envio até ao dia 20 do mês seguinte ao final do trimestre civil, contribuintes abrangidos pela alínea b) do n.º 1 do art. 41.º do CIVA)"
+      ],
+      "sourceIds": [
+        "at-riti-art30",
+        "at-agenda-decl-2026",
+        "at-folheto-inicio-atividade"
+      ],
+      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
+      "documentsToKeep": [
+        "Declaração recapitulativa entregue e comprovativo de submissão",
+        "Faturas relativas a prestações intracomunitárias de serviços"
+      ],
+      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
+      "verification": "partial",
+      "verifyNote": "Periodicidade e prazo confirmados no RITI art. 30.º n.º 1 b). Não se aplica quando o n.º 2 do mesmo artigo obriga ao envio mensal (operações intracomunitárias acima de 50 000 EUR num trimestre) — essa é a regra iva.recapitulativa.mensalPorVolume."
+    },
+    {
+      "id": "iva.recapitulativa.mensalPorVolume",
+      "kind": "communicate",
+      "authority": "AT",
+      "tax": "IVA",
+      "title": "Declaração recapitulativa de IVA - envio mensal por volume de operações intracomunitárias (regime trimestral de IVA com operações acima de 50 000 EUR num trimestre)",
+      "appliesWhen": [
+        {
+          "field": "activity.intraCommunityOperations",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "iva.regime",
+          "op": "eq",
+          "value": "trimestral"
+        },
+        {
+          "field": "activity.intraCommunityOperationsAbove50k",
           "op": "eq",
           "value": true
         }
@@ -765,11 +944,11 @@
         }
       ],
       "legalBasis": [
-        "Declaração recapitulativa: envio até ao dia 20 do mês seguinte (folheto oficial da AT)"
+        "RITI art. 30.º n.º 2 (os sujeitos passivos da alínea b) do n.º 1 do art. 41.º do CIVA enviam mensalmente quando o montante das operações do art. 23.º n.º 1 c) no trimestre civil em curso ou em qualquer dos quatro trimestres anteriores seja superior a 50 000 EUR)"
       ],
       "sourceIds": [
-        "at-agenda-decl-2026",
-        "at-folheto-inicio-atividade"
+        "at-riti-art30",
+        "at-agenda-decl-2026"
       ],
       "portalUrl": "https://www.portaldasfinancas.gov.pt/",
       "documentsToKeep": [
@@ -779,67 +958,7 @@
       ],
       "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
       "verification": "partial",
-      "verifyNote": "Datas oficiais de 2026 vindas do calendário da AT. A data de 31 de agosto de 2026 não tem nota explicativa no calendário e não foi possível identificar a base legal desse dia (ver todo)."
-    },
-    {
-      "id": "iva.recapitulativa.trimestral",
-      "kind": "communicate",
-      "authority": "AT",
-      "tax": "IVA",
-      "title": "Declaração recapitulativa de IVA - envio trimestral",
-      "appliesWhen": [
-        {
-          "field": "activity.intraCommunityOperations",
-          "op": "eq",
-          "value": true
-        },
-        {
-          "field": "iva.regime",
-          "op": "eq",
-          "value": "trimestral"
-        }
-      ],
-      "periodicity": {
-        "type": "quarterly",
-        "lagMonths": 1
-      },
-      "deadlineRule": {
-        "kind": "day_of_month",
-        "day": 20
-      },
-      "officialDates2026": [
-        {
-          "month": 1,
-          "day": 20
-        },
-        {
-          "month": 4,
-          "day": 20
-        },
-        {
-          "month": 7,
-          "day": 20
-        },
-        {
-          "month": 10,
-          "day": 20
-        }
-      ],
-      "legalBasis": [
-        "Declaração recapitulativa trimestral: envio até ao dia 20 do mês seguinte ao trimestre (linha própria do calendário declarativo de 2026)"
-      ],
-      "sourceIds": [
-        "at-agenda-decl-2026",
-        "at-folheto-inicio-atividade"
-      ],
-      "portalUrl": "https://www.portaldasfinancas.gov.pt/",
-      "documentsToKeep": [
-        "Declaração recapitulativa entregue e comprovativo de submissão",
-        "Faturas relativas a prestações intracomunitárias de serviços"
-      ],
-      "penaltyNote": "A falta de entrega esta sujeita a penalidades nos termos do RGIT; montantes não verificados.",
-      "verification": "partial",
-      "verifyNote": "Datas oficiais de 2026 do calendário da AT ('Declaração recapitulativa para contribuintes com o seu envio trimestral')."
+      "verifyNote": "A regra do art. 30.º n.º 2 foi lida no texto do RITI. O que decide se ela se aplica — o montante trimestral das operações intracomunitárias — é declarado no perfil e não é calculado a partir do livro de faturas, que não tem repartição trimestral por país do adquirente."
     },
     {
       "id": "efatura.comunicacaoFaturas",
@@ -1408,6 +1527,8 @@
     "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo (CIRS art. 71.º n.º 4 a), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida). O texto do artigo foi lido, mas a aplicação a casos concretos (convenções para evitar a dupla tributação, estabelecimento estável) exige revisão humana.",
     "efatura.validacaoDespesas: a base legal do prazo para as despesas pessoais (art. 78.º-B do CIRS) foi apenas referida de forma remissa pelo art. 31.º n.º 15 a); não foi lida integralmente.",
     "Os prazos de conservação de documentos são diferentes conforme o imposto (10 anos no CIVA art. 52.º; 4 anos no CIRS art. 128.º n.º 3). A aplicação deve adotar por omissão o prazo mais longo (10 anos) para as faturas, mas a decisão deve ser validada por um contabilista certificado.",
-    "ss.declaracaoTrimestral: na integração, periodicity.lagMonths foi corrigido de 0 para 1, porque as datas oficiais do próprio pacote (31/01, 30/04, 31/07, 31/10) so alinham com os trimestres com um mês de desfasamento (T1 -> abril, T2 -> julho, T3 -> outubro). O campo deadlineRule.months não e usado pelo motor."
+    "ss.declaracaoTrimestral: na integração, periodicity.lagMonths foi corrigido de 0 para 1, porque as datas oficiais do próprio pacote (31/01, 30/04, 31/07, 31/10) so alinham com os trimestres com um mês de desfasamento (T1 -> abril, T2 -> julho, T3 -> outubro). O campo deadlineRule.months não e usado pelo motor.",
+    "Declaração recapitulativa (iva.recapitulativa, iva.recapitulativa.trimestral, iva.recapitulativa.mensalPorVolume): a periodicidade passou a depender do regime de IVA declarado, como manda o RITI art. 30.º n.º 1 a) e b). Até à versão 2026.1.0 a regra mensal não tinha condição de regime e era agendada em paralelo com a trimestral para qualquer contribuinte com operações intracomunitárias — as duas séries apareciam ao mesmo tempo, o que a lei nunca permite. O desempate do n.º 2 (mensal quando as operações intracomunitárias passam 50 000 EUR num trimestre) depende do campo activity.intraCommunityOperationsAbove50k, que o contribuinte declara; a aplicação não o calcula a partir do livro de faturas porque não há repartição trimestral por país do adquirente. Se o campo estiver por declarar, aplica-se a regra trimestral do n.º 1 b), que é a regra base da lei: a exceção do n.º 2 só se aplica a quem a declarar.",
+    "Declaração recapitulativa e regime de isenção do art. 53.º: as três regras exigem regime de IVA mensal ou trimestral. Um perfil com iva.regime = isento_art53 e operações intracomunitárias declaradas não agenda qualquer recapitulativa, porque o art. 30.º n.º 1 do RITI se refere aos sujeitos passivos das alíneas a) e b) do n.º 1 do art. 41.º do CIVA. Não foi confirmado se, e em que termos, um sujeito passivo isento pelo art. 53.º com prestações intracomunitárias continua obrigado à recapitulativa: confirmar antes de codificar."
   ]
 }

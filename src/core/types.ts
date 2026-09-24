@@ -74,6 +74,17 @@ export interface ActivityProfile {
   turnoverCurrentYearExpectedCents?: Cents;
   /** Intra-community supplies of services, triggering reverse charge and recapitulativa. */
   intraCommunityOperations: boolean;
+  /**
+   * Declared, never inferred: whether the intra-community operations reached
+   * more than 50 000 EUR in the current quarter or in any of the four previous
+   * ones. That is the RITI art. 30.º n.º 2 override, which makes the
+   * recapitulativa MONTHLY even for a quarterly-regime taxpayer. The ledger
+   * holds no reliable quarterly intra-community breakdown to compute it from,
+   * so the person answers it. Undeclared is fine and is not a guess: n.º 1 b)
+   * is the base rule, so the quarterly frequency applies until someone declares
+   * the exception, and the rule pack tests for exactly that.
+   */
+  intraCommunityOperationsAbove50k?: boolean;
   /** Supplies of services to clients outside the European Union. */
   exports: boolean;
   hasEmployees: boolean;
@@ -117,6 +128,7 @@ export type ConditionField =
   | 'profile.isCompany'
   | 'activity.categoryB'
   | 'activity.intraCommunityOperations'
+  | 'activity.intraCommunityOperationsAbove50k'
   | 'activity.exports'
   | 'activity.hasEmployees'
   | 'activity.usesCertifiedInvoicingSoftware'

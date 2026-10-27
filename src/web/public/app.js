@@ -11,8 +11,8 @@
        o contrato da API (`baseCents`, `ivaRateBp`) a exigir a conversão, e é
        por isso que ela está isolada em `parseEurosToCents` / `parsePercentToBp`.
      - NADA É CARREGADO DE FORA. Sem CDN, sem fontes web, sem imagens, sem
-       framework. A única chamada de rede é a que o utilizador autoriza em
-       "Atualizar regras", e vai para o servidor local.
+       framework — e nenhuma chamada de rede para fora deste computador: o
+       painel só fala com o servidor local, por loopback.
    ========================================================================== */
 
 const TOKEN_KEY = 'vnfin.token';
@@ -30,11 +30,6 @@ const API = {
   vaultReveal: '/api/vault/reveal',
   receiptsUpload: '/api/receipts/upload',
   receiptsRecord: '/api/receipts/record',
-  aiKey: '/api/ai-key',
-  aiKeyUnlock: '/api/ai-key/unlock',
-  updateSend: '/api/update/send',
-  updateApply: '/api/update/apply',
-  updateDiscard: '/api/update/discard',
 };
 
 /* --------------------------------------------------------------------------
@@ -48,7 +43,6 @@ const state = {
   page: 'painel',
   anchor: null,
   filter: 'year',
-  preview: false,
   nifRevealed: false,
   /* O formulário de perfil abre sozinho na primeira utilização — quando o cofre
      ainda não tem perfil — e fica disponível no botão "Perfil" a partir daí. */
@@ -97,10 +91,9 @@ const PAGES = [
   { id: 'regras', label: 'Regras e fontes', subtitle: 'A lei citada por trás de cada número' },
   {
     id: 'diagnostico',
-    label: 'Diagnóstico e chave',
-    subtitle: 'Perfil, cofre, pacote de regras e chave da API',
+    label: 'Diagnóstico',
+    subtitle: 'Perfil, cofre e pacote de regras',
   },
-  { id: 'assistente', label: 'Atualizar regras', subtitle: 'A única função que usa a internet' },
   // A última de propósito: não é uma página de trabalho, é a promessa que
   // sustenta as outras todas. Estava em rodapé, em todos os separadores, onde
   // ninguém a lê duas vezes; aqui lê-se quando se quer saber o que a aplicação
@@ -808,18 +801,11 @@ function renderChrome(model) {
 
   /* O diagnóstico conta o que está por resolver: erros de perfil, cofre em git e
      pacote a rever. É o número que responde a "está tudo bem?". */
-  const keyInfo = model.key ?? {};
   const profileErrors = (model.profileProblems ?? []).filter((problem) => problem.level === 'error').length;
   const risk = meta.dataDirRisk ?? { level: 'none' };
   const diagPoints =
     profileErrors + (risk.level === 'none' ? 0 : 1) + ((model.pack?.freshness ?? {}).status === 'current' ? 0 : 1);
   setCount('cnt-diag', diagPoints === 0 ? 'ok' : String(diagPoints), diagPoints === 0 ? 'off' : 'due');
-  if (keyInfo.available !== true) setCount('cnt-diag', 'sem chave', diagPoints === 0 ? 'off' : 'due');
-
-  const update = model.update ?? {};
-  if (update.hasKey === false) setCount('cnt-assistente', 'sem chave', 'off');
-  else if (update.pending) setCount('cnt-assistente', `${update.pendingChanges ?? 0} por aplicar`, 'soon');
-  else setCount('cnt-assistente', 'pronta', 'off');
 
   const meta2 = document.querySelector('meta[name="description"]');
   if (meta2 !== null) meta2.setAttribute('content', `vn-finance — painel local do exercício ${meta.year}. Alertas: ${counts.total}.`);
@@ -830,18 +816,30 @@ function renderChrome(model) {
    -------------------------------------------------------------------------- */
 
 /**
+ * As duas páginas onde os alertas existem.
+ *
+ * São as duas páginas sobre o que está por fazer: o Resumo, que responde a "está
+ * tudo bem?", e a Agenda fiscal, que responde a "o que é que falta e até quando?".
+ * Repetir a faixa em todos os separadores tornava o aviso em decoração — e
+ * decoração é exactamente o que deixa de ser lida quando passa a importar.
+ */
+const ALERT_PAGES = new Set(['painel', 'agenda']);
+
+/**
  * A faixa de alerta — e a lista de alertas, que só pertence ao Resumo.
  *
- * Nas outras páginas aparece apenas quando há algo urgente. Repetir um "sem
- * alertas" verde em dez separadores tornaria o aviso em decoração, e decoração é
- * exactamente o que deixa de ser lida quando passa a importar.
+ * A faixa (o estado, o alerta mais grave e as contagens) aparece no Resumo e na
+ * Agenda fiscal. A lista completa, com a base legal de cada alerta, fica só no
+ * Resumo: é aí que se lê o detalhe, e uma lista de dez linhas impressa em duas
+ * páginas é uma lista que se deixa de ler nas duas.
  */
 function renderAlertBlock(model, options = {}) {
-  const onSummary = (options.page ?? 'painel') === 'painel';
+  const page = options.page ?? 'painel';
+  if (!ALERT_PAGES.has(page)) return '';
+  const onSummary = page === 'painel';
   const today = model.meta.today;
   const flags = model.flags ?? [];
   const summary = model.flagSummary ?? { urgent: 0, attention: 0, info: 0, total: 0 };
-  if (!onSummary && summary.urgent === 0) return '';
   const agenda = model.agenda ?? [];
 
   const next30 = agenda.filter((instance) => {
@@ -860,16 +858,15 @@ function renderAlertBlock(model, options = {}) {
     `<span class="dot" aria-hidden="true">·</span><span>${summary.urgent} urgentes · ${summary.attention} de atenção · ${summary.info} informativos</span>`;
 
   /*
-   * As ações são construídas uma vez: a faixa aparece no Resumo e — quando há
-   * algo urgente — nas outras páginas, e nas outras páginas leva também a ligação
-   * para a lista completa, que só existe no Resumo.
+   * As ações mudam com a página: no Resumo a faixa leva à agenda, que é o plano;
+   * na agenda já se está no plano, e o que falta é a lista completa — que fica no
+   * Resumo.
    */
   const actions =
     '<div class="ab-actions">' +
-    '<button type="button" class="btn btn-primary" data-act="scroll-agenda">Ver o plano</button>' +
     (onSummary
-      ? ''
-      : `<span class="ab-link">${summary.urgent} ${summary.urgent === 1 ? 'urgente' : 'urgentes'} · lista completa no <a href="#painel">Resumo</a></span>`) +
+      ? '<button type="button" class="btn btn-primary" data-act="scroll-agenda">Ver o plano</button>'
+      : `<span class="ab-link">${summary.total} ${summary.total === 1 ? 'verificação ativa' : 'verificações ativas'} · lista completa no <a href="#painel">Resumo</a></span>`) +
     '</div>';
 
   let strip;
@@ -949,10 +946,10 @@ function renderAlertBlock(model, options = {}) {
       '</section>';
   }
 
-  // Nas outras páginas a faixa aponta para o Resumo, onde está a lista completa
-  // com a base legal de cada alerta.
+  // Na Agenda fiscal a faixa leva ao Resumo, onde está a lista completa com a
+  // base legal de cada alerta.
   if (!onSummary) {
-    return `<section class="block" aria-label="Alertas urgentes">${strip}</section>`;
+    return `<section class="block" aria-label="Resumo dos alertas">${strip}</section>`;
   }
 
   return `<section class="block" aria-label="Faixa de alerta">${strip}</section>${list}`;
@@ -1442,6 +1439,19 @@ function invoiceTotals(invoice) {
   return { iva, retention, net: invoice.baseCents + iva - retention };
 }
 
+/**
+ * A ordem em que a lista de faturas se lê: a mais recente em cima.
+ *
+ * A data decide primeiro, porque é o que se procura nesta página ("o que faturei
+ * neste mês?"); o número desempata documentos do mesmo dia, comparado em ordem
+ * natural para que "FT 2026/9" não fique depois de "FT 2026/10" só por ser texto.
+ */
+function latestFirst(left, right) {
+  const byDate = String(right.date ?? '').localeCompare(String(left.date ?? ''));
+  if (byDate !== 0) return byDate;
+  return String(right.number ?? '').localeCompare(String(left.number ?? ''), 'pt-PT', { numeric: true });
+}
+
 /*
  * A lista das faturas emitidas.
  *
@@ -1456,7 +1466,7 @@ function renderRecibos(model) {
   const meta = model.meta;
   const year = String(meta.year);
   const all = model.invoices ?? [];
-  const invoices = all.filter((invoice) => String(invoice.date ?? '').startsWith(year));
+  const invoices = all.filter((invoice) => String(invoice.date ?? '').startsWith(year)).sort(latestFirst);
   const others = all.length - invoices.length;
 
   const empty =
@@ -2534,102 +2544,15 @@ function renderRegras(model) {
    browser.
 
    Nada aqui é calculado: o modelo traz o perfil, o pacote de regras, as
-   contagens do cofre, o risco da pasta de dados e o estado da chave. Esta
-   secção reúne-os num só lugar, e é onde vive o formulário da chave da API,
-   porque era o único passo que ainda obrigava a abrir um terminal.
+   contagens do cofre e o risco da pasta de dados. Esta secção reúne-os num só
+   lugar, e não tem formulários: o que se corrige, corrige-se na página do seu
+   assunto — o perfil no Resumo, o cofre em Cofre de documentos.
    -------------------------------------------------------------------------- */
-
-const KEY_SOURCE_LABEL = {
-  flag: 'indicada no arranque',
-  env: 'variável de ambiente',
-  file: 'ficheiro cifrado no cofre',
-  session: 'esta sessão do painel',
-  none: 'sem origem',
-};
-
-/** A chave da API: guardar, desbloquear, esquecer ou apagar — tudo daqui. */
-function aiKeyPanel(model) {
-  const key = model.key ?? { available: false, source: 'none', masked: null, problems: [], stored: false, locked: false, passphraseFromEnv: false, minPassphraseLength: 12 };
-  const min = Number(key.minPassphraseLength ?? 12);
-
-  const stateLine = key.available
-    ? '<p class="dl-inline"><span class="state on"><span aria-hidden="true">●</span> Chave em uso</span>' +
-      `<span class="mono">${esc(key.masked ?? '••••')}</span>` +
-      `<span class="badge local">${esc(KEY_SOURCE_LABEL[key.source] ?? key.source)}</span></p>`
-    : key.locked
-      ? '<p class="dl-inline"><span class="state off"><span aria-hidden="true">⊘</span> Chave guardada, fechada</span>' +
-        '<span class="badge miss">falta a frase-passe</span></p>'
-      : '<p class="dl-inline"><span class="state off"><span aria-hidden="true">⊘</span> Sem chave configurada</span>' +
-        '<span class="badge miss">assistente desligado</span></p>';
-
-  const unlock =
-    key.locked && !key.available
-      ? '<form data-form="ai-key-unlock" novalidate class="mt-10">' +
-        '<div class="form-grid">' +
-        '<div class="field full"><label for="ak-pass-unlock">Frase-passe da chave guardada</label>' +
-        '<input id="ak-pass-unlock" name="passphrase" type="password" autocomplete="current-password" required>' +
-        `<small>A mesma frase-passe com que a chave foi cifrada (${esc(min)} caracteres ou mais). É usada para abrir a chave e não é guardada.</small></div>` +
-        '</div>' +
-        '<div class="form-actions"><button type="submit" class="btn btn-primary">Desbloquear nesta sessão</button></div>' +
-        '<div data-role="form-message"></div>' +
-        '</form>'
-      : '';
-
-  const replace =
-    '<details class="disclosure noprint"' + (key.available ? '' : ' open') + '>' +
-    '<summary>' + (key.available ? 'Substituir a chave' : 'Configurar a chave DeepSeek') +
-    '<span class="cnt off">fica fora do browser</span></summary>' +
-    '<div class="d-body">' +
-    '<p class="tnote">A chave é enviada para o servidor local por loopback, cifrada no cofre se indicares uma frase-passe, ' +
-    'e nunca é devolvida ao browser — daqui só sai uma máscara. Sem frase-passe a chave vive apenas na memória deste ' +
-    'processo e desaparece quando fechas o painel.</p>' +
-    '<form data-form="ai-key" novalidate>' +
-    '<div class="form-grid">' +
-    '<div class="field full"><label for="ak-key">Chave da API DeepSeek</label>' +
-    '<input id="ak-key" name="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" required>' +
-    '<small>Não é validada aqui: uma chave errada só se revela no primeiro envio. Não é escrita no registo de auditoria.</small></div>' +
-    '<div class="field full"><label for="ak-pass">Frase-passe para a guardar cifrada (opcional)</label>' +
-    `<input id="ak-pass" name="passphrase" type="password" autocomplete="new-password">` +
-    `<small>Com ${esc(min)} caracteres ou mais, a chave fica cifrada no cofre e sobrevive ao reinício. Vazio: só nesta sessão.</small></div>` +
-    '</div>' +
-    '<div class="form-actions">' +
-    '<button type="submit" class="btn btn-primary">Usar esta chave</button>' +
-    (key.source === 'session'
-      ? '<button type="button" class="btn" data-act="ai-key-forget">Esquecer a chave desta sessão</button>'
-      : '') +
-    (key.stored
-      ? '<button type="button" class="btn btn-tertiary" data-act="ai-key-delete">Apagar a chave guardada no cofre</button>'
-      : '') +
-    '</div>' +
-    '<div data-role="form-message"></div>' +
-    '</form>' +
-    '</div>' +
-    '</details>';
-
-  const envNote =
-    key.stored === true && key.passphraseFromEnv === true
-      ? '<p class="tnote"><span class="state on"><span aria-hidden="true">✓</span> Frase-passe no ambiente</span> ' +
-        'A frase-passe está definida no ambiente do servidor (<span class="mono">VN_FINANCE_PASSPHRASE</span>), ' +
-        'por isso a chave guardada no cofre abre sozinha quando o painel arranca.</p>'
-      : '';
-
-  return (
-    '<div class="panel mt-10 panel-pad">' +
-    '<p class="subhead">Assistente — chave da API</p>' +
-    stateLine +
-    envNote +
-    notes(key.problems ?? [], 'danger') +
-    unlock +
-    replace +
-    '</div>'
-  );
-}
 
 function renderDiagnostico(model) {
   const meta = model.meta ?? {};
   const summary = model.pack?.summary ?? {};
   const freshness = model.pack?.freshness ?? null;
-  const key = model.key ?? {};
   const profile = model.profile ?? null;
   const vault = model.vault ?? { files: 0, bytes: 0, entries: [] };
   const risk = meta.dataDirRisk ?? { level: 'none', message: null };
@@ -2654,14 +2577,14 @@ function renderDiagnostico(model) {
   const verdict =
     problems === 0 && warnings === 0
       ? '<div class="disc pos"><span class="sev sev-info"><span class="g" aria-hidden="true">✓</span> Sem problemas</span>' +
-        '<div><p class="a-t">Nada a assinalar</p><p class="a-d">Perfil, pacote de regras, cofre e chave estão como deviam estar.</p></div></div>'
+        '<div><p class="a-t">Nada a assinalar</p><p class="a-d">Perfil, pacote de regras e cofre estão como deviam estar.</p></div></div>'
       : `<div class="disc"><span class="sev ${problems > 0 ? 'sev-alta' : 'sev-media'}"><span class="g" aria-hidden="true">▲</span> ` +
         `${esc(problems)} erro(s) · ${esc(warnings)} aviso(s)</span>` +
         '<div><p class="a-t">O que fazer a seguir</p><p class="a-d">Cada ponto abaixo diz o que se passa e o que falta. ' +
         'Um aviso não impede o trabalho; um erro impede um cálculo.</p></div></div>';
 
   const envTable = tableWrap(
-    'Estado do ambiente local: aplicação, runtime, cofre, pacote de regras e chave da API.',
+    'Estado do ambiente local: aplicação, runtime, cofre e pacote de regras.',
     '<th scope="col">Item</th><th scope="col">Valor</th>',
     [
       '<tr><td>Versão da aplicação</td><td class="mono">' + esc(meta.version ?? '—') + '</td></tr>',
@@ -2670,11 +2593,6 @@ function renderDiagnostico(model) {
       '<tr><td>Cofre</td><td class="mono">' + esc(meta.dataDir ?? '—') + '</td></tr>',
       '<tr><td>Ficheiros no cofre</td><td>' + esc(vault.files) + ' ficheiros · ' + esc(bytesLabel(vault.bytes)) + '</td></tr>',
       '<tr><td>Pacote de regras</td><td>pt/' + esc(meta.packVersion ?? '—') + ' <span class="mono">' + esc(String(meta.packChecksum ?? '').slice(0, 16)) + '…</span><span class="sub mono">' + esc(meta.packPath ?? '') + '</span></td></tr>',
-      '<tr><td>Chave DeepSeek</td><td>' +
-        (key.available
-          ? '<span class="badge local">presente</span> <span class="mono">' + esc(key.masked ?? '••••') + '</span> <span class="sub">' + esc(KEY_SOURCE_LABEL[key.source] ?? key.source ?? '') + '</span>'
-          : '<span class="badge miss">ausente</span><span class="sub">o assistente fica indisponível; todo o resto funciona</span>') +
-        '</td></tr>',
     ].join(''),
   );
 
@@ -2742,10 +2660,10 @@ function renderDiagnostico(model) {
     '<section class="block" id="diagnostico" aria-label="Diagnóstico">' +
     sectionHead(
       'Diagnóstico',
-      'O mesmo que o comando <span class="mono">doctor</span> responde: perfil, pacote de regras, cofre e chave',
-      'Se alguma coisa não estiver a funcionar — um valor em falta, uma pasta em risco, uma chave por ' +
-        'abrir — é aqui que se vê o que se passa. Tudo o que os comandos de terminal diriam está nesta ' +
-        'secção, porque quem usa o painel não deve ter de abrir um terminal para saber isto.',
+      'O mesmo que o comando <span class="mono">doctor</span> responde: perfil, pacote de regras e cofre',
+      'Se alguma coisa não estiver a funcionar — um valor em falta, uma pasta em risco, uma regra sem ' +
+        'documentação — é aqui que se vê o que se passa. Tudo o que os comandos de terminal diriam está ' +
+        'nesta secção, porque quem usa o painel não deve ter de abrir um terminal para saber isto.',
     ) +
     verdict +
     envTable +
@@ -2754,205 +2672,8 @@ function renderDiagnostico(model) {
     profileBlock +
     '<p class="subhead mt-14">Pacote de regras e cofre</p>' +
     packBlock +
-    aiKeyPanel(model) +
     '<p class="tnote">Este diagnóstico é lido do cofre local e do pacote de regras em cada carregamento da página. ' +
-    'Nada é enviado para fora deste computador: a única chamada de rede da aplicação é a que autorizares em «Atualizar regras».</p>' +
-    '</section>'
-  );
-}
-
-/* --------------------------------------------------------------------------
-   12. Atualizar regras (o assistente limitado)
-   -------------------------------------------------------------------------- */
-
-function unitValue(value, unit) {
-  if (value === null || value === undefined) return '<span class="mini">— sem valor no pacote</span>';
-  switch (unit) {
-    case 'EUR_cents':
-      return eur(value);
-    case 'basis_points':
-      return bpPercent(value);
-    case 'hundredths_of_ias':
-      return `${INT.format(value)} <span class="mini">centésimos do IAS</span>`;
-    case 'months':
-      return `${INT.format(value)} ${value === 1 ? 'mês' : 'meses'}`;
-    default:
-      return esc(String(value));
-  }
-}
-
-function renderAssistente(model) {
-  const update = model.update ?? { variables: [], variableCount: 0, requestCharacters: 0, hasKey: false, keySource: '', pending: null, pendingChanges: 0 };
-  const summary = model.pack?.summary ?? {};
-  const variables = update.variables ?? [];
-  const pending = update.pending ?? null;
-
-  const keyRow =
-    update.hasKey === true
-      ? '<div><dt>Chave de API</dt><dd><span class="keyfield"><span class="mono">chave presente</span>' +
-        `<span class="badge local">${esc(KEY_SOURCE_LABEL[update.keySource] ?? update.keySource ?? 'origem não indicada')}</span></span>` +
-        '<small>A chave nunca é escrita no registo de auditoria nem devolvida ao browser — só a máscara. ' +
-        'Podes substituí-la no <a href="#diagnostico">Diagnóstico</a>.</small></dd></div>'
-      : '<div><dt>Chave de API</dt><dd><span class="state off"><span aria-hidden="true">⊘</span> Sem chave configurada</span>' +
-        '<small>O envio está desativado. Guarda uma chave no <a href="#diagnostico">Diagnóstico</a>, sem sair do painel.</small></dd></div>';
-
-  const variableRows = variables
-    .map(
-      (variable) =>
-        '<tr>' +
-        `<td><span class="ob">${esc(variable.label)}</span><span class="ob-src">${esc(variable.path)}</span></td>` +
-        `<td class="n">${unitValue(variable.currentValue, variable.unit)}</td>` +
-        `<td class="pt">${esc(variable.unit)}</td>` +
-        '</tr>',
-    )
-    .join('');
-
-  const variablesTable =
-    variables.length === 0
-      ? emptyState('Sem variáveis', 'O pacote de regras não expõe variáveis atualizáveis.')
-      : tableWrap(
-          'Variáveis de lei pública que o assistente pode propor, com o valor atual no pacote e a unidade.',
-          '<th scope="col">Variável</th><th scope="col" class="n">Valor atual no pacote</th><th scope="col">Unidade</th>',
-          variableRows,
-        );
-
-  const previewBlock =
-    state.preview === false
-      ? ''
-      : '<div class="redact mt-10">' +
-        '<div class="redact-head"><h3>Pedido que será enviado</h3><span class="badge local">sem dados pessoais</span></div>' +
-        '<p class="redact-note"><span class="g" aria-hidden="true">✓</span><span>' +
-        `Jurisdição <span class="mono">PT</span> · ano <span class="mono">${esc(summary.year ?? model.meta.year)}</span> · ` +
-        `<span class="mono">${esc(update.variableCount ?? variables.length)}</span> variáveis · cerca de <span class="mono">${esc(update.requestCharacters ?? 0)}</span> caracteres. ` +
-        'Contém apenas: os nomes das variáveis, os seus valores atuais no pacote, as unidades e os endereços oficiais já citados pelo pacote ' +
-        `(<span class="mono">${esc(summary.sources ?? 0)}</span> fontes). Não contém: perfil, NIF, faturas, clientes, rendimentos ou alertas.` +
-        '</span></p>' +
-        '<div class="redact-act">' +
-        (update.hasKey === true
-          ? '<button type="button" class="btn btn-primary" data-act="send-update">Enviar à DeepSeek</button>' +
-            '<button type="button" class="btn" data-act="cancel-preview">Cancelar</button>' +
-            '<span class="cta-note">Esta é a única chamada de rede da aplicação. A resposta é guardada como proposta e não altera o pacote até tu mandares aplicar.</span>'
-          : '<button type="button" class="btn" disabled>Enviar à DeepSeek</button>' +
-            '<button type="button" class="btn" data-act="cancel-preview">Cancelar</button>' +
-            '<span class="cta-note">Envio desativado: não há chave configurada. ' +
-            'Configura-a no <a href="#diagnostico">Diagnóstico</a>.</span>') +
-        '</div>' +
-        '</div>';
-
-  const pendingBlock =
-    pending === null
-      ? '<div class="empty mt-10"><strong>Sem proposta pendente</strong>Não há nenhuma resposta por aplicar. O pacote de regras em uso é o que está no disco.</div>'
-      : (() => {
-          const rows = (pending.values ?? [])
-            .map((value) => {
-              const changed = value.value !== null && value.value !== value.currentValue;
-              const url = safeUrl(value.sourceUrl);
-              return (
-                `<tr${changed ? ' class="changed"' : ''}>` +
-                `<td><span class="ob">${esc(value.label)}</span><span class="ob-src">${esc(value.path)}</span></td>` +
-                `<td class="n">${unitValue(value.currentValue, value.unit)}</td>` +
-                `<td class="n">${value.value === null ? '<span class="mini">sem proposta</span>' : unitValue(value.value, value.unit)}` +
-                (changed ? ' <span class="badge">alterado</span>' : '') +
-                '</td>' +
-                `<td class="pt">${url === null ? (value.sourceUrl ? esc(value.sourceUrl) : '<span class="mini">sem fonte indicada</span>') : `<a href="${url}" rel="noopener noreferrer">${esc(value.sourceUrl)}</a>`}</td>` +
-                `<td class="small">${value.note ? esc(value.note) : '—'}</td>` +
-                '</tr>'
-              );
-            })
-            .join('');
-
-          const problems =
-            (pending.problems ?? []).length === 0
-              ? ''
-              : '<div class="notes">' +
-                pending.problems
-                  .map((problem) => `<p><span class="g danger" aria-hidden="true">!</span><span>${esc(problem)}</span></p>`)
-                  .join('') +
-                '</div>';
-
-          return (
-            '<div class="redact mt-10">' +
-            '<div class="redact-head"><h3>Proposta por aplicar</h3>' +
-            `<span class="badge est">${esc(update.pendingChanges ?? 0)} valores alterados</span></div>` +
-            `<p class="redact-note"><span class="g" aria-hidden="true">●</span><span>Proposta recebida em <span class="mono">${esc(pending.proposedAt)}</span> · ` +
-            `modelo <span class="mono">${esc(pending.model)}</span> · referência <span class="mono">${esc(pending.asOf)}</span> · ` +
-            `${esc((pending.values ?? []).length)} valores respondidos. Nada foi aplicado ao pacote.</span></p>` +
-            tableWrap(
-              'Valores propostos pelo assistente, comparados com os valores atuais do pacote, com a fonte indicada e nota.',
-              '<th scope="col">Variável</th><th scope="col" class="n">Atual</th><th scope="col" class="n">Proposto</th>' +
-                '<th scope="col">Fonte indicada</th><th scope="col">Nota</th>',
-              rows,
-            ) +
-            problems +
-            '<div class="redact-act">' +
-            '<button type="button" class="btn btn-primary" data-act="apply-update" data-verified="false">Aplicar (por confirmar)</button>' +
-            '<button type="button" class="btn" data-act="apply-update" data-verified="true">Aplicar e marcar confirmado</button>' +
-            '<button type="button" class="btn" data-act="discard-update">Descartar</button>' +
-            '<span class="cta-note">Aplicar grava os valores como propostos pelo assistente. Passá-los a confirmados é um ato teu, depois de leres a fonte.</span>' +
-            '</div>' +
-            '<div class="disc"><span class="sev sev-media"><span class="g" aria-hidden="true">▲</span> Atenção</span><div>' +
-            '<p class="a-t">Aplicar e marcar confirmado afirma que leste a fonte citada</p>' +
-            '<p class="a-d">O assistente propõe; nunca verifica. Só escolhe esta opção depois de abrires o endereço indicado e confirmares o valor. ' +
-            'Enquanto um valor ficar por confirmar, os alertas do painel voltam a apontá-lo.</p></div></div>' +
-            '</div>'
-          );
-        })();
-
-  const sendBlock =
-    '<div class="redact mt-10">' +
-    '<div class="redact-head"><h3>Passo a passo do envio</h3>' +
-    `<span class="badge ${update.hasKey === true ? 'local' : 'miss'}">${update.hasKey === true ? 'chave presente' : 'sem chave'}</span></div>` +
-    '<div class="kv">' +
-    '<div><dt>1. Pré-visualizar</dt><dd>Revela exatamente o que o pedido contém: as variáveis, o ano, o tamanho e as fontes citadas. Não envia nada.' +
-    (state.preview === true ? ' <span class="badge ver">pré-visualização aberta</span>' : '') + '</dd></div>' +
-    '<div><dt>2. Enviar</dt><dd>Envia o pedido ao modelo <span class="mono">deepseek-chat</span> e guarda a resposta como proposta pendente. ' +
-    'É a única chamada de rede da aplicação.</dd></div>' +
-    '<div><dt>3. Aplicar</dt><dd>Decide se a proposta entra no pacote — e se fica por confirmar ou marcada como confirmada por uma pessoa.</dd></div>' +
-    '</div>' +
-    '<div class="redact-act">' +
-    (state.preview === true
-      ? '<button type="button" class="btn" data-act="cancel-preview">Fechar pré-visualização</button>'
-      : update.hasKey === true
-        ? '<button type="button" class="btn btn-primary" data-act="preview-update">Pré-visualizar pedido</button>'
-        : '<button type="button" class="btn" disabled>Pré-visualizar pedido</button><span class="cta-note">Disponível quando existir chave: configura-a no <a href="#diagnostico">Diagnóstico</a>.</span>') +
-    '</div>' +
-    '</div>';
-
-  return (
-    '<section class="block" id="assistente" aria-label="Atualização das regras">' +
-    sectionHead(
-      'Atualizar regras',
-      'A única função do assistente: propor os valores que a lei muda de ano para ano. Não conversa, não aconselha e não vê os teus dados.',
-      'Os prazos e as taxas mudam todos os anos. Em vez de os escrever à mão no pacote de regras, ' +
-        'podes pedir a um modelo que os proponha — e a proposta fica por confirmar até tu a validares. ' +
-        'É o único momento em que algo sai deste computador, e sai sem nada teu lá dentro.',
-    ) +
-    '<div class="ia">' +
-    '<div class="ia-cfg">' +
-    '<div class="redact-head"><h3>O que é enviado neste pedido</h3><span class="badge local">sem dados pessoais</span></div>' +
-    '<p class="redact-note no-border-top"><span class="g" aria-hidden="true">✓</span><span>' +
-    'O pedido é construído apenas a partir do <strong>pacote de regras</strong>: nomes de variáveis, os seus valores atuais e os endereços ' +
-    'oficiais já citados por cada regra. Perfil, faturas, clientes e rendimentos <strong>não têm caminho de código</strong> para entrar neste pedido.' +
-    '</span></p>' +
-    '<div class="kv">' +
-    `<div><dt>Variáveis</dt><dd><span class="mono">${esc(update.variableCount ?? variables.length)}</span> variáveis de lei pública <small>taxas, limites, coeficientes, IAS</small></dd></div>` +
-    `<div><dt>Tamanho do pedido</dt><dd><span class="mono">${esc(update.requestCharacters ?? 0)} caracteres</span> <small>calculado a partir do pacote, sem qualquer dado do contribuinte</small></dd></div>` +
-    keyRow +
-    '<div><dt>Validação</dt><dd><span class="mono">unidade + ordem de grandeza</span><small>Uma taxa de IVA de 0,23% é um inteiro de pontos base válido — e é recusada.</small></dd></div>' +
-    '</div>' +
-    '<div class="ia-notes">' +
-    '<p><span class="g lock" aria-hidden="true">✓</span><span>O pedido não inclui o perfil, as faturas, os clientes nem os rendimentos.</span></p>' +
-    '<p><span class="g" aria-hidden="true">●</span><span>O assistente propõe valores; nunca verifica nem afirma que estão em vigor.</span></p>' +
-    '<p><span class="g" aria-hidden="true">●</span><span>O pacote de regras só é alterado quando tu mandas aplicar, e fica registado como proposto até confirmares.</span></p>' +
-    '</div>' +
-    '</div>' +
-    '<div>' +
-    variablesTable +
-    sendBlock +
-    previewBlock +
-    pendingBlock +
-    '</div>' +
-    '</div>' +
+    'Nada sai deste computador: o painel fala apenas com o servidor local, e é este que lê os ficheiros.</p>' +
     '</section>'
   );
 }
@@ -3395,6 +3116,10 @@ function render(model) {
       html.push(renderOnboarding(model));
     }
   } else if (page.id === 'agenda') {
+    // A faixa também aqui: é a segunda página sobre o que está por fazer, e a que
+    // responde a "o que falta e até quando?". Nas restantes não aparece — ver
+    // ALERT_PAGES.
+    html.push(renderAlertBlock(model, { page: page.id }));
     html.push(renderAgenda(model));
   } else if (page.id === 'recibos') {
     html.push(renderRecibos(model));
@@ -3410,15 +3135,9 @@ function render(model) {
     html.push(renderRegras(model));
   } else if (page.id === 'diagnostico') {
     html.push(renderDiagnostico(model));
-  } else if (page.id === 'assistente') {
-    html.push(renderAssistente(model));
   } else if (page.id === 'about') {
     html.push(renderAbout(model));
   }
-
-  // O aviso de alertas urgentes aparece em qualquer página: um prazo em atraso
-  // não deixa de existir por se estar a olhar para outra coisa.
-  if (page.id !== 'painel' && hasProfile) html.unshift(renderAlertBlock(model, { page: page.id }));
 
   host.innerHTML = html.join('');
 }
@@ -3717,43 +3436,6 @@ async function sendBinary(path, blob) {
   return data;
 }
 
-/**
- * A chave da API, escrita no painel.
- *
- * Sem frase-passe a chave vale só para esta sessão do servidor; com ela, fica
- * cifrada no cofre e sobrevive ao reinício. As duas coisas são ditas antes e
- * depois, porque "guardei a chave" e "guardei a chave até fechar a janela" são
- * promessas diferentes.
- */
-async function submitAiKey(form, unlockOnly) {
-  const passphrase = fieldRaw(form, 'passphrase');
-
-  if (unlockOnly) {
-    if (passphrase === '') {
-      formMessage(form, 'err', 'Escreve a frase-passe com que a chave foi cifrada.');
-      return;
-    }
-    await send(API.aiKeyUnlock, { passphrase });
-    toast('Chave desbloqueada nesta sessão. O envio para a DeepSeek está disponível.');
-    return;
-  }
-
-  const key = fieldValue(form, 'key');
-  if (key.trim() === '') {
-    formMessage(form, 'err', 'Escreve a chave da API.');
-    return;
-  }
-  const body = { key: key.trim() };
-  if (passphrase !== '') body.passphrase = passphrase;
-
-  const data = await send(API.aiKey, body);
-  toast(
-    data.stored === true
-      ? 'Chave ativa e cifrada no cofre.'
-      : 'Chave ativa apenas nesta sessão: o cofre não foi alterado.',
-  );
-}
-
 /* A navegação entre separadores é do endereço, não do JavaScript: uma ligação
    `#cofre` num alerta, o botão "voltar" do navegador e uma ligação colada noutro
    sítio têm todas de levar ao mesmo sítio. Por isso o roteador ouve o hash, e os
@@ -3820,70 +3502,6 @@ document.addEventListener('click', (event) => {
   if (act === 'filter') {
     state.filter = trigger.dataset.filter ?? 'year';
     if (state.model !== null) applyModel(state.model);
-    return;
-  }
-  if (act === 'preview-update') {
-    state.preview = true;
-    navigate('assistente');
-    return;
-  }
-  if (act === 'ai-key-forget') {
-    if (!window.confirm('Esquecer a chave nesta sessão? O cofre não é tocado e a próxima utilização volta a pedi-la.')) return;
-    void withBusy(trigger, async () => {
-      await send(API.aiKey, { forget: true });
-      toast('Chave esquecida nesta sessão.');
-    }).catch((error) => {
-      showError(error instanceof Error ? error.message : String(error));
-    });
-    return;
-  }
-  if (act === 'ai-key-delete') {
-    if (!window.confirm('Apagar a chave cifrada guardada no cofre? Fica só o que estiver no ambiente ou nesta sessão.')) return;
-    void withBusy(trigger, async () => {
-      const data = await send(API.aiKey, { delete: true });
-      toast(data.deleted === true ? 'Chave guardada apagada do cofre.' : 'Não havia chave guardada para apagar.');
-    }).catch((error) => {
-      showError(error instanceof Error ? error.message : String(error));
-    });
-    return;
-  }
-  if (act === 'cancel-preview') {
-    state.preview = false;
-    if (state.model !== null) applyModel(state.model);
-    return;
-  }
-  if (act === 'send-update') {
-    void withBusy(trigger, async () => {
-      await send(API.updateSend, {});
-      state.preview = false;
-      toast('Pedido enviado. A resposta ficou guardada como proposta pendente.');
-    }).catch((error) => {
-      showError(error instanceof Error ? error.message : String(error));
-    });
-    return;
-  }
-  if (act === 'apply-update') {
-    const verified = trigger.dataset.verified === 'true';
-    void withBusy(trigger, async () => {
-      const data = await send(API.updateApply, { verified });
-      const applied = typeof data.applied === 'number' ? data.applied : null;
-      toast(
-        verified
-          ? `${applied === null ? 'Proposta' : applied} valores aplicados e marcados como confirmados.`
-          : `${applied === null ? 'Proposta' : applied} valores aplicados ao pacote, por confirmar.`,
-      );
-    }).catch((error) => {
-      showError(error instanceof Error ? error.message : String(error));
-    });
-    return;
-  }
-  if (act === 'discard-update') {
-    void withBusy(trigger, async () => {
-      await send(API.updateDiscard, {});
-      toast('Proposta descartada. O pacote de regras não foi alterado.');
-    }).catch((error) => {
-      showError(error instanceof Error ? error.message : String(error));
-    });
     return;
   }
   if (act === 'complete') {
@@ -3991,11 +3609,7 @@ document.addEventListener('submit', (event) => {
               ? () => submitReceiptUpload(form)
               : kind === 'receipt-record'
                 ? () => submitReceiptRecord(form)
-                : kind === 'ai-key'
-                  ? () => submitAiKey(form, false)
-                  : kind === 'ai-key-unlock'
-                    ? () => submitAiKey(form, true)
-                    : null;
+                : null;
   if (work === null) return;
   void withBusy(button, work).catch((error) => {
     formMessage(form, 'err', error instanceof Error ? error.message : String(error));

@@ -50,7 +50,6 @@ flowchart LR
     EST --> RULES
     EST --> VAULT
     CLI --> RED
-    WEB --> RED
     RED -->|só após aprovação| DS
 ```
 
@@ -186,6 +185,11 @@ Routes (`API_ROUTES` maps every path to the one method it accepts):
 | `POST /api/update/apply` | Apply a pending proposal, confirmed or unconfirmed |
 | `POST /api/update/discard` | Delete a pending proposal |
 
+The last five are served and tested but reachable only from the command line and
+from a script holding the run token: the panel has no form that calls them, because
+the rule pack is a developer artifact and not something a person updates from a tab
+(see *Interface parity*).
+
 Two of these deserve a note. `POST /api/vault` is the only route that changes
 what the process is looking at: it writes the pointer file, builds a `Vault` for
 the new folder and replaces the one in the request context, recording
@@ -219,7 +223,8 @@ grows an `if` about tax belongs in `src/core/`.
   the wrong unit; an applied value is recorded as `ai-proposed` and stays
   `unverified` until a human confirms it.
 - `keyring.ts` — resolution order `--key` → `DEEPSEEK_API_KEY` → encrypted file, plus
-  `session`, the panel's in-memory key. The file is AES-256-GCM with a scrypt-derived
+  `session`, the in-memory key the server holds when one is set over the local API.
+  The file is AES-256-GCM with a scrypt-derived
   key (N=2¹⁵, r=8, p=1), mode `0600`, minimum passphrase length 12.
 
 ### `src/web/public/` — the panel
@@ -234,7 +239,7 @@ points) — that conversion is the API contract.
 **The panel is divided into pages, one per subject**, and the page is part of the
 address: `#painel` (the dashboard: alerts, indicators, fiscal situation),
 `#agenda`, `#recibos`, `#ss`, `#iva`, `#irs`, `#cofre`, `#regras`,
-`#diagnostico`, `#assistente`, `#about` (what the application does not do, which
+`#diagnostico`, `#about` (what the application does not do, which
 used to be a footer repeated on every page). The list lives once, in `PAGES` at the top of
 `app.js`; the sidebar in `index.html` and the narrow-screen tab strip are both
 driven from it, so the two navigations cannot drift. Rendering dispatches on the
@@ -264,10 +269,13 @@ throw away the listing that was just fetched.
 
 A page whose numbers need the profile says so, instead of rendering the zeros the
 model returns without one (`PROFILE_PAGES`); the vault, the rules and the
-diagnostics work without a profile and are not blocked by it. The alert strip
-follows the same rule in reverse: it is on the dashboard always, and on the other
-pages only when something is urgent — a green "no alerts" repeated on ten tabs
-stops being read long before it matters.
+diagnostics work without a profile and are not blocked by it. The alert strip and
+the flag list have exactly two homes, `ALERT_PAGES`: the dashboard (`#painel`) and
+`#agenda`, the two pages about what is due. Everywhere else the subject is
+something else, and a green "no alerts" repeated on every tab stops being read long
+before it matters. The strip appears on both of those pages; the flag list, with
+each alert's legal basis, is on the dashboard only — a ten-line list printed twice
+is read neither time.
 
 The panel's typography is part of its correctness: the first version packed a
 whole tax year into 13px with 9.5px uppercase micro-labels, which is
@@ -312,7 +320,7 @@ about what the core can compute, and they are listed under the table.
 | --- | --- |
 | `vnfin` / `vnfin web` | The panel itself, opened at `http://127.0.0.1:<port>/?t=<token>` |
 | `init` | *Perfil* — create, edit, import, export |
-| `doctor` | *Diagnóstico e chave* — profile, pack, vault, data-dir risk, key, verdict |
+| `doctor` | *Diagnóstico* — profile, pack, vault, data-dir risk, verdict |
 | `agenda` | *Agenda fiscal* with the 30/90-day, year, done and N/A filters |
 | `flags` | *Resumo* — the alert block and the flag list |
 | `rules` | *Regras e fontes* |
@@ -324,11 +332,11 @@ about what the core can compute, and they are listed under the table.
 | `vault list` / `vault add` | *Cofre de documentos* — file picker (upload) or absolute path |
 | `vault where` / `vault set <pasta>` | The vault card: the folder, where the choice came from, *Abrir a pasta*, *Mudar de pasta…* |
 | `--vault <dir>` (alias of `--data-dir`) | The folder chooser, and the pointer it writes |
-| `ai-key status` / `ai-key set` | *Diagnóstico e chave* → the DeepSeek key panel |
-| `update --send` / `--approve` | *Atualizar regras*, in three explicit steps |
+| `ai-key status` / `ai-key set` | **CLI only** — see below |
+| `update --send` / `--approve` | **CLI only** — see below |
 | `--json` everywhere | Machine-readable output has no browser equivalent to need |
 
-Two command-line capabilities are deliberately **not** in the panel today, and
+Four command-line capabilities are deliberately **not** in the panel today, and
 `vnfin --help` is the only door to them. Each is written down here so the omission
 stays a decision rather than becoming an oversight:
 
@@ -336,6 +344,8 @@ stays a decision rather than becoming an oversight:
 | --- | --- |
 | `ledger add` | An invoice in the panel is born from a document — the PDF, hashed and archived, with the reading confirmed field by field. A hand-typed form was a second door into the same room and the only one that left no proof of what was registered. The route (`POST /api/invoices`) still exists and is tested; nothing calls it. |
 | `estimate --despesas` | The taxable-income calculation needs a figure for eligible documented expenses, and expenses are not a record in this application yet — there is nowhere to keep them and no import that produces them. A lone text box asking for a number the vault knows nothing about is a form, not a capability. The core function and the route stay. |
+| `ai-key status` / `ai-key set` | The DeepSeek credential exists for one job — proposing the rule values that change every year — and **the rule pack is a developer artifact**: it ships in the repository, is reviewed like source, and is the only place Portuguese tax law is written down. A key field in a tax panel invited the person to believe the panel could keep the law current for them, which is a promise this application does not make. The keyring, the client and the routes stay, for whoever maintains the pack. |
+| `update --send` / `--approve` | The same reason, one step further: an in-panel flow that rewrote rates and deadlines from a model's answer turned the distance between "proposed" and "confirmed" into a button. Updating the pack is a change to the repository, with a diff, a review and a commit — done from the command line, where that distance is visible. |
 
 ## Testing
 

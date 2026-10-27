@@ -194,6 +194,15 @@ export interface DashboardModel {
   invoices: Invoice[];
   vault: { entries: VaultEntry[]; files: number; bytes: number };
   rules: { sources: RuleSource[]; obligations: ObligationRule[]; todo: string[] };
+  /**
+   * The rule-update state and the key's masked presence.
+   *
+   * The panel renders neither any more: updating the pack is a change to the
+   * repository, made from the command line, so the two fields survive for the
+   * routes (`/api/update/*`, `/api/ai-key`) — which answer with this model after
+   * every write — rather than for a page. A mask is not the key; keeping it here
+   * is what lets the routes be tested end to end.
+   */
   update: UpdateState;
   key: KeyInfo;
 }

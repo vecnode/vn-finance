@@ -55,7 +55,7 @@ local server goes wrong:
 | A hostile file upload | The panel accepts bytes from the browser, and a file name is attacker-controlled input | The body cap (32 MiB) is enforced while reading, so an oversized upload is refused rather than buffered; the name is reduced to its last path segment and sanitised before it is joined to the vault directory; the stored name is the file's own SHA-256 plus that name, so content cannot masquerade as another document. |
 | **Filesystem enumeration through the folder chooser** | The panel can list directories so that a folder can be chosen without typing a path | The route returns **sub-directories only, never file names**, and it is behind the same session token as every other `/api` call. Anyone holding the token could already read any file by absolute path through the document route, so this adds no capability that did not exist — but it is the one route that describes the *shape* of the disk, and it is deliberately limited to directory names for that reason. |
 | **A process spawned with attacker-controlled arguments** | Opening the vault folder in the file manager runs an external program | The command is fixed per platform (`explorer.exe`, `open`, `xdg-open`) and the argument is the vault's own path from the server's state, never a value from the request. `POST /api/vault/reveal` takes no body. |
-| A stolen API key through the panel | The key travels from the browser to the local server | It crosses loopback only, behind the session token, is never returned to the browser (the model carries a mask), is never written to the audit log, and is held in process memory unless the user supplies a passphrase to encrypt it into the vault. |
+| A stolen API key | The DeepSeek key is a billable credential | The panel has no key form, so the browser has no field to type one into: the key lives with whoever maintains the rule pack, on the command line (`--key`, `DEEPSEEK_API_KEY`, or the encrypted file in the vault). The view model still carries a mask (`sk-a…f9c2`) and the key's source, as it did for the old form; nothing in the panel renders either, and neither is the key. |
 
 What the panel explicitly does **not** do: it never binds to `0.0.0.0`, it opens no
 port on your network, it sends no CORS headers, it sets no cookie, and it fetches
@@ -68,9 +68,10 @@ to the loopback server, the text is extracted by `src/core/pdf.ts` with `node:zl
 and nothing else, and no part of the document — not the text, not the figures, not
 the file — is sent anywhere. The reader has no network code path at all, and the
 panel copies the file into the vault before it reports what it read, so a document
-that cannot be parsed is still kept rather than discarded. If you use the optional
-assistant for nothing else, note that a PDF you import has no path into it: the
-rule-pack update request is built from the rule pack alone (§5).
+that cannot be parsed is still kept rather than discarded. The optional assistant —
+the only thing in the application that talks to a third party — has no path from a
+PDF either, and the panel has no path to the assistant at all: the rule-pack update
+request is built from the rule pack alone (§5) and is run from the command line.
 
 The residual risk is the one stated in the next section: the vault itself is not
 encrypted at rest, so the panel changes the *reachability* of your data, not its
@@ -160,11 +161,11 @@ asserting it.
 
 | Aspect | v0 behaviour |
 | --- | --- |
-| Sources, in order | `--key` flag → `DEEPSEEK_API_KEY` environment variable → key held by the running panel (session) → encrypted file in the vault |
-| Typed in the panel | Sent to the local server over loopback with the session token; kept in the server process's memory, and written to the vault only if a passphrase is supplied with it |
-| Back to the browser | Never. Only a mask (`sk-a…f9c2`) and the source are part of the view model |
+| Sources, in order | `--key` flag → `DEEPSEEK_API_KEY` environment variable → encrypted file in the vault |
+| Typed in the panel | Never: the panel has no key form. The rule pack is a developer artifact, and updating it is a change to the repository made from the command line |
+| Back to the browser | Never the key. The view model still carries a mask (`sk-a…f9c2`) and the source, as it did for the panel's old form; the panel now renders neither and has no field that could use them |
 | Encrypted file | AES-256-GCM; key derived with scrypt (N=2¹⁵, r=8, p=1, 32-byte key) from `VN_FINANCE_PASSPHRASE`, random 16-byte salt and 12-byte IV per file |
-| Minimum passphrase | 12 characters, enforced (also for the panel's form) |
+| Minimum passphrase | 12 characters, enforced by `vnfin ai-key set` |
 | Never written to | The ledger, the audit log, the profile, any backup of the ledger |
 | Displayed as | `sk-a…f9c2`, never in full |
 | Target (M6) | OS credential store: Windows Credential Manager/DPAPI, libsecret, macOS Keychain, via Tauri's keyring plugin |
@@ -175,12 +176,9 @@ history. The encrypted file is the better default; the credential store is the
 right answer once the desktop shell exists. This ordering is stated in the code
 and here rather than glossed over.
 
-The panel adds one case that the command line cannot have, because only a long-lived
-process can hold a secret without writing it down: a key typed into the browser can
-live in the server's memory for the life of that run — nothing on disk, nothing in
-the audit log longer than the fact that a key was set — and it is gone when the panel
-stops. It is not a substitute for the encrypted file, and the panel says which of the
-two it did.
+The routes that accept a key over the local API (`POST /api/ai-key`) still exist and
+are tested, behind the per-run token, and nothing in the panel calls them. They serve
+the command line and a script; the browser has no field that reaches them.
 
 ## 7. Integrity of records
 
@@ -206,7 +204,7 @@ two it did.
 | Device theft or loss | Full-disk encryption (user-supplied) | Medium — depends on the user enabling it |
 | A dependency is compromised | Zero runtime dependencies | Very low |
 | An identifier leaks to the AI provider | Redaction + residual scan + per-request approval + audit | Low — depends on the patterns being right; the residual scan makes a missed pattern fail closed |
-| The API key leaks | Encrypted at rest, masked in output, never logged, held in memory only for the life of a panel run unless saved | Low; rises if the key is put in an environment variable on a shared machine |
+| The API key leaks | Never in the panel, encrypted at rest, masked in output, never logged | Low; rises if the key is put in an environment variable on a shared machine |
 | The wrong obligation is trusted | Verification flags, discrepancy reporting, provisional marking, golden test | Low, and the failure is visible rather than silent |
 | A backup leaks | Backups are the vault; same controls apply | Medium until encrypted export (M3) |
 | The tool is trusted too much | Disclaimers in pack, CLI and UI; nothing is filed | Medium — a social risk, mitigated by design honesty rather than technology |
@@ -243,7 +241,7 @@ The claims in this document are all checkable against the repository:
 grep -rn "await fetch(" src --include='*.ts' --exclude='*.test.ts' --exclude-dir=public
 
 grep -n "dependencies" package.json   # no runtime dependency block
-npm run verify                  # typecheck + 168 tests, including the panel guards
+npm run verify                  # typecheck + 169 tests, including the panel guards
 node src/cli.ts update          # lists the rule variables; sends nothing
 node src/cli.ts vault list      # what is in the vault, with hashes
 node src/cli.ts doctor          # what the tool knows and what is missing

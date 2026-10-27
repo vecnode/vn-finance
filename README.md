@@ -23,10 +23,10 @@ self-employed professional, focus on CIRS category B.
 git clone <this repository> vn-finance
 cd vn-finance
 npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 168 tests
+npm run verify       # strict typecheck + 169 tests
 ```
 
-`npm run verify` is the gate. It should end with `# pass 168` and `# fail 0`.
+`npm run verify` is the gate. It should end with `# pass 169` and `# fail 0`.
 
 ```bash
 node src/cli.ts          # or: npm run dev — opens the local panel in your browser
@@ -92,8 +92,8 @@ rules/proposals-<year>.json   a pending rule update, before you approve it
 
 ## Architecture
 
-Two interfaces over one deterministic core, one optional AI layer, and a single
-arrow that leaves this machine.
+Two interfaces over one deterministic core, one optional AI layer that only the
+command line reaches, and a single arrow that leaves this machine.
 
 **The layers.**
 
@@ -124,9 +124,11 @@ flowchart LR
     EST --> RULES
     EST --> VAULT
     CLI --> RED
-    WEB --> RED
     RED -->|só após aprovação| DS
 ```
+
+The panel draws no arrow to the AI layer: updating the rule pack is a change to the
+repository, made from the command line, with a diff and a review.
 
 **The only request that ever leaves this machine: the rule pack, and nothing else.**
 

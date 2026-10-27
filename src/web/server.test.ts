@@ -493,6 +493,37 @@ test('a warning from the rule pack is printed on one page, not on two', async ()
   });
 });
 
+test('the alert strip has two homes, and the panel offers no assistant', async () => {
+  // Two decisions a screenshot cannot keep fixed. The alert block used to be
+  // repeated on every tab, which turned a deadline into wallpaper; and the panel
+  // used to carry a DeepSeek key form and a rule-update flow, which invited the
+  // person to believe the panel would keep the law current for them. The rule
+  // pack is a developer artifact — reviewed like source — so the panel must not
+  // grow that door again. Both are one edit away from coming back, so both are
+  // asserted where they are made.
+  await withServer(async (server) => {
+    const js = await (await fetch(`http://${HOST}:${server.port}/app.js`)).text();
+
+    assert.match(
+      js,
+      /const ALERT_PAGES = new Set\(\['painel', 'agenda'\]\)/,
+      'a faixa de alerta tem de ter exatamente duas páginas: o Resumo e a Agenda fiscal',
+    );
+    assert.equal(
+      (js.match(/renderAlertBlock\(model, \{ page/g) ?? []).length,
+      2,
+      'a faixa de alerta tem de ser mostrada no Resumo e na Agenda fiscal, e em mais lado nenhum',
+    );
+    for (const phrase of ['DeepSeek', 'Atualizar regras', 'ai-key', "id: 'assistente'"]) {
+      assert.ok(!js.includes(phrase), `o painel voltou a expor o assistente: "${phrase}"`);
+    }
+    assert.ok(
+      js.includes('.sort(latestFirst)'),
+      'a lista de faturas tem de ser lida da mais recente para a mais antiga',
+    );
+  });
+});
+
 test('an invoice whose treatment and VAT rate contradict each other is refused', async () => {
   await withServer(async (server) => {
     const post = (body: Record<string, unknown>): Promise<Response> =>

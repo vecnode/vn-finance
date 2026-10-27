@@ -86,13 +86,19 @@ the stylesheet is lifted from the reviewed mockup rather than re-invented.
 
 Closed the remaining command-line-only steps, so a browser-only user never needs a
 terminal: the panel now carries the `doctor` diagnostic (profile validity, missing
-inputs, pack freshness and verification, vault size, git risk, verdict), its own
-form to store, unlock, replace or delete the DeepSeek key — with the key held in the
-server's memory when it is not saved — a file picker that uploads a document instead
-of asking for an absolute path, and the `estimate --despesas` calculator for the
-simplified regime's taxable income. Every write still goes through the same vault,
-the same validation and the same append-only audit log, and `ARCHITECTURE.md` keeps
-the command-by-command equivalence table.
+inputs, pack freshness and verification, vault size, git risk, verdict), a file
+picker that uploads a document instead of asking for an absolute path, and the
+`estimate --despesas` calculator for the simplified regime's taxable income. Every
+write still goes through the same vault, the same validation and the same
+append-only audit log, and `ARCHITECTURE.md` keeps the command-by-command
+equivalence table.
+
+The panel briefly also carried the DeepSeek key form and the bounded rule-update
+flow. Both have left it: the rule pack is a developer artifact, reviewed like
+source, and a key field in a tax panel invited the person to believe the panel
+would keep the law current for them. They remain on the command line, where the
+distance between "proposed" and "confirmed" is a diff and a commit, and
+`ARCHITECTURE.md` lists them as deliberate omissions.
 
 That calculator has since left the panel, and the hand-typed invoice form with it.
 Both asked for something the vault could not prove — an expense figure nothing

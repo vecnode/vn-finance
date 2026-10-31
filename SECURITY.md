@@ -7,8 +7,23 @@ bug in the code you are running — which is why the interesting report is a bug
 
 If you want the threat model rather than the reporting process, it is in
 [`docs/PRIVACY-SECURITY.md`](docs/PRIVACY-SECURITY.md): the trust boundaries, what
-the loopback panel defends against and why, what is deliberately not protected in
-v0, the residual risk, and how to check every claim against the repository.
+is deliberately not protected, the residual risk, and how to check every claim
+against the repository.
+
+## The one promise, and how to check it
+
+**The application has no network code.** There is no HTTP client, no TLS stack and
+no async runtime in the dependency tree. Two checks enforce it, both in
+`cargo xtask ci`:
+
+- a scan of every source file in the crates that link into the binary, for HTTP
+  APIs and socket types;
+- a scan of `Cargo.lock` for the crates that would add one (`reqwest`, `hyper`,
+  `rustls`, `native-tls`, `openssl`, `ureq`, `curl`, `isahc`, `surf`, `awc`).
+
+Neither check can prove the absence of a network *syscall* — a crate could reach one
+through `libc`. What they do guarantee is that adding one would be a visible,
+deliberate change to this repository rather than an accident of a dependency.
 
 ## Reporting a vulnerability
 
@@ -22,12 +37,12 @@ have a security report and would like a private channel, with no details in it.
 
 What makes a report easy to act on:
 
-- the commit or version you tested (`git rev-parse HEAD` for the code,
-  `node src/cli.ts doctor` for the rule-pack version);
-- your operating system and Node version;
+- the version you tested (`vnfin` shows it on the Diagnóstico page, and
+  `git rev-parse HEAD` for the commit), and the rule-pack version it reported;
+- your operating system;
 - what you did, what you expected, and what happened;
 - your reading of the impact — in particular **whether anything outside the vault
-  became reachable**, and whether the API key or the pseudonym map was involved.
+  became reachable**.
 
 What to expect: an acknowledgement, an honest assessment, and either a fix or a
 decision not to fix with the reasoning written down. That assessment may well be
@@ -36,6 +51,41 @@ is a normal outcome rather than a dismissal. This is a single-maintainer project
 with no bug bounty and no response-time guarantee. If that matters to you, treat it
 as the constraint it is rather than a promise someone forgot to make.
 
+## What an attacker would have to do
+
+The interesting question for this application is not "is there a remote attack
+surface" — there is none — but "what would it take to read the vault":
+
+1. **Read the files on disk.** The vault is plain JSON and PDF, not encrypted at
+   rest. Your disk's encryption (FileVault, BitLocker, LUKS) and your file
+   permissions are the control; the application adds an advisory lock that stops a
+   second *window* from writing, and nothing more. Do not run it from a shared
+   account, and do not put the vault on a network share.
+2. **Get a document in front of the PDF reader.** The reader is the only component
+   that parses input the person did not type, and it is written to refuse rather
+   than guess: a compressed-object layout, an encrypted file, a font with no
+   character map and a stream that will not inflate are all reported as problems
+   rather than half-read. It has no code path that writes, executes or fetches
+   anything. A malformed PDF that makes it panic is a bug worth reporting: the
+   window would close, and the vault would be untouched.
+3. **Convince the application that a `fatura-recibo` is yours.** It will only record
+   an invoice whose issuer NIF matches the profile's, and it refuses one whose
+   customer NIF is the profile's — that is somebody else's invoice, and recording it
+   as income would inflate every estimate that follows. A document that identifies
+   neither party is recorded only with a warning, which the form shows.
+
+## What is deliberately not protected
+
+- **No encryption at rest.** Stated in `README.md` and in `docs/PRIVACY-SECURITY.md`;
+  it is the first thing to add if this ever supports a shared machine.
+- **No integrity protection of the vault.** The document index carries a SHA-256 of
+  each archived file, so a *document* that changed is detectable, but `profile.json`
+  and the ledgers have no signature: somebody with write access to the folder can
+  edit them, and the application will believe them. That is the same threat as
+  editing the files with a text editor.
+- **No sandboxing.** The binary is an ordinary desktop application. If it is run as
+  your user, it can read what your user can read.
+
 ## Supported versions
 
 Pre-1.0. Only the latest commit on `main` is supported: there are no maintenance
@@ -43,59 +93,16 @@ branches and no backports.
 
 Two things are versioned separately from the code:
 
-- **The rule pack** (`src/rules/pt/<year>.<major>.<patch>.json`) is data, not code.
-  A wrong rate or a wrong deadline is a *correctness* bug, not a security one. The
-  pack marks every rule `verified`, `partial` or `unverified` and keeps its own
-  list of gaps, so report it as an ordinary issue and cite the source you are
-  reading.
-- **Your vault** has no version. It is JSON and JSONL, and it is meant to outlive
-  the code.
+- **the rule pack** (`rules/pt/2026.json`), which carries its own `packVersion`,
+  checksum and per-value provenance, and shows on the Regras & fontes page;
+- **the vault format**, which is the file layout under `~/.vn-finance`. It has not
+  changed across the port from TypeScript to Rust, and a folder from the older
+  implementation opens in this one unchanged.
 
-## In scope
+## Dependency hygiene
 
-Things that would be vulnerabilities here, each next to the control that is
-supposed to prevent it:
-
-| Report | The control that is supposed to hold |
-| --- | --- |
-| A page on another origin can read a response from the panel, or successfully POST to it | No CORS headers, no cookie, and the session token must arrive as a header a browser will not set cross-origin |
-| A route reached with a `Host` that is not the loopback name the server started with | The `Host` allowlist, which answers 403 before any route sees the request |
-| Reading a file outside `public/` through the static handler, or outside the vault through the document routes — including percent-encoded and symlinked variants | Every path is resolved and required to stay inside its own base directory |
-| A crafted document name that escapes the documents directory or overwrites an unrelated file | The name is reduced to its last path segment, sanitised, and prefixed with the SHA-256 of the content itself |
-| Script execution in the panel, including through a client name, an invoice description or a file name that came from the vault | Strict CSP with no inline script or style, and a front end that writes text rather than HTML |
-| The session token disclosed anywhere beyond the documented moment it sits in the URL | Random per run, stripped from the address bar immediately, worthless once the process exits |
-| A request to the DeepSeek API carrying an identifier the redaction gateway should have removed | `src/ai/redact.ts`, the residual scan that fails closed, and the per-request approval step |
-| The API key returned to the browser, written to the audit log, or sent anywhere but loopback and the provider you configured | The model carries a mask, the key is never logged, and it is held in memory unless you supply a passphrase to encrypt it |
-| A record under `ledger/`, `obligations/` or `audit/` rewritten or silently dropped, or a document whose bytes no longer match its index entry | Append-only JSONL, hash-addressed documents, and a hash check before an archived document is trusted |
-| A runtime dependency appearing in `package.json`, or code fetched at install time | Zero runtime dependencies is a security property here, not a style preference |
-| The vault guard bypassed, so a data directory inside a git work tree is accepted | `src/store/vault.ts` refuses one outright |
-
-## Out of scope
-
-Stated as decisions rather than as oversights:
-
-- **The vault is not encrypted at rest in v0.** This is the top residual risk, it is
-  written down in [`docs/PRIVACY-SECURITY.md`](docs/PRIVACY-SECURITY.md) §3, and it
-  is scheduled. Full-disk encryption is the control that matters today. "I read the
-  vault's files" is therefore expected behaviour, not a vulnerability.
-- **Anything already running as your user.** There is no privilege boundary inside a
-  single-user application, and this project does not pretend there is one.
-- **Physical access, a stolen unlocked device, malware, or a leaked backup.**
-- **The API key placed in an environment variable on a shared machine.**
-- **A wrong tax figure, a missing rule, or an unverified rule that turns out to be
-  wrong.** That is a real bug and worth reporting — as an ordinary issue, with the
-  source — but it is a correctness problem, not a vulnerability. The pack publishes
-  its own confidence level, and the application never files anything.
-- **The static mockup in `design/`**, which is a design artefact and is not served
-  by anything.
-- **Social engineering, and the risk that someone trusts this further than they
-  should.** It is not an accountant: it prepares and explains, and nothing here
-  submits anything to the AT or to a Segurança Social portal.
-
-## Disclosure
-
-Coordinated in the ordinary way. Report privately, allow a reasonable window to
-understand the problem and ship a fix, and then either of us can write about it. The
-repository is public and `main` is the release, so a fix becomes visible as soon as
-it is pushed. There is no embargo process, no security advisory mailing list, and no
-CVE process to join.
+`THIRD-PARTY-NOTICES.md` is generated from `cargo metadata` by `cargo xtask notices`,
+and `cargo xtask ci` fails if it has drifted from the tree. Every crate in it is one
+the build actually resolves to, all pure Rust: the single C dependency the
+JavaScript implementation had (zlib, for PDF streams) was replaced by
+`miniz_oxide`.

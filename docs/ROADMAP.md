@@ -1,5 +1,11 @@
 # Roadmap
 
+> **Historical.** This roadmap was written for the TypeScript implementation with a
+> browser panel. Its milestones were met there; the desktop application arrived through
+> a different route, recorded milestone by milestone in `PORT-TO-RUST.md`. The content
+> below is kept because the *exit criteria* are still the criteria — only the surface
+> they were met on changed.
+
 From the verified skeleton to an application you can rely on for a full tax year.
 
 Each milestone has an **exit criterion** that can be checked without a meeting.
@@ -183,7 +189,7 @@ application, and the key never exists in plaintext on disk.
 
 ## Deliberately not on this roadmap
 
-- **Filing anything.** See `docs/PROPOSAL.md` §2.
+- **Filing anything.** The application never submits a declaration or a payment.
 - **Browser automation of the portal.** Same reasoning; the fragility-to-benefit
   ratio is bad and the failure mode is invisible.
 - **Multi-user, teams, accountant practice management.**

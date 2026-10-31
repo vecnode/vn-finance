@@ -6,6 +6,18 @@ generic SaaS product. There is no server to breach, and that is the point. But
 "local" is not automatically "safe", and this document says exactly what is
 protected, what is not, and what the user has to bring.
 
+> **Superseded in part.** This document was written while the application was a Node
+> process serving a panel to the browser on `127.0.0.1`. It is now a desktop binary with
+> **no server, no port, no session token and no network code at all**, so the section on
+> the loopback server describes a component that no longer exists. Everything else — the
+> asset inventory, the at-rest story, the threat model, what is deliberately unprotected —
+> still holds, and that section is kept because it explains *why* the surface was removed
+> rather than replaced. The current guarantees are in `../README.md` and `../SECURITY.md`;
+> the port plan is in `PORT-TO-RUST.md`.
+>
+> The single network call this document describes — the optional rule-pack update — is
+> gone as well: there is no assistant and no update, and the rule pack ships inside the
+> binary.
 For how to report a vulnerability, and what is in and out of scope, see
 [`../SECURITY.md`](../SECURITY.md).
 
@@ -107,7 +119,7 @@ user approves a specific request (§5).
 
 ## 5. The AI boundary
 
-Full rationale is in `docs/PROPOSAL.md` §8. The security-relevant facts, in order
+The assistant described in this section has been removed from the application, and its rationale with it. The security-relevant facts, in order
 of strength:
 
 **1. The assistant never receives your data — by construction, not by filtering.**

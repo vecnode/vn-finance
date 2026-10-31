@@ -1,156 +1,58 @@
-# 📊 vn-finance
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Node.js 22.18 or newer](https://img.shields.io/badge/node-%E2%89%A522.18-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+# vn-finance
 
-A private, local-first assistant for the Portuguese tax obligations of a
-self-employed professional, focus on CIRS category B.
+**Um assistente fiscal local para quem trabalha por conta própria.**
 
+[![Licença: AGPL-3.0-only](https://img.shields.io/badge/licen%C3%A7a-AGPL--3.0--only-3fb950.svg)](LICENSE)
+[![Rust 1.95+](https://img.shields.io/badge/rust-1.95%2B-dea584.svg?logo=rust&logoColor=white)](#construir)
+[![Edição 2024](https://img.shields.io/badge/edi%C3%A7%C3%A3o-2024-dea584.svg)](#construir)
+[![egui 0.37](https://img.shields.io/badge/interface-egui%200.37-8b5cf6.svg)](https://github.com/emilk/egui)
+[![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20macOS%20%7C%20Linux-4c8dff.svg)](#instala%C3%A7%C3%A3o)
 
-### What you need
+</div>
 
-- **Node 22.18 or newer** (`node --version`). The CLI runs TypeScript directly
-  through Node's type stripping: no build step, no bundler, no runtime dependency.
-- A browser, for the local panel.
-- **Full-disk encryption, if you have it.** The vault is not encrypted at rest yet
-  (see `docs/PRIVACY-SECURITY.md` §3), so the operating system's disk encryption is
-  the control that protects it today.
+Focado no trabalhador independente em Portugal. 
+Serve para quem emite *recibos verdes* em Portugal: monta o calendário das
+obrigações do ano, calcula IVA, retenções e contribuições a partir do que
+faturavas, lê as faturas em PDF, e diz-te quanto deves ter de lado para o IRS.
 
-### 1. Install and Dev
+Não substitui um contabilista certificado e nunca entrega nada por ti.
 
-```bash
-git clone <this repository> vn-finance
-cd vn-finance
-npm install          # only TypeScript and @types/node, for development
-npm run verify       # strict typecheck + 169 tests
-```
+## Construir
 
-`npm run verify` is the gate. It should end with `# pass 169` and `# fail 0`.
+O espaço de trabalho usa um único conjunto de comandos:
 
 ```bash
-node src/cli.ts          # or: npm run dev — opens the local panel in your browser
+cargo run --release              # compilar e abrir a janela
+cargo build --release            # compilar sem abrir  ->  target/release/vnfin.exe
+
+cargo xtask ci                   # formatação, lints e testes: exatamente o que a CI corre
+cargo xtask fmt-fix              # aplicar a formatação
+cargo xtask lint                 # clippy sobre todo o espaço de trabalho, avisos como erros
+cargo xtask test                 # a bateria de testes
 ```
 
-```bash
-node src/cli.ts doctor
+Para testar a versão de distribuição no Windows, sem instalador nenhum:
 
-node src/cli.ts agenda                  # next 90 days, then the rest of the year
-node src/cli.ts agenda --horizon 180    # a wider plan
-node src/cli.ts agenda --all            # include completed, N/A and history
-node src/cli.ts agenda --json           # machine readable
-
-node src/cli.ts flags
-node src/cli.ts flags --json
-
-node src/cli.ts ledger add --base 1200 --client "ACME, Lda." --nif 501234560
-node src/cli.ts ledger add --base 4200 --client "Helsinki Labs Oy" --country FI
-node src/cli.ts ledger add --base 900 --client "Studio Mira" --retention 0 --paid
-node src/cli.ts ledger list
-
-node src/cli.ts ledger import ~/Downloads/fatura-recibo-2026-014.pdf
-node src/cli.ts ledger import fatura.pdf --dry-run   # read it, write nothing
-
-node src/cli.ts estimate                                  # per quarter + reserve
-node src/cli.ts estimate --quarter 3                      # one quarter
-node src/cli.ts estimate --despesas 5000                  # + the IRS tax base
-
-node src/cli.ts vault add ~/Documents/comprovativo-iva-t3.pdf \
-  --kind comprovativo --obligation iva.dp.trimestral
-node src/cli.ts vault list
+```powershell
+cargo build --release -p vnfin
+.\target\release\vnfin.exe
 ```
 
-## Where the data lives
 
-Default: `~/.vn-finance` (`%USERPROFILE%\.vn-finance` on Windows).
+## Segurança e licença
 
-The folder actually in use is decided in this order: `--vault <dir>` or
-`--data-dir <dir>` on the command line, then `VN_FINANCE_DATA_DIR`, then the folder
-you chose once and the application remembered, then the default above. The
-remembered choice lives in `~/.vn-finance/vault-location.json`, never inside a vault:
-a file that says where the vault is cannot live in the place you would have to find
-first.
-
-Change it from the panel: *Cofre de documentos* → *Mudar de pasta…*. Or from the
-command line:
-
-```bash
-node src/cli.ts vault where                       # which folder, and why that one
-node src/cli.ts vault set "C:\Users\eu\Documents\vn-finance"
-```
-
-```
-profile.json                  your profile
-ledger/invoices.jsonl         append-only invoice ledger
-obligations/completions.jsonl obligations you marked as handled
-documents/index.json          document index, with SHA-256 hashes
-documents/<hash>-<name>       the archived copies
-audit/audit.jsonl             append-only audit log
-ai/deepseek.key               the encrypted API key, if you set one
-rules/proposals-<year>.json   a pending rule update, before you approve it
-```
-
-## Architecture
-
-Two interfaces over one deterministic core, one optional AI layer that only the
-command line reaches, and a single arrow that leaves this machine.
-
-**The layers.**
-
-```mermaid
-flowchart LR
-    subgraph UI["Interfaces"]
-        CLI["CLI vnfin"]
-        WEB["Painel local<br/>127.0.0.1 e token"]
-        APP["App Tauri<br/>mais tarde"]
-    end
-    subgraph CORE["Núcleo determinístico"]
-        CAL["Motor de obrigações"]
-        EST["Cálculos IVA SS IRS"]
-        RULES[("Pacote de regras<br/>pt/2026.json")]
-        VAULT[("Cofre local<br/>JSONL e ficheiros")]
-    end
-    subgraph AI["Camada de IA opcional"]
-        RED["Gateway de redação"]
-        DS["DeepSeek API"]
-    end
-    CLI --> CAL
-    WEB --> CAL
-    APP --> CAL
-    CLI --> EST
-    WEB --> EST
-    CAL --> RULES
-    CAL --> VAULT
-    EST --> RULES
-    EST --> VAULT
-    CLI --> RED
-    RED -->|só após aprovação| DS
-```
-
-The panel draws no arrow to the AI layer: updating the rule pack is a change to the
-repository, made from the command line, with a diff and a review.
-
-**The only request that ever leaves this machine: the rule pack, and nothing else.**
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as Utilizador
-    participant P as Pacote de regras
-    participant G as Gateway de redação
-    participant D as DeepSeek
-    U->>P: vnfin update
-    P->>G: Nomes de variáveis e valores atuais
-    Note over U,P: Sem dados pessoais no pedido
-    G->>D: Payload de lei pública
-    D-->>G: JSON com valores e fontes
-    G->>G: Valida unidade e ordem de grandeza
-    G->>P: Grava proposta no cofre local
-    Note over U,P: O pacote não é alterado
-    U->>P: Aprova como por confirmar
-    Note over U: Só uma pessoa confirma
-```
-
-## Licence
-
-MIT. See `LICENSE`.
+- **AGPL-3.0-only** — ver [`LICENSE`](LICENSE). O vn-finance é *copyleft*: podes
+  executá-lo, estudá-lo, alterá-lo e partilhá-lo, e uma versão que distribuías ou
+  serves por rede tem de levar o código-fonte com a mesma licença.
+- A promessa de "sem rede" é verificável em dois sítios: uma varredura ao código das
+  crates que entram no binário, e uma varredura ao `Cargo.lock` às crates que lhe
+  dariam uma ligação. Ambas correm em `cargo xtask ci`.
+- [`SECURITY.md`](SECURITY.md): o modelo de ameaças, o que um atacante teria de fazer,
+  o que fica deliberadamente por proteger, e como reportar uma vulnerabilidade em
+  privado.
+- [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) é gerado a partir de
+  `cargo metadata` e a CI falha se ficar desatualizado. Todas as crates são Rust puro:
+  a única dependência em C que a versão JavaScript tinha (o zlib, para os fluxos dos
+  PDFs) foi substituída por `miniz_oxide`.

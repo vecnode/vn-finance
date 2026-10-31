@@ -1,0 +1,180 @@
+name: Release
+
+# Three platforms, one artefact each, built from the same commit that passed CI.
+#
+# The matrix is not `cargo build` three times: each platform wants a different shape,
+# and getting it wrong is only discovered by somebody who downloads the file. Windows
+# links the C runtime statically so the binary runs on a machine with no redistributable
+# installed; macOS ships one universal binary rather than two downloads nobody knows how
+# to choose between; Linux is built on the oldest supported Ubuntu so the glibc it needs
+# is the one an LTS has.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+
+jobs:
+  # Nothing is published from a tree that has not passed the gate.
+  gate:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  build:
+    name: ${{ matrix.target }}
+    needs: gate
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: vnfin-windows-x86_64
+            binary: target/x86_64-pc-windows-msvc/release/vnfin.exe
+            archive: zip
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+            name: vnfin-linux-x86_64
+            binary: target/x86_64-unknown-linux-gnu/release/vnfin
+            archive: tar.gz
+          - target: universal-apple-darwin
+            os: macos-latest
+            name: vnfin-macos-universal
+            binary: target/universal-apple-darwin/release/vnfin
+            archive: tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target == 'universal-apple-darwin' && 'x86_64-apple-darwin,aarch64-apple-darwin' || matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: vn-finance-release
+          cache-on-failure: true
+
+      - name: Linux window dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxi-dev \
+            libxcursor-dev libxrandr-dev libgl1-mesa-dev
+
+      # The two macOS architectures are built separately and fused, because a universal
+      # binary is the only macOS artefact a person can download without first knowing
+      # which Mac they have.
+      - name: Build (macOS universal)
+        if: matrix.target == 'universal-apple-darwin'
+        run: |
+          cargo build --release --locked -p vnfin --target x86_64-apple-darwin
+          cargo build --release --locked -p vnfin --target aarch64-apple-darwin
+          mkdir -p target/universal-apple-darwin/release
+          lipo -create \
+            target/x86_64-apple-darwin/release/vnfin \
+            target/aarch64-apple-darwin/release/vnfin \
+            -output target/universal-apple-darwin/release/vnfin
+
+      - name: Build
+        if: matrix.target != 'universal-apple-darwin'
+        run: cargo build --release --locked -p vnfin --target ${{ matrix.target }}
+        env:
+          # A Windows binary that needs the Visual C++ redistributable installed first
+          # is a binary that does not run on the machine it was downloaded to.
+          RUSTFLAGS: ${{ runner.os == 'Windows' && '-C target-feature=+crt-static' || '' }}
+
+      - name: Assemble the archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "${BINARY}" "dist/vnfin"
+          cp LICENSE "dist/LICENSE"
+          cp THIRD-PARTY-NOTICES.md "dist/THIRD-PARTY-NOTICES.md"
+          cp README.md "dist/README.md"
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            cp "${BINARY}" "dist/vnfin.exe"
+            rm -f "dist/vnfin"
+            (cd dist && 7z a -tzip "../${{ matrix.name }}.zip" .)
+          else
+            tar -C dist -czf "${{ matrix.name }}.tar.gz" .
+          fi
+        env:
+          BINARY: ${{ matrix.binary }}
+
+      - name: Checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            sha256sum "${{ matrix.name }}.zip" > "${{ matrix.name }}.zip.sha256"
+          else
+            sha256sum "${{ matrix.name }}.tar.gz" > "${{ matrix.name }}.tar.gz.sha256"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            ${{ matrix.name }}.${{ matrix.archive }}
+            ${{ matrix.name }}.${{ matrix.archive }}.sha256
+          if-no-files-found: error
+
+  publish:
+    name: Publish the release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Write the release notes
+        run: |
+          {
+            echo "One window, one folder, no network."
+            echo
+            echo "Download the file for your system, verify it against the matching \`.sha256\`, and run it. There is nothing to install and nothing to configure: the application opens the vault at \`~/.vn-finance\` (or \`%USERPROFILE%\\.vn-finance\` on Windows)."
+            echo
+            echo "| Platform | File |"
+            echo "| --- | --- |"
+            echo "| Windows 10/11, 64-bit | \`vnfin-windows-x86_64.zip\` |"
+            echo "| macOS 11+, Intel or Apple silicon | \`vnfin-macos-universal.tar.gz\` |"
+            echo "| Linux, 64-bit (glibc 2.35+) | \`vnfin-linux-x86_64.tar.gz\` |"
+            echo
+            echo "The Linux build needs the system's own windowing libraries (X11 or Wayland, and OpenGL); they are present on any desktop distribution."
+            echo
+            echo "The source of every file here is the tag this release was built from, under the GNU AGPL v3."
+            echo
+            echo "SHA-256:"
+            echo '```'
+            cat artifacts/*.sha256
+            echo '```'
+          } > notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          files: |
+            artifacts/vnfin-windows-x86_64.zip
+            artifacts/vnfin-macos-universal.tar.gz
+            artifacts/vnfin-linux-x86_64.tar.gz
+            artifacts/*.sha256
+          fail_on_unmatched_files: true

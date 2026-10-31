@@ -1,14 +1,14 @@
-# Dependencies
-node_modules/
+# Rust build output
+/target/
 
 # ---------------------------------------------------------------------------
 # PERSONAL DATA NEVER GOES IN THIS REPOSITORY.
 #
 # The application keeps everything in one folder outside the working tree
-# (~/.vn-finance by default), and the vault refuses to open a data directory
-# that sits inside a git work tree. These rules exist as a second line of
-# defence: if someone points --data-dir at the checkout anyway, or copies a
-# vault in by hand, git must not pick it up.
+# (~/.vn-finance by default), and it refuses to open a data directory that sits
+# inside a git work tree. These rules exist as a second line of defence: if
+# someone points the vault at the checkout anyway, or copies one in by hand, git
+# must not pick it up.
 # ---------------------------------------------------------------------------
 .vn-finance/
 vn-finance-data/
@@ -16,17 +16,19 @@ profile.json
 **/ledger/*.jsonl
 **/obligations/*.jsonl
 **/audit/*.jsonl
-**/rules/proposals-*.json
 **/documents/index.json
-**/ai/deepseek.key
 
 # Exported backups
 exports/
 *.vnfin-backup
 
-# Everything in .gitignore stays out of the pack, but the RULE PACKS themselves
-# are law, not personal data, and are meant to be versioned and reviewed:
-#   src/rules/**/*.json   <- keep these tracked
+# The RULE PACKS are law, not personal data, and are meant to be versioned and
+# reviewed: rules/**/*.json stays tracked.
+#
+# The same goes for the committed fixture vault: it was written by the reference
+# application so this one can prove it opens a real one, and every value in it is
+# invented. Re-including it here is deliberate.
+!crates/store/tests/fixtures/**
 
 # Editor and OS noise
 .DS_Store

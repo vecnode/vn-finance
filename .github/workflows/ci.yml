@@ -1,0 +1,106 @@
+name: CI
+
+# Three operating systems, but not on every commit.
+#
+# A push to main runs one job, on the platform a Windows development machine
+# cannot check for itself. The full matrix runs on a pull request, and — through
+# `workflow_call` — as the gate a release passes before it publishes anything.
+#
+# `main` ships and `dev` is where work happens: a push to `dev` deliberately runs no
+# CI, so a work-in-progress commit costs nothing. A pull request into `main` runs the
+# full matrix, and that is where the gate is enforced. A `v*` tag runs the release
+# workflow, which calls this file first.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'design/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'design/**'
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+
+jobs:
+  # The matrix is chosen by the event rather than written twice, so the caller and
+  # the push cannot disagree about what "checked" means.
+  plan:
+    name: Choose the matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      os: ${{ steps.pick.outputs.os }}
+    steps:
+      - id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo 'os=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'os=["ubuntu-latest","windows-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: ${{ matrix.os }}
+    needs: plan
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.plan.outputs.os) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: vn-finance-ci
+          cache-on-failure: true
+
+      # The window needs the platform's own windowing and graphics libraries on Linux.
+      # They are C, and no pure-Rust replacement exists; this is the same list
+      # vn-ranger installs, and it is the only place the build needs one.
+      - name: Linux GUI dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxi-dev \
+            libxcursor-dev libxrandr-dev libgl1-mesa-dev
+
+      # The same command a contributor runs: formatting, clippy with warnings
+      # denied, the whole test suite, and the two audits that keep the no-socket
+      # and no-unsafe promises true.
+      - name: Check
+        run: cargo xtask ci
+
+      # A `#[cfg]` bug lives on the platform that is not being compiled. The
+      # Windows runner is the one that can type-check Linux code without spending
+      # a matrix slot on it.
+      - name: Type-check the other two platforms from Windows
+        if: runner.os == 'Windows'
+        run: |
+          rustup target add x86_64-unknown-linux-gnu x86_64-apple-darwin
+          cargo clippy --workspace --all-targets --target x86_64-unknown-linux-gnu -- -D warnings
+          cargo clippy --workspace --all-targets --target x86_64-apple-darwin -- -D warnings
+

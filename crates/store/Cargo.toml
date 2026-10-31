@@ -1,0 +1,22 @@
+[package]
+name = "vnf-store"
+description = "vn-finance's local vault: the folder, the append-only ledgers, the documents and the view model"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+vnf-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+fs4 = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

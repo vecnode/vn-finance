@@ -1,0 +1,27 @@
+[package]
+name = "vnf-core"
+description = "vn-finance's deterministic domain: money, dates, rule packs, the obligation engine and the PDF reader"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+unicode-normalization = { workspace = true }
+# Pure-Rust DEFLATE, for the one place the application has to inflate something: a
+# PDF's content stream. The reference used `node:zlib`, which is C behind a JS API;
+# this keeps the shipped binary free of C without hand-rolling an inflate.
+miniz_oxide = "0.9.0"
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }

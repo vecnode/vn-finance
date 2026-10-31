@@ -1,0 +1,4 @@
+[alias]
+# `cargo xtask ci` is the same checks CI runs. `--release` keeps the helper fast
+# to start; it does no work of its own beyond invoking cargo.
+xtask = "run --package xtask --release --"

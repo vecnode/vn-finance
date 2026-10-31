@@ -1,0 +1,241 @@
+{
+  "checksum": "bd5b94e955a06f66523d8d71ace208d356ca2d97f3f30161fd2eb46654b9973d",
+  "year": 2026,
+  "pack_version": "2026.1.1",
+  "obligation_ids": [
+    "irs.modelo3",
+    "irs.pagamentosPorConta",
+    "irs.retencoesPagamento",
+    "iva.dp.mensal",
+    "iva.dp.trimestral",
+    "iva.pagamento.mensal",
+    "iva.pagamento.trimestral",
+    "iva.recapitulativa",
+    "iva.recapitulativa.trimestral",
+    "iva.recapitulativa.mensalPorVolume",
+    "efatura.comunicacaoFaturas",
+    "efatura.validacaoDespesas",
+    "saft.mensal",
+    "ss.declaracaoTrimestral",
+    "ss.contribuicoesMensais",
+    "ss.declaracaoAnual",
+    "ies",
+    "modelo22",
+    "iva.declaracaoAlteracoes",
+    "guardar.documentos"
+  ],
+  "summary": {
+    "pack_version": "2026.1.1",
+    "year": 2026,
+    "checksum": "bd5b94e955a06f66523d8d71ace208d356ca2d97f3f30161fd2eb46654b9973d",
+    "sources": 21,
+    "official_sources": 18,
+    "obligations": 20,
+    "verified": 6,
+    "partial": 14,
+    "unverified": 0,
+    "stale": 0,
+    "event_driven": 1,
+    "todo": [
+      "constants.irs.simplifiedRegime.documentedExpensesDeductionCap = null: o art. 31.º n.º 13 do CIRS, na redação em vigor, não fixa um limite monetário. O mecanismo e um acréscimo ao rendimento tributavel igual a diferença positiva entre 15 % dos rendimentos brutos das prestações de serviços e o somatório das despesas elegíveis (dedução específica, despesas com pessoal, rendas, 1,5 %/4 % do VPT dos imóveis, outras despesas comunicadas a AT, importações e aquisições intracomunitárias). O limite de 1 500 EUR habitual em resumos secundários não consta do texto atual: confirmar com um contabilista antes de o codificar.",
+      "IVA: as taxas registadas (23 %, 13 % e 6 %) são as do continente (CIVA art. 18.º n.º 1, redação da Lei n.º 55-A/2010). O art. 18.º n.º 3 permite taxas diminutas nas Regiões Autónomas dos Açores e da Madeira, que não estão refletidas neste pacote.",
+      "IVA, art. 53.º: o pacote registra o limiar de 15 000 EUR. O folheto oficial da AT acrescenta a regra de transição que não esta codificada por falta de chave na estrutura: se o volume de negócios do ano exceder 15 000 EUR mas ficar abaixo de 18 750 EUR, e entregue declaração de alterações em 15 dias úteis a contar do último dia desse ano e o regime normal aplica-se a partir de 1 de janeiro seguinte; se 18 750 EUR for excedido no decurso do ano, o IVA passa a ser liquidado a partir desse momento.",
+      "iva.pagamento.mensal e iva.pagamento.trimestral: o artigo do CIVA que fixa o prazo de pagamento (dia 25 do 2.º mês seguinte) não foi confirmado; a verificação baseia-se no folheto oficial da AT e nas datas de 2026 do calendário de pagamentos.",
+      "irs.retencoesPagamento: o artigo do CIRS que fixa o prazo de entrega das importâncias retidas (dia 20 do mês seguinte) não foi confirmado. As taxas de retenção estão confirmadas no art. 101.º.",
+      "iva.recapitulativa: a data de 31 de agosto de 2026 consta do calendário oficial mas não tem nota nem base legal identificada; confirmar se decorre de despacho ou de regra própria da declaração recapitulativa.",
+      "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF: figura como nota e) do calendário declarativo de 2026 e como nota c) do calendário de pagamentos, mas não foi possível determinar a que obrigação concreta se refere; não foi associado a nenhuma data neste pacote. O PDF não foi recolhido (apenas o link referenciado na pagina).",
+      "Modelo 22 e IES: apenas as datas oficiais de 2026 foram registadas (30 de junho, com prorrogação pelo Despacho n.º 81/2026, e 15 de julho). Os prazos gerais da lei não foram confirmados em fonte oficial nesta recolha e por isso não são afirmados.",
+      "saft.mensal: o calendário da AT não tem linha autónoma para o SAF-T (PT) mensal; as datas foram transpostas da linha da comunicação de faturas (mesmo prazo do dia 5). Confirmar se quem comunica em tempo real por webservice esta efetivamente dispensado da remessa mensal do ficheiro e se a dispensa abrange quem usa o sistema de faturação do Portal das Finanças (esta última consta do folheto oficial).",
+      "Segurança Social: não foi encontrado calendário oficial anual (a seg-social.pt devolveu 404 nos PDFs do Guia Prático e redirecionou as paginas de documentos para a área reservada). Os prazos, a taxa de 21,4 % e os coeficientes de 70 %/20 % foram confirmados no Guia Prático da OCC de agosto de 2026 e corroborados pela DECO. Confirmar igualmente o artigo exato do CRC da declaração trimestral (o Guia cita o art. 151.º-A para a declaração anual, sugerindo o art. 151.º para a trimestral, mas isso não foi confirmado).",
+      "Segurança Social, inicio de atividade: os primeiros 12 meses Não são uma isenção. O Guia Prático da OCC indica que o enquadramento existe mas os seus efeitos so se produzem no 1.º dia do 12.º mês posterior ao inicio de atividade, pelo que o campo startupExemptionMonths foi fixado em 12 como periodo sem obrigação contributiva. Não foi encontrada qualquer redução faseada (por exemplo 50 % e depois 25 %) após esse periodo, pelo que startupReductions ficou vazio: o pressuposto de 'isenção de 12 meses seguida de reduções' não esta sustentado nas fontes consultadas e deve ser confirmado. Também não foram confirmadas as condições de acesso (por exemplo cessação anterior de atividade) nem a regra de suspensão da contagem do prazo em caso de cessação durante os primeiros 12 meses.",
+      "constants.socialSecurity.iasMonthly = 53713 (537,13 EUR): valor corroborado pelo Guia Prático da OCC, que cita a Portaria n.º 480-A/2025/1, de 30 de dezembro, e por fontes secundárias (Garrigues, imprensa). A pagina oficial do Diário da República foi pedida mas não devolveu texto legível por máquina, pelo que o valor não foi lido diretamente no diploma.",
+      "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): codificados em centésimos do IAS, ou seja 1,5 × IAS escreve-se 150 e 12 × IAS escreve-se 1200. A base de incidência mensal é um duodécimo (ou um terço do rendimento relevante trimestral), limitada entre 1,5 x IAS e 12 x IAS; existe ainda um valor mínimo de contribuição de 20,00 EUR por referência ao Despacho n.º 599/2019, citado pelo Guia da OCC mas não lido diretamente.",
+      "Segurança Social, direito de opção: o trabalhador pode fixar rendimento relevante superior ou inferior até 25 %, por escalões de 5 % (art. 164.º do CRC, citado pelo Guia da OCC). Não esta codificado por falta de chave na estrutura; a aplicação deve ter isto em conta ao estimar contribuições.",
+      "Retenção na fonte: além das três taxas codificadas, o art. 101.º do CIRS fixa 16,5 % para rendimentos de propriedade intelectual ou industrial e 20 % para rendimentos abrangidos pelo art. 58.º-A do EBF. Não foram codificadas por a estrutura pedida prever apenas três chaves; considerar a sua inclusão numa versão seguinte do pacote.",
+      "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo (CIRS art. 71.º n.º 4 a), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida). O texto do artigo foi lido, mas a aplicação a casos concretos (convenções para evitar a dupla tributação, estabelecimento estável) exige revisão humana.",
+      "efatura.validacaoDespesas: a base legal do prazo para as despesas pessoais (art. 78.º-B do CIRS) foi apenas referida de forma remissa pelo art. 31.º n.º 15 a); não foi lida integralmente.",
+      "Os prazos de conservação de documentos são diferentes conforme o imposto (10 anos no CIVA art. 52.º; 4 anos no CIRS art. 128.º n.º 3). A aplicação deve adotar por omissão o prazo mais longo (10 anos) para as faturas, mas a decisão deve ser validada por um contabilista certificado.",
+      "ss.declaracaoTrimestral: na integração, periodicity.lagMonths foi corrigido de 0 para 1, porque as datas oficiais do próprio pacote (31/01, 30/04, 31/07, 31/10) so alinham com os trimestres com um mês de desfasamento (T1 -> abril, T2 -> julho, T3 -> outubro). O campo deadlineRule.months não e usado pelo motor.",
+      "Declaração recapitulativa (iva.recapitulativa, iva.recapitulativa.trimestral, iva.recapitulativa.mensalPorVolume): a periodicidade passou a depender do regime de IVA declarado, como manda o RITI art. 30.º n.º 1 a) e b). Até à versão 2026.1.0 a regra mensal não tinha condição de regime e era agendada em paralelo com a trimestral para qualquer contribuinte com operações intracomunitárias — as duas séries apareciam ao mesmo tempo, o que a lei nunca permite. O desempate do n.º 2 (mensal quando as operações intracomunitárias passam 50 000 EUR num trimestre) depende do campo activity.intraCommunityOperationsAbove50k, que o contribuinte declara; a aplicação não o calcula a partir do livro de faturas porque não há repartição trimestral por país do adquirente. Se o campo estiver por declarar, aplica-se a regra trimestral do n.º 1 b), que é a regra base da lei: a exceção do n.º 2 só se aplica a quem a declarar.",
+      "Declaração recapitulativa e regime de isenção do art. 53.º: as três regras exigem regime de IVA mensal ou trimestral. Um perfil com iva.regime = isento_art53 e operações intracomunitárias declaradas não agenda qualquer recapitulativa, porque o art. 30.º n.º 1 do RITI se refere aos sujeitos passivos das alíneas a) e b) do n.º 1 do art. 41.º do CIVA. Não foi confirmado se, e em que termos, um sujeito passivo isento pelo art. 53.º com prestações intracomunitárias continua obrigado à recapitulativa: confirmar antes de codificar."
+    ],
+    "null_constants": [
+      "constants.irs.simplifiedRegime.documentedExpensesDeductionCap"
+    ]
+  },
+  "problems": [
+    {
+      "level": "warning",
+      "path": "obligations[1].deadlineRule.months",
+      "message": "a lista \"months\" não é usada pelo motor: o mês de vencimento resulta de periodicity.lagMonths. Confirma que as duas descrições coincidem."
+    },
+    {
+      "level": "warning",
+      "path": "obligations[13].deadlineRule.months",
+      "message": "a lista \"months\" não é usada pelo motor: o mês de vencimento resulta de periodicity.lagMonths. Confirma que as duas descrições coincidem."
+    },
+    {
+      "level": "warning",
+      "path": "obligations[16].legalBasis",
+      "message": "sem base legal registada; todas as regras devem citar a lei"
+    },
+    {
+      "level": "warning",
+      "path": "obligations[17].legalBasis",
+      "message": "sem base legal registada; todas as regras devem citar a lei"
+    }
+  ],
+  "freshness": [
+    {
+      "today": "2025-12-31",
+      "status": "future",
+      "message": "Pacote de regras de 2026, à frente do ano em curso (2025)."
+    },
+    {
+      "today": "2026-09-20",
+      "status": "current",
+      "message": "Pacote de regras de 2026 (ano em curso)."
+    },
+    {
+      "today": "2027-01-15",
+      "status": "stale",
+      "message": "O pacote de regras é de 2026 mas o ano em curso é 2027. As datas publicadas não cobrem este ano: os prazos são provisórios e têm de ser conferidos."
+    }
+  ],
+  "declares": [
+    {
+      "id": "irs.modelo3",
+      "declared": true
+    },
+    {
+      "id": "irs.pagamentosPorConta",
+      "declared": true
+    },
+    {
+      "id": "irs.retencoesPagamento",
+      "declared": true
+    },
+    {
+      "id": "iva.dp.mensal",
+      "declared": true
+    },
+    {
+      "id": "iva.dp.trimestral",
+      "declared": true
+    },
+    {
+      "id": "iva.pagamento.mensal",
+      "declared": true
+    },
+    {
+      "id": "iva.pagamento.trimestral",
+      "declared": true
+    },
+    {
+      "id": "iva.recapitulativa",
+      "declared": true
+    },
+    {
+      "id": "iva.recapitulativa.trimestral",
+      "declared": true
+    },
+    {
+      "id": "iva.recapitulativa.mensalPorVolume",
+      "declared": true
+    },
+    {
+      "id": "efatura.comunicacaoFaturas",
+      "declared": true
+    },
+    {
+      "id": "efatura.validacaoDespesas",
+      "declared": true
+    },
+    {
+      "id": "saft.mensal",
+      "declared": true
+    },
+    {
+      "id": "ss.declaracaoTrimestral",
+      "declared": true
+    },
+    {
+      "id": "ss.contribuicoesMensais",
+      "declared": true
+    },
+    {
+      "id": "ss.declaracaoAnual",
+      "declared": true
+    },
+    {
+      "id": "ies",
+      "declared": true
+    },
+    {
+      "id": "modelo22",
+      "declared": true
+    },
+    {
+      "id": "iva.declaracaoAlteracoes",
+      "declared": true
+    },
+    {
+      "id": "guardar.documentos",
+      "declared": true
+    },
+    {
+      "id": "nao.existe",
+      "declared": false
+    }
+  ],
+  "constant_reads": [
+    {
+      "path": "iva.rates.normal",
+      "value": 2300
+    },
+    {
+      "path": "iva.rates.intermediaire",
+      "value": 1300
+    },
+    {
+      "path": "iva.rates.reduzida",
+      "value": 600
+    },
+    {
+      "path": "iva.art53.ceiling",
+      "value": 1500000
+    },
+    {
+      "path": "irs.withholding.professionalServicesResident",
+      "value": 2300
+    },
+    {
+      "path": "irs.withholding.nonResident",
+      "value": 2500
+    },
+    {
+      "path": "socialSecurity.contributionRate",
+      "value": 2140
+    },
+    {
+      "path": "socialSecurity.iasMonthly",
+      "value": 53713
+    },
+    {
+      "path": "socialSecurity.relevantIncomeShareServices",
+      "value": 7000
+    },
+    {
+      "path": "socialSecurity.baseMinMultipleIas",
+      "value": 150
+    },
+    {
+      "path": "socialSecurity.startupReductions.0",
+      "value": null
+    },
+    {
+      "path": "nao.existe",
+      "value": null
+    }
+  ]
+}

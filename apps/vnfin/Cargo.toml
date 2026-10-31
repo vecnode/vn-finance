@@ -1,0 +1,25 @@
+[package]
+name = "vnfin"
+description = "vn-finance: a local-first Portuguese tax assistant, in one window"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "vnfin"
+path = "src/main.rs"
+
+[dependencies]
+vnf-core = { workspace = true }
+vnf-store = { workspace = true }
+vnf-ui = { workspace = true }
+# `clipboard` is named because `default-features = false` drops eframe's default
+# set, and without it Ctrl+C and every Copy button would silently do nothing.
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "clipboard", "wayland", "x11"] }
+egui = { workspace = true }

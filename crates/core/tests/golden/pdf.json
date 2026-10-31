@@ -1,0 +1,1059 @@
+{
+  "cases": [
+    {
+      "name": "fatura-recibo",
+      "note": "the standard document",
+      "bytesHex": "255044462d312e350a25e2e3cfd30a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c202f466f6e74203c3c202f4631203520302052203e3e203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e67746820393539202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c9d57cb8edb3614ddfb2bee668004f0837af931280a70243920609b1e8936b2c886b6189781244e24d908baea7765576431abfe40570d66314081fc4341698c346dd9d0b331ac4bfb9cab7b780ea5f7bd1bd61bcd1d98027bdb8b59ef56171c4080c0011fc1142160c5d79fa076a93af45e60166ea26b7c13468eebf903e7257bd74370d020e7ffebcf7df10fc4c97466409cf3e658f14122f672a7e08779022c4e593c72913b1e4d7eb426984c0d04a2908dcc3888029c6084bc16d91a763c31c0d24a1e64c9736ba4606c408a7044538828b004afd22561f18ac510c57013af52a01bbdb44ee294e18826ba9ec6c996dcd3d49ada0f0cd42bba8c61891382217e1d2fd70b0a29596cb135b2e79b6e8a2e49f8db8250488e1c320eb85075537170501f1c84d0c0410816b2de296ecde67aa6fbf87d192754cf8644f18a913909f1fd270a73928678016f5eacc8fccd4b1880deb5c178329d59733aeef764c3d1ed8624ff12ed193a21e7ff748a8bbb4ad41ce20fa2b8cb551f16191fda628f67264ba7711477bbecac183e0dcf2410f4c1d76a218460adaa46f5614d13b6798517d6d41393f7bf235b803ab99035d3d814024f62e1b3c7d2f413fd462dfc64b1fbae7ea974e3c0941391da1f0b51360aba2052c0a1f9d21c730599b886353ff06e395335ec4459833ab6df6b519de4a3aaad5bf08d01c39bd6827b95ab3d7f7c50f00764b2be53b5d41767e25125782e7fe6e7dab981eb67e4e6d83345ce162f68620de31af3254ec38468b56e5904fa8aae1805865f63205b0c8c32bc807044966b9a326a4de8982266b322ecd784d82321537084aaac8f79a32ac92113209e9c260a10e541943f71bdb09727697db604335370a49d867a10db7630d69053535e38b02965c633a1e374e87aa88f10fc628d3b368581fd5840c041d48ddea602d44e1f2a4384ba3ec0f5aee0caba9bc01418978cca37799ff10f1c96aa91a7b655598bf2f1418dca0705f5f19d90e78ba692bb63d31a6fcb7355016b0b9f4f227f2a5cd28e67ca01d7eb2374050368fb5aa9aae0390c205465234b5136e2db395e28ac6b723c49ac6334704c7ebfe1b5686758ee65f667b9971c12d1b4f38492c35ba5db27490a892833d925ead3e82ea04726f7a7a280eacc37005c354307391ffb500e3f3a90290835f76513f367a684d0e145da678b88869b65bcb20f307f6a8a826e1a32fff2fea84fa1af525b434f4c91a0b3e5d2fde207a62020c59daadb03115291ab4ba7ea9b2cdd1d097f1fea33f2cbf74c66ffefed7821ba6bf26ed73c86357e8593e7f4ed98ecb9feacdf63c0d1ee32bfcffd05116062150a656e6473747265616d0a656e646f626a0a352030206f626a0a3c3c202f54797065202f466f6e74202f53756274797065202f5479706531202f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67203e3e0a656e646f626a0a787265660a3020360a303030303030303030302036353533352066200a30303030303030303135203030303030206e200a30303030303030303634203030303030206e200a30303030303030313231203030303030206e200a30303030303030323437203030303030206e200a30303030303031323738203030303030206e200a747261696c65720a3c3c202f53697a652036202f526f6f74203120302052203e3e0a7374617274787265660a313337350a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [
+          "ATCUD:ABCD1234-1",
+          "Fatura-Recibo <FR TESTE/2026/7>",
+          "emitida em 15/03/2026",
+          "Original",
+          "DADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS",
+          "NOME MARIA EXEMPLO SILVA",
+          "DOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789",
+          "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+          "NOME Empresa Exemplo, Lda.",
+          "SEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+          "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+          "Documento emitido a título de: Pagamento dos bens ou dos serviços",
+          "Data da colocação à disposição dos bens/realização dos serviços: 15/03/2026",
+          "VALOR",
+          "DESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO",
+          "UNITÁRIO",
+          "Consultoria de exemplo em engenharia civil",
+          "Serviço C/IVA IVA",
+          "1 Unidade - 1.230,00 €",
+          "Consultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %",
+          "IVA",
+          "Taxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+          "23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €",
+          "IRS",
+          "Base de incidência Retenção na fonte IRS Rendimento Valor IRS",
+          "Sem retenção - Art.101º, n.º1 do CIRS 0,00 €",
+          "TOTAIS DO DOCUMENTO",
+          "Valor ilíquido 1.000,00 €",
+          "IVA 230,00 €",
+          "Imposto do Selo 0,00 €",
+          "TOTAL DO DOCUMENTO 1.230,00 €",
+          "Retenção na fonte IRS 0,00 €",
+          "TOTAL A PAGAR 1.230,00 €",
+          "Página 1 de 1"
+        ],
+        "text": "ATCUD:ABCD1234-1\nFatura-Recibo <FR TESTE/2026/7>\nemitida em 15/03/2026\nOriginal\nDADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS\nNOME MARIA EXEMPLO SILVA\nDOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa\nNÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789\nDADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS\nNOME Empresa Exemplo, Lda.\nSEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL\nNÚMERO DE IDENTIFICAÇÃO FISCAL 501234560\nDADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS\nDocumento emitido a título de: Pagamento dos bens ou dos serviços\nData da colocação à disposição dos bens/realização dos serviços: 15/03/2026\nVALOR\nDESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO\nUNITÁRIO\nConsultoria de exemplo em engenharia civil\nServiço C/IVA IVA\n1 Unidade - 1.230,00 €\nConsultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %\nIVA\nTaxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA\n23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €\nIRS\nBase de incidência Retenção na fonte IRS Rendimento Valor IRS\nSem retenção - Art.101º, n.º1 do CIRS 0,00 €\nTOTAIS DO DOCUMENTO\nValor ilíquido 1.000,00 €\nIVA 230,00 €\nImposto do Selo 0,00 €\nTOTAL DO DOCUMENTO 1.230,00 €\nRetenção na fonte IRS 0,00 €\nTOTAL A PAGAR 1.230,00 €\nPágina 1 de 1",
+        "problems": []
+      },
+      "draft": {
+        "kind": "Fatura-Recibo",
+        "number": "FR TESTE/2026/7",
+        "atcud": "ABCD1234-1",
+        "date": "2026-03-15",
+        "issuer": {
+          "name": "MARIA EXEMPLO SILVA",
+          "nif": "123456789",
+          "address": "Rua da Amostra 10, 1000-100 Lisboa"
+        },
+        "customer": {
+          "name": "Empresa Exemplo, Lda.",
+          "nif": "501234560",
+          "address": "Av. Exemplo 5, 4000-000 Porto, PORTUGAL"
+        },
+        "description": "Consultoria de exemplo em engenharia civil e gestão de obra",
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "ivaRateBp": 2300,
+        "stampDutyCents": 0,
+        "retentionCents": 0,
+        "totalCents": 123000,
+        "netCents": 123000,
+        "retentionReason": "Sem retenção - Art.101º, n.º1 do CIRS",
+        "purpose": "Pagamento dos bens ou dos serviços",
+        "declaresPaid": true,
+        "customerCountryHint": "PT",
+        "ivaRatesBp": [
+          2300
+        ],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": "Fatura-Recibo",
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": "FR TESTE/2026/7",
+            "hint": null
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": "ABCD1234-1",
+            "hint": null
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": "2026-03-15",
+            "hint": null
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": "123456789",
+            "hint": null
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": "501234560",
+            "hint": null
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": "1000,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": "230,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": "23%",
+            "hint": null
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": "1230,00 €",
+            "hint": null
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": "0,00 €",
+            "hint": "Sem retenção - Art.101º, n.º1 do CIRS"
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": "1230,00 €",
+            "hint": null
+          }
+        ],
+        "checks": [
+          {
+            "id": "total",
+            "label": "Base + IVA + imposto do selo = total do documento",
+            "ok": true,
+            "detail": "1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "payable",
+            "label": "Total do documento − retenção = total a pagar",
+            "ok": true,
+            "detail": "1230,00 € − 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "rate",
+            "label": "Taxa de IVA aplicada à base = IVA do documento",
+            "ok": true,
+            "detail": "1000,00 € × 23% = 230,00 € · documento: 230,00 €"
+          },
+          {
+            "id": "nif-prestador",
+            "label": "Dígito de controlo do NIF do prestador",
+            "ok": true,
+            "detail": "123456789 é um NIF português válido"
+          },
+          {
+            "id": "nif-adquirente",
+            "label": "Dígito de controlo do NIF do adquirente",
+            "ok": true,
+            "detail": "501234560 é um NIF português válido"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "fatura-recibo-total-errado",
+      "note": "the total does not add up, and the checks must say so",
+      "bytesHex": "255044462d312e350a25e2e3cfd30a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c202f466f6e74203c3c202f4631203520302052203e3e203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e67746820393632202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c9d57cb8edb3614ddfb2bee668004f08392253f0645018e2407046cd323d14616d9d016e33290c489241b4157fdaeec8a2c66d51fe8aac12c0628907f28288d91a62d1b6a368675699f73750fcfa1f4be77c37aa3850333606f7b11ebddea8203081038e0219821042cfffa13d42c95c7de0bcc826d788d6f82d071c7dec079c9def5101c35c8e5fffaf390ff03713a9b1b1017bc3e957c108b83dc2bf86111038b12168d5ce44e46d31fad09a6330381c8652d530e2207c71fa171836c0d3b991a6069298fb2e09935923f31208538a4098414588cd7c98ab068cd220823b889d609d0ad5edac451c27048635d4fa27847ee69624dedf906ea355d45b0c231c110bd8e569b2585842c77d81a79ec996e8aae48f0db9250884f1c520e3857555d7270501f1c84d0c0410896b2da2b6ecde68e4df7f1fb2a8aa99e0d09a335230b12e0fb4f14162409f012debc5893c59b973000bd6bfdc97436b7e674dcefc986c3db2d89ff25da337442ceffe914e577a5a838441f447e97a93e2c533eb4c59ecc4d964ea2306a77d945317c1e5e48c0ef83a7d54208c14695b5eac386c66cfb0a2fada9a726ef7f47361fb572216ba68929049ec4c2178f25c927fa8d5af8c962f76dbdab7413df9413a13a9c7251d40ada2052c0a1fe529f3205a9b8860d3ff276395515ec4551813a35df2b519ee5a3aaac5bf08c01c3ebc6820795a9037f7c50f007a4b2ba5395d41717e2512978267fe697daa581eb67e4e6646c8a9c1d5ed2d81ac635e64b940431d16addb210f4155d330a0cbfc640761818657809c188ac363461d49ad03145cc764dd8af31b14742a6e00854519db25a9592432a403c394de4208aa3287ee27ae120cfd2fa6cf1e7a6e0485a0df52076cd60ac2167a6bc70605bc894a742c7e9d01da33e42f08b35eec41406f66301014751d57a9b0a507b7da80c116afb00777c0557d6ddf8a6c0e8322acfe47dc63f7058a95a9e9b5665258ac707352a1e1454a777425e2eea52ee4f7563bc1dcf5409ac297c3e8beca9d0a59db12907dc711fa12b1840d3d75a9539cf6000812a6a5988a216dfceb1a3b0aec9f124b68e51df31f9fd8657a299617190e99fc541728845ddcc130a0e6f956e9fc409c4a248659ba84fa3eb408f4cee4f440ee5856f00b8ac870e723ef6a1187e7420551068ee6e13f3e6a684d0e1459a678b9006db55b4b60f306f668a82761a32fbf2fea44fa1af525b434f4d91a0b3a5eb7ef17c531090fc4e55cd810889c854d7a97a264bb747c2df87dae497d30d7e6c32fb7f6fc78ecdbb26efb6cd63d8e057387e46ee7a8ec99e9bcffa3d061ced2ef3fbdc5f128662160a656e6473747265616d0a656e646f626a0a352030206f626a0a3c3c202f54797065202f466f6e74202f53756274797065202f5479706531202f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67203e3e0a656e646f626a0a787265660a3020360a303030303030303030302036353533352066200a30303030303030303135203030303030206e200a30303030303030303634203030303030206e200a30303030303030313231203030303030206e200a30303030303030323437203030303030206e200a30303030303031323831203030303030206e200a747261696c65720a3c3c202f53697a652036202f526f6f74203120302052203e3e0a7374617274787265660a313337380a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [
+          "ATCUD:ABCD1234-1",
+          "Fatura-Recibo <FR TESTE/2026/7>",
+          "emitida em 15/03/2026",
+          "Original",
+          "DADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS",
+          "NOME MARIA EXEMPLO SILVA",
+          "DOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789",
+          "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+          "NOME Empresa Exemplo, Lda.",
+          "SEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+          "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+          "Documento emitido a título de: Pagamento dos bens ou dos serviços",
+          "Data da colocação à disposição dos bens/realização dos serviços: 15/03/2026",
+          "VALOR",
+          "DESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO",
+          "UNITÁRIO",
+          "Consultoria de exemplo em engenharia civil",
+          "Serviço C/IVA IVA",
+          "1 Unidade - 1.230,00 €",
+          "Consultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %",
+          "IVA",
+          "Taxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+          "23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €",
+          "IRS",
+          "Base de incidência Retenção na fonte IRS Rendimento Valor IRS",
+          "Sem retenção - Art.101º, n.º1 do CIRS 0,00 €",
+          "TOTAIS DO DOCUMENTO",
+          "Valor ilíquido 1.000,00 €",
+          "IVA 230,00 €",
+          "Imposto do Selo 0,00 €",
+          "TOTAL DO DOCUMENTO 1.231,00 €",
+          "Retenção na fonte IRS 0,00 €",
+          "TOTAL A PAGAR 1.230,00 €",
+          "Página 1 de 1"
+        ],
+        "text": "ATCUD:ABCD1234-1\nFatura-Recibo <FR TESTE/2026/7>\nemitida em 15/03/2026\nOriginal\nDADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS\nNOME MARIA EXEMPLO SILVA\nDOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa\nNÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789\nDADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS\nNOME Empresa Exemplo, Lda.\nSEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL\nNÚMERO DE IDENTIFICAÇÃO FISCAL 501234560\nDADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS\nDocumento emitido a título de: Pagamento dos bens ou dos serviços\nData da colocação à disposição dos bens/realização dos serviços: 15/03/2026\nVALOR\nDESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO\nUNITÁRIO\nConsultoria de exemplo em engenharia civil\nServiço C/IVA IVA\n1 Unidade - 1.230,00 €\nConsultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %\nIVA\nTaxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA\n23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €\nIRS\nBase de incidência Retenção na fonte IRS Rendimento Valor IRS\nSem retenção - Art.101º, n.º1 do CIRS 0,00 €\nTOTAIS DO DOCUMENTO\nValor ilíquido 1.000,00 €\nIVA 230,00 €\nImposto do Selo 0,00 €\nTOTAL DO DOCUMENTO 1.231,00 €\nRetenção na fonte IRS 0,00 €\nTOTAL A PAGAR 1.230,00 €\nPágina 1 de 1",
+        "problems": []
+      },
+      "draft": {
+        "kind": "Fatura-Recibo",
+        "number": "FR TESTE/2026/7",
+        "atcud": "ABCD1234-1",
+        "date": "2026-03-15",
+        "issuer": {
+          "name": "MARIA EXEMPLO SILVA",
+          "nif": "123456789",
+          "address": "Rua da Amostra 10, 1000-100 Lisboa"
+        },
+        "customer": {
+          "name": "Empresa Exemplo, Lda.",
+          "nif": "501234560",
+          "address": "Av. Exemplo 5, 4000-000 Porto, PORTUGAL"
+        },
+        "description": "Consultoria de exemplo em engenharia civil e gestão de obra",
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "ivaRateBp": 2300,
+        "stampDutyCents": 0,
+        "retentionCents": 0,
+        "totalCents": 123100,
+        "netCents": 123000,
+        "retentionReason": "Sem retenção - Art.101º, n.º1 do CIRS",
+        "purpose": "Pagamento dos bens ou dos serviços",
+        "declaresPaid": true,
+        "customerCountryHint": "PT",
+        "ivaRatesBp": [
+          2300
+        ],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": "Fatura-Recibo",
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": "FR TESTE/2026/7",
+            "hint": null
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": "ABCD1234-1",
+            "hint": null
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": "2026-03-15",
+            "hint": null
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": "123456789",
+            "hint": null
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": "501234560",
+            "hint": null
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": "1000,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": "230,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": "23%",
+            "hint": null
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": "1231,00 €",
+            "hint": null
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": "0,00 €",
+            "hint": "Sem retenção - Art.101º, n.º1 do CIRS"
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": "1230,00 €",
+            "hint": null
+          }
+        ],
+        "checks": [
+          {
+            "id": "total",
+            "label": "Base + IVA + imposto do selo = total do documento",
+            "ok": false,
+            "detail": "1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1231,00 €"
+          },
+          {
+            "id": "payable",
+            "label": "Total do documento − retenção = total a pagar",
+            "ok": true,
+            "detail": "1230,00 € − 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "rate",
+            "label": "Taxa de IVA aplicada à base = IVA do documento",
+            "ok": true,
+            "detail": "1000,00 € × 23% = 230,00 € · documento: 230,00 €"
+          },
+          {
+            "id": "nif-prestador",
+            "label": "Dígito de controlo do NIF do prestador",
+            "ok": true,
+            "detail": "123456789 é um NIF português válido"
+          },
+          {
+            "id": "nif-adquirente",
+            "label": "Dígito de controlo do NIF do adquirente",
+            "ok": true,
+            "detail": "501234560 é um NIF português válido"
+          }
+        ],
+        "problems": [
+          "Verificação falhada — Base + IVA + imposto do selo = total do documento: 1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1231,00 €"
+        ]
+      }
+    },
+    {
+      "name": "fatura-recibo-com-retencao",
+      "note": "a retention that the ledger has to store as a rate",
+      "bytesHex": "255044462d312e350a25e2e3cfd30a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c202f466f6e74203c3c202f4631203520302052203e3e203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e67746820393538202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c9d57cb8edb3614ddfb2bee668004f0837af931280a70243920609b1e8936b2c886b6189781244e24d908baea7765576431abfe40570d66314081fc4341698c346dd9d0b3314cd23ee7f21e9e43e97def86f5467307a6c0def662d6bbd5130e2040e0808f608a10b0e2eb4f50bb541d7a2f300b37d135be0923c7f5fc81f392bdeb21386890f3fff5e7bef807e2643a3320ce7973acf820117bb953f0c33c0116a72c1eb9c81d8f263f5a134ca6060251c846661c44014e30425e8b6c0d3b9e186069250fb2e4b935523036204538a2294414588257e992b078c5628862b8895729d08d5e5a2771ca7044133d9fc6c996dcd3d49ada0f0cd42bba8c61891382217e1d2fd70b0a29596cb135b2e79b36459724fc6d412824470e19075ca8baa93838a80f0e4268e020040b59ef14b766733dd33e7e5fc609d5bd2151bc62644e427cff89c29ca4215ec09b172b327ff31206a04f6d309e4c67d69c8efb3dd97074bb21c9bf447b864ec8f93f9de2e2ae123587f88328ee72d58745c687b6d8e399c9d2691cc5dd293b2b864fc33309047df0b55a082158abaa517d58d3846d5ee18535f5c4e4fdefc816a04e2e64cd343685c09358f8ecb134fd44bf510b3f59ecbe9bbf54ba7160ca8948ed8f85281b055d1029e0d07c698eb9824c5cc39a1f78b79ca91a76a2ac411ddbefb5a84ef251d5d625f8c680e14d6bc1bdcad59e3f3e28f8033259dfa95aeac1997854099ecb9ff979ee5cc0f5337273ec9922678b1734b186718df912a76142b45ab72c023da22b4681e1d718c81603a30c2f201c91e59aa68c5a133aa688d9ac08fb3521f648c8141ca12aeb63dea84a72c8048827a78902447910e54f5c2fece5495adf2dc1cc141c69a7a16ec4b66d8c35e4d494170e6c4a99f14ce8381dba1eea2304bf58e38e4d6160df1610701075a38fa900b5d397ca10a1ae0e70bd2bb8b2ae263005c625adf24dde67fc0387a56ae4a92d55d6a27c7c50a3f241417d7c27e479d05472776c5ae36d79ae2a60edc4e793c89f262e29c733e580ebf511ba8201b475ad5455f01c0610aab291a5281bf16d1f2f14d635399e24d6311a3826bfdff05ab43d2cf732fbb3dc4b0e8968da7e42c9e1add2e5932485449499ec12f5a97517d02393fb53514075e61b00ae9aa1839c8f7d28871f1dc814849afbd29ef9335346e8f822edd34544c3cd325ed947983f358541d70f997f797fd4f7d057b1ada127a650d0e972f1ee03531490e24ed5ed9508a9c8155c88eb9b4cdd5d0a7f6fea3312ccf74c76ffef037931be6bf26f573e86357e8593e7c8e7982cbafeacdf65c0d10e33bfd3fd0574c562da0a656e6473747265616d0a656e646f626a0a352030206f626a0a3c3c202f54797065202f466f6e74202f53756274797065202f5479706531202f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67203e3e0a656e646f626a0a787265660a3020360a303030303030303030302036353533352066200a30303030303030303135203030303030206e200a30303030303030303634203030303030206e200a30303030303030313231203030303030206e200a30303030303030323437203030303030206e200a30303030303031323737203030303030206e200a747261696c65720a3c3c202f53697a652036202f526f6f74203120302052203e3e0a7374617274787265660a313337340a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [
+          "ATCUD:ABCD1234-1",
+          "Fatura-Recibo <FR TESTE/2026/7>",
+          "emitida em 15/03/2026",
+          "Original",
+          "DADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS",
+          "NOME MARIA EXEMPLO SILVA",
+          "DOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789",
+          "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+          "NOME Empresa Exemplo, Lda.",
+          "SEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+          "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+          "Documento emitido a título de: Pagamento dos bens ou dos serviços",
+          "Data da colocação à disposição dos bens/realização dos serviços: 15/03/2026",
+          "VALOR",
+          "DESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO",
+          "UNITÁRIO",
+          "Consultoria de exemplo em engenharia civil",
+          "Serviço C/IVA IVA",
+          "1 Unidade - 1.230,00 €",
+          "Consultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %",
+          "IVA",
+          "Taxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+          "23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €",
+          "IRS",
+          "Base de incidência Retenção na fonte IRS Rendimento Valor IRS",
+          "Sem retenção - Art.101º, n.º1 do CIRS 230,00 €",
+          "TOTAIS DO DOCUMENTO",
+          "Valor ilíquido 1.000,00 €",
+          "IVA 230,00 €",
+          "Imposto do Selo 0,00 €",
+          "TOTAL DO DOCUMENTO 1.230,00 €",
+          "Retenção na fonte IRS 230,00 €",
+          "TOTAL A PAGAR 1.000,00 €",
+          "Página 1 de 1"
+        ],
+        "text": "ATCUD:ABCD1234-1\nFatura-Recibo <FR TESTE/2026/7>\nemitida em 15/03/2026\nOriginal\nDADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS\nNOME MARIA EXEMPLO SILVA\nDOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa\nNÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789\nDADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS\nNOME Empresa Exemplo, Lda.\nSEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL\nNÚMERO DE IDENTIFICAÇÃO FISCAL 501234560\nDADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS\nDocumento emitido a título de: Pagamento dos bens ou dos serviços\nData da colocação à disposição dos bens/realização dos serviços: 15/03/2026\nVALOR\nDESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO\nUNITÁRIO\nConsultoria de exemplo em engenharia civil\nServiço C/IVA IVA\n1 Unidade - 1.230,00 €\nConsultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %\nIVA\nTaxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA\n23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €\nIRS\nBase de incidência Retenção na fonte IRS Rendimento Valor IRS\nSem retenção - Art.101º, n.º1 do CIRS 230,00 €\nTOTAIS DO DOCUMENTO\nValor ilíquido 1.000,00 €\nIVA 230,00 €\nImposto do Selo 0,00 €\nTOTAL DO DOCUMENTO 1.230,00 €\nRetenção na fonte IRS 230,00 €\nTOTAL A PAGAR 1.000,00 €\nPágina 1 de 1",
+        "problems": []
+      },
+      "draft": {
+        "kind": "Fatura-Recibo",
+        "number": "FR TESTE/2026/7",
+        "atcud": "ABCD1234-1",
+        "date": "2026-03-15",
+        "issuer": {
+          "name": "MARIA EXEMPLO SILVA",
+          "nif": "123456789",
+          "address": "Rua da Amostra 10, 1000-100 Lisboa"
+        },
+        "customer": {
+          "name": "Empresa Exemplo, Lda.",
+          "nif": "501234560",
+          "address": "Av. Exemplo 5, 4000-000 Porto, PORTUGAL"
+        },
+        "description": "Consultoria de exemplo em engenharia civil e gestão de obra",
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "ivaRateBp": 2300,
+        "stampDutyCents": 0,
+        "retentionCents": 23000,
+        "totalCents": 123000,
+        "netCents": 100000,
+        "retentionReason": "Sem retenção - Art.101º, n.º1 do CIRS",
+        "purpose": "Pagamento dos bens ou dos serviços",
+        "declaresPaid": true,
+        "customerCountryHint": "PT",
+        "ivaRatesBp": [
+          2300
+        ],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": "Fatura-Recibo",
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": "FR TESTE/2026/7",
+            "hint": null
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": "ABCD1234-1",
+            "hint": null
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": "2026-03-15",
+            "hint": null
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": "123456789",
+            "hint": null
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": "501234560",
+            "hint": null
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": "1000,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": "230,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": "23%",
+            "hint": null
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": "1230,00 €",
+            "hint": null
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": "230,00 €",
+            "hint": "Sem retenção - Art.101º, n.º1 do CIRS"
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": "1000,00 €",
+            "hint": null
+          }
+        ],
+        "checks": [
+          {
+            "id": "total",
+            "label": "Base + IVA + imposto do selo = total do documento",
+            "ok": true,
+            "detail": "1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "payable",
+            "label": "Total do documento − retenção = total a pagar",
+            "ok": true,
+            "detail": "1230,00 € − 230,00 € = 1000,00 € · documento: 1000,00 €"
+          },
+          {
+            "id": "rate",
+            "label": "Taxa de IVA aplicada à base = IVA do documento",
+            "ok": true,
+            "detail": "1000,00 € × 23% = 230,00 € · documento: 230,00 €"
+          },
+          {
+            "id": "nif-prestador",
+            "label": "Dígito de controlo do NIF do prestador",
+            "ok": true,
+            "detail": "123456789 é um NIF português válido"
+          },
+          {
+            "id": "nif-adquirente",
+            "label": "Dígito de controlo do NIF do adquirente",
+            "ok": true,
+            "detail": "501234560 é um NIF português válido"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "fatura-recibo-sem-prestador",
+      "note": "no issuer section: the document cannot be attributed",
+      "bytesHex": "255044462d312e350a25e2e3cfd30a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c202f466f6e74203c3c202f4631203520302052203e3e203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e67746820393433202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c9d97cd8edb361485f77e8ab3099000fea164c9f60c8a021c490e04d89647a28d2cb2e1588ccb401227923c08b2ea7365576491555fa0ab06b318a040dea1a03c6e9aa26ce9d91812659f7375afce47eb5def8af546730733b037bd88f5aef582030202071ec18c10b0f2db574877a9def79e53166cc24b7a15848e3bf606ce0bf6b647b0d722a7dfebcf5df90fc5e9ecc2a038e7eda1e68354ece48dc20ff3142cca583472893b194d7fb43698ce0c06a294adcc394409c71f9171a76c2d3b991a64935aee65c50b6b257f62505a25cb084b9ac614d1ab68b95e24c8e2c5965a2b7bbe41394c9671f0eb224e901e38720e5aaaa6ad391cd287430819388460219b1bc5adddc69ee93e7e5b46698230421c462b16cfe3807efe94601e67015de0f5f3553c7ffd0203e847c79f4c6717d69eeed87487344c3284096878bd89d368c5225dc055b4ca906cf46116a5dbf87392597b39ee7fcd292a6f6bd17044ef45795ba83e16391f5a6b13c7a09d4561d415fcd7c4e8ddf06402bf0f4f4f8b1082b5aa5bd5c73a49d9e6255dd85a4f2e4c91fe9fb1f9e4382e62ed343545fd7158142ca5ab6c1967d9a7e4bb6951acd328639dfd13463799981810aadda11455ab70a4810247fbb53d140ab9b8c49aeff9f172ae1adc88aa813a74c78da8efe4836aac4bf04dbc0879db4570a70ab5e30ff70abf2397cdad6aa43e39198f6ac10bf9819fd64e055c3e015e13cf849c2d5d24a9b5ccd8c897280bd2584feb9a85d067c98a2560f41545bca56009a30b04a378b94e3296581bba26c46c5631fb258ded951c133802553587a255b5e4c805c463d2440951ed45f513d71776f24e5a037e424ce0c88e33d48dd8768db195f42f4cbc70b0a964ce73a1713a74c7a44f087eb6d69d996060df1608ec45d3eac75440dde84d6548c8b10eb8e36778665dcdc4048c735ae59bb2cff87b8ea56ae55d57aa6c44f570af46d5bd4273782be4e9a4ade5cda1ed82b7e585aac1ba852f77a2785c38a71ccfc40177dc27e41906e8ea5aa9bae405060854d5ca4a54adf8be8f670e766c4a7c9c5a63d4774d79bfe28de87a58ed64fe47b5931ca968bb7ea2e278a374f9719a2115552e8f447d6cdd19f68e29fd9928519ffc06a0753b7488f3b18f6af8d141ae1068ef333b464c84d0f08abbff1661126c96d1ca1e60de850905c76ec8e2ebbb83de85be8dda5a7a66428266cbb9cf8b373581202e6f55d36d88c844a1ceecaae79b227ddc12feded427f0cbf34c61fff7c7f14cf5b129bbc7e229d6f4254d9f52b76b8ae7fa8b7e9980a3d3657ea9fa1385a345690a656e6473747265616d0a656e646f626a0a352030206f626a0a3c3c202f54797065202f466f6e74202f53756274797065202f5479706531202f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67203e3e0a656e646f626a0a787265660a3020360a303030303030303030302036353533352066200a30303030303030303135203030303030206e200a30303030303030303634203030303030206e200a30303030303030313231203030303030206e200a30303030303030323437203030303030206e200a30303030303031323632203030303030206e200a747261696c65720a3c3c202f53697a652036202f526f6f74203120302052203e3e0a7374617274787265660a313335390a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [
+          "ATCUD:ABCD1234-1",
+          "Fatura-Recibo <FR TESTE/2026/7>",
+          "emitida em 15/03/2026",
+          "Original",
+          "NOME MARIA EXEMPLO SILVA",
+          "DOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789",
+          "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+          "NOME Empresa Exemplo, Lda.",
+          "SEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+          "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+          "Documento emitido a título de: Pagamento dos bens ou dos serviços",
+          "Data da colocação à disposição dos bens/realização dos serviços: 15/03/2026",
+          "VALOR",
+          "DESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO",
+          "UNITÁRIO",
+          "Consultoria de exemplo em engenharia civil",
+          "Serviço C/IVA IVA",
+          "1 Unidade - 1.230,00 €",
+          "Consultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %",
+          "IVA",
+          "Taxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+          "23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €",
+          "IRS",
+          "Base de incidência Retenção na fonte IRS Rendimento Valor IRS",
+          "Sem retenção - Art.101º, n.º1 do CIRS 0,00 €",
+          "TOTAIS DO DOCUMENTO",
+          "Valor ilíquido 1.000,00 €",
+          "IVA 230,00 €",
+          "Imposto do Selo 0,00 €",
+          "TOTAL DO DOCUMENTO 1.230,00 €",
+          "Retenção na fonte IRS 0,00 €",
+          "TOTAL A PAGAR 1.230,00 €",
+          "Página 1 de 1"
+        ],
+        "text": "ATCUD:ABCD1234-1\nFatura-Recibo <FR TESTE/2026/7>\nemitida em 15/03/2026\nOriginal\nNOME MARIA EXEMPLO SILVA\nDOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa\nNÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789\nDADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS\nNOME Empresa Exemplo, Lda.\nSEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL\nNÚMERO DE IDENTIFICAÇÃO FISCAL 501234560\nDADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS\nDocumento emitido a título de: Pagamento dos bens ou dos serviços\nData da colocação à disposição dos bens/realização dos serviços: 15/03/2026\nVALOR\nDESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO\nUNITÁRIO\nConsultoria de exemplo em engenharia civil\nServiço C/IVA IVA\n1 Unidade - 1.230,00 €\nConsultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %\nIVA\nTaxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA\n23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €\nIRS\nBase de incidência Retenção na fonte IRS Rendimento Valor IRS\nSem retenção - Art.101º, n.º1 do CIRS 0,00 €\nTOTAIS DO DOCUMENTO\nValor ilíquido 1.000,00 €\nIVA 230,00 €\nImposto do Selo 0,00 €\nTOTAL DO DOCUMENTO 1.230,00 €\nRetenção na fonte IRS 0,00 €\nTOTAL A PAGAR 1.230,00 €\nPágina 1 de 1",
+        "problems": []
+      },
+      "draft": {
+        "kind": "Fatura-Recibo",
+        "number": "FR TESTE/2026/7",
+        "atcud": "ABCD1234-1",
+        "date": "2026-03-15",
+        "issuer": {
+          "name": null,
+          "nif": null,
+          "address": null
+        },
+        "customer": {
+          "name": "Empresa Exemplo, Lda.",
+          "nif": "501234560",
+          "address": "Av. Exemplo 5, 4000-000 Porto, PORTUGAL"
+        },
+        "description": "Consultoria de exemplo em engenharia civil e gestão de obra",
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "ivaRateBp": 2300,
+        "stampDutyCents": 0,
+        "retentionCents": 0,
+        "totalCents": 123000,
+        "netCents": 123000,
+        "retentionReason": "Sem retenção - Art.101º, n.º1 do CIRS",
+        "purpose": "Pagamento dos bens ou dos serviços",
+        "declaresPaid": true,
+        "customerCountryHint": "PT",
+        "ivaRatesBp": [
+          2300
+        ],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": "Fatura-Recibo",
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": "FR TESTE/2026/7",
+            "hint": null
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": "ABCD1234-1",
+            "hint": null
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": "2026-03-15",
+            "hint": null
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": null,
+            "hint": "Não encontrado."
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": "501234560",
+            "hint": null
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": "1000,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": "230,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": "23%",
+            "hint": null
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": "1230,00 €",
+            "hint": null
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": "0,00 €",
+            "hint": "Sem retenção - Art.101º, n.º1 do CIRS"
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": "1230,00 €",
+            "hint": null
+          }
+        ],
+        "checks": [
+          {
+            "id": "total",
+            "label": "Base + IVA + imposto do selo = total do documento",
+            "ok": true,
+            "detail": "1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "payable",
+            "label": "Total do documento − retenção = total a pagar",
+            "ok": true,
+            "detail": "1230,00 € − 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "rate",
+            "label": "Taxa de IVA aplicada à base = IVA do documento",
+            "ok": true,
+            "detail": "1000,00 € × 23% = 230,00 € · documento: 230,00 €"
+          },
+          {
+            "id": "nif-adquirente",
+            "label": "Dígito de controlo do NIF do adquirente",
+            "ok": true,
+            "detail": "501234560 é um NIF português válido"
+          }
+        ],
+        "problems": [
+          "Não foi encontrada a secção do prestador de serviços (\"DADOS DO TRANSMITENTE…\"): pelo documento sozinho não é possível confirmar que esta fatura é tua."
+        ]
+      }
+    },
+    {
+      "name": "fatura-de-outro-emitente",
+      "note": "somebody else's invoice, which must be refused rather than recorded",
+      "bytesHex": "255044462d312e350a25e2e3cfd30a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c202f466f6e74203c3c202f4631203520302052203e3e203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e67746820393539202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c9d57cb8edb3614ddfb2bee668004f0837ad99e41518023c90101dbf448b4914536b4c5b80c247122c946d055bf2bbb228b59f507ba6a308b010ae41f0a4a36d2b465438f178675699f7b750ecfa1f5be77cb7aa3990353606f7b31ebdde98203081038e023982204acf8fa15d42e55fbde0bccc27574836fc3c8713d7fe0bc64ef7a08f61ae4fc7bfdbe2bfe8138995e1b1067bc39547c90889ddc2af86196008b53168f5ce48e47931fad1b4ca68606a2908dcc3888029c6084bc16d91a763c31c0d24aee65c9736ba4606c408a7044538828b0042fd30561f192c510c5701b2f53a06bbdb44ae294e18826ba9ec6c9863cd0d4bab51f185a2fe92286054e0886f875bc58cd29a464bec1d6c89e6fba29ba20e16f7342213970c838e042d54dc5c1417d70104203072198cb7aabb87537d733ddc7ef8b38a19a1b12c54b466624c40f9f28cc481ae239bc79b124b3372f6100d7a717b2eee9b8df930d47776b92fc4bb467e8849cffd3292eee2b5173883f88e23e577d98677c688b3dbe36593a8da3b8db6567c5f071786e02411f7cad16420856aa6a541f563461eb57786edd7a62f2fe77640b900e99606c2dd6786c0a819358f8ecb134fd44bf510b9f2cf6d0d52f956e1c98722252bb4321ca464117440a38345f9a43ae201337b0e27bde2d67aa86ad286b5087f6732daaa37c52b5f508be316078d35a70a772b5e34f8f0afe804cd6f7aa96fae2dc7854099ecb9ff9b9761ee0e619b939f64c91b3c1739a58c3b8c67c89d330215aad3b1681bea24b4681e1d718c80603a30ccf211c91c58aa68c5a37744c11b35e12f66b42ec919029384255d687bc5195e490091027a7890244b917e54f5c2fece4515a9f2dc1b52938d24e434dc4a625c61a726aca0b07d6a5cc78266000ced0f5501f21f8c51a776c0a037b5a40c05ed48ddea602d4561f2a4384ba39c0f5aee0ca7a9ac014189750e59bbccff8070e0bd5c8633baaac45f9f4a846e5a382faf04ec8f34553c9eda1698db7e1b9aa80b585cf47919f0a978ce39972c0f5fa085dc100dab996aa2a780e030855d9c852948df896c70b85754d8e2789758c068ec9efb7bc162d87e54e667f963bc921114dcb27941cde2a3d3e4952484499c92e514fd45dd01e99dc9f8a02aa73bf01e0aa193ac8f9d88772f8d1814c41a87b5fc6987f6d4a081d5ea4fd6f11d170bd8897f601e64f4d51d0b121f32fef0ffa14fa2ab535f4c414093a5b2edd2f7e600a0252dcabba3d102115b9ba9455df64e9ee48f83ba9cfc82fdf3399fdbfb7e385e8aec9bbddf01856f8154e9e33b763b2e7eab37e8e0147bbcbfc3cf717406662300a656e6473747265616d0a656e646f626a0a352030206f626a0a3c3c202f54797065202f466f6e74202f53756274797065202f5479706531202f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67203e3e0a656e646f626a0a787265660a3020360a303030303030303030302036353533352066200a30303030303030303135203030303030206e200a30303030303030303634203030303030206e200a30303030303030313231203030303030206e200a30303030303030323437203030303030206e200a30303030303031323738203030303030206e200a747261696c65720a3c3c202f53697a652036202f526f6f74203120302052203e3e0a7374617274787265660a313337350a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [
+          "ATCUD:ABCD1234-1",
+          "Fatura-Recibo <FR TESTE/2026/7>",
+          "emitida em 15/03/2026",
+          "Original",
+          "DADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS",
+          "NOME MARIA EXEMPLO SILVA",
+          "DOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 999999990",
+          "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+          "NOME Empresa Exemplo, Lda.",
+          "SEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL",
+          "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+          "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+          "Documento emitido a título de: Pagamento dos bens ou dos serviços",
+          "Data da colocação à disposição dos bens/realização dos serviços: 15/03/2026",
+          "VALOR",
+          "DESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO",
+          "UNITÁRIO",
+          "Consultoria de exemplo em engenharia civil",
+          "Serviço C/IVA IVA",
+          "1 Unidade - 1.230,00 €",
+          "Consultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %",
+          "IVA",
+          "Taxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+          "23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €",
+          "IRS",
+          "Base de incidência Retenção na fonte IRS Rendimento Valor IRS",
+          "Sem retenção - Art.101º, n.º1 do CIRS 0,00 €",
+          "TOTAIS DO DOCUMENTO",
+          "Valor ilíquido 1.000,00 €",
+          "IVA 230,00 €",
+          "Imposto do Selo 0,00 €",
+          "TOTAL DO DOCUMENTO 1.230,00 €",
+          "Retenção na fonte IRS 0,00 €",
+          "TOTAL A PAGAR 1.230,00 €",
+          "Página 1 de 1"
+        ],
+        "text": "ATCUD:ABCD1234-1\nFatura-Recibo <FR TESTE/2026/7>\nemitida em 15/03/2026\nOriginal\nDADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS\nNOME MARIA EXEMPLO SILVA\nDOMICÍLIO Rua da Amostra 10, 1000-100 Lisboa\nNÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 999999990\nDADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS\nNOME Empresa Exemplo, Lda.\nSEDE OU DOMICÍLIO Av. Exemplo 5, 4000-000 Porto, PORTUGAL\nNÚMERO DE IDENTIFICAÇÃO FISCAL 501234560\nDADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS\nDocumento emitido a título de: Pagamento dos bens ou dos serviços\nData da colocação à disposição dos bens/realização dos serviços: 15/03/2026\nVALOR\nDESCRIÇÃO QTD DESCONTO TAXA IVA TOTAL C/IMPOSTO\nUNITÁRIO\nConsultoria de exemplo em engenharia civil\nServiço C/IVA IVA\n1 Unidade - 1.230,00 €\nConsultoria de exemplo em engenharia civil e gestão de obra 1.000,00 € 23% %\nIVA\nTaxa Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA\n23,00% - Taxa Normal - Continente 1.000,00 € 230,00 €\nIRS\nBase de incidência Retenção na fonte IRS Rendimento Valor IRS\nSem retenção - Art.101º, n.º1 do CIRS 0,00 €\nTOTAIS DO DOCUMENTO\nValor ilíquido 1.000,00 €\nIVA 230,00 €\nImposto do Selo 0,00 €\nTOTAL DO DOCUMENTO 1.230,00 €\nRetenção na fonte IRS 0,00 €\nTOTAL A PAGAR 1.230,00 €\nPágina 1 de 1",
+        "problems": []
+      },
+      "draft": {
+        "kind": "Fatura-Recibo",
+        "number": "FR TESTE/2026/7",
+        "atcud": "ABCD1234-1",
+        "date": "2026-03-15",
+        "issuer": {
+          "name": "MARIA EXEMPLO SILVA",
+          "nif": "999999990",
+          "address": "Rua da Amostra 10, 1000-100 Lisboa"
+        },
+        "customer": {
+          "name": "Empresa Exemplo, Lda.",
+          "nif": "501234560",
+          "address": "Av. Exemplo 5, 4000-000 Porto, PORTUGAL"
+        },
+        "description": "Consultoria de exemplo em engenharia civil e gestão de obra",
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "ivaRateBp": 2300,
+        "stampDutyCents": 0,
+        "retentionCents": 0,
+        "totalCents": 123000,
+        "netCents": 123000,
+        "retentionReason": "Sem retenção - Art.101º, n.º1 do CIRS",
+        "purpose": "Pagamento dos bens ou dos serviços",
+        "declaresPaid": true,
+        "customerCountryHint": "PT",
+        "ivaRatesBp": [
+          2300
+        ],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": "Fatura-Recibo",
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": "FR TESTE/2026/7",
+            "hint": null
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": "ABCD1234-1",
+            "hint": null
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": "2026-03-15",
+            "hint": null
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": "999999990",
+            "hint": null
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": "501234560",
+            "hint": null
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": "1000,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": "230,00 €",
+            "hint": null
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": "23%",
+            "hint": null
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": "1230,00 €",
+            "hint": null
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": "0,00 €",
+            "hint": "Sem retenção - Art.101º, n.º1 do CIRS"
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": "1230,00 €",
+            "hint": null
+          }
+        ],
+        "checks": [
+          {
+            "id": "total",
+            "label": "Base + IVA + imposto do selo = total do documento",
+            "ok": true,
+            "detail": "1000,00 € + 230,00 € + 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "payable",
+            "label": "Total do documento − retenção = total a pagar",
+            "ok": true,
+            "detail": "1230,00 € − 0,00 € = 1230,00 € · documento: 1230,00 €"
+          },
+          {
+            "id": "rate",
+            "label": "Taxa de IVA aplicada à base = IVA do documento",
+            "ok": true,
+            "detail": "1000,00 € × 23% = 230,00 € · documento: 230,00 €"
+          },
+          {
+            "id": "nif-prestador",
+            "label": "Dígito de controlo do NIF do prestador",
+            "ok": true,
+            "detail": "999999990 é um NIF português válido"
+          },
+          {
+            "id": "nif-adquirente",
+            "label": "Dígito de controlo do NIF do adquirente",
+            "ok": true,
+            "detail": "501234560 é um NIF português válido"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "imagem",
+      "note": "no text layer at all",
+      "bytesHex": "255044462d312e340a312030206f626a0a3c3c202f54797065202f436174616c6f67202f5061676573203220302052203e3e0a656e646f626a0a322030206f626a0a3c3c202f54797065202f5061676573202f4b696473205b33203020525d202f436f756e742031203e3e0a656e646f626a0a332030206f626a0a3c3c202f54797065202f50616765202f506172656e74203220302052202f4d65646961426f78205b30203020353935203834325d202f5265736f7572636573203c3c203e3e202f436f6e74656e7473203420302052203e3e0a656e646f626a0a342030206f626a0a3c3c202f4c656e677468203331202f46696c746572202f466c6174654465636f6465203e3e0a73747265616d0a789c2b54303430500041106d0246c9b90afa9eb9060a2ef90a810069e306e50a656e6473747265616d0a656e646f626a0a787265660a3020350a303030303030303030302036353533352066200a30303030303030303039203030303030206e200a30303030303030303538203030303030206e200a30303030303030313135203030303030206e200a30303030303030323139203030303030206e200a747261696c65720a3c3c202f53697a652035202f526f6f74203120302052203e3e0a7374617274787265660a3332310a2525454f460a",
+      "pdf": {
+        "pageCount": 1,
+        "rows": [],
+        "text": "",
+        "problems": [
+          "Não foi encontrado texto no PDF. Se for um documento digitalizado (uma imagem), não há texto para ler: o ficheiro pode ser guardado no cofre e a fatura registada à mão."
+        ]
+      },
+      "draft": {
+        "kind": null,
+        "number": null,
+        "atcud": null,
+        "date": null,
+        "issuer": {
+          "name": null,
+          "nif": null,
+          "address": null
+        },
+        "customer": {
+          "name": null,
+          "nif": null,
+          "address": null
+        },
+        "description": null,
+        "baseCents": null,
+        "ivaCents": null,
+        "ivaRateBp": null,
+        "stampDutyCents": null,
+        "retentionCents": null,
+        "totalCents": null,
+        "netCents": null,
+        "retentionReason": null,
+        "purpose": null,
+        "declaresPaid": false,
+        "customerCountryHint": null,
+        "ivaRatesBp": [],
+        "pageCount": 1,
+        "fields": [
+          {
+            "key": "kind",
+            "label": "Tipo de documento",
+            "value": null,
+            "hint": null
+          },
+          {
+            "key": "number",
+            "label": "Número",
+            "value": null,
+            "hint": "Não encontrado no documento."
+          },
+          {
+            "key": "atcud",
+            "label": "ATCUD",
+            "value": null,
+            "hint": "Não encontrado no documento."
+          },
+          {
+            "key": "date",
+            "label": "Data de emissão",
+            "value": null,
+            "hint": "Não encontrada."
+          },
+          {
+            "key": "issuerNif",
+            "label": "NIF do prestador",
+            "value": null,
+            "hint": "Não encontrado."
+          },
+          {
+            "key": "customerNif",
+            "label": "NIF do adquirente",
+            "value": null,
+            "hint": "Não encontrado (documento sem NIF do cliente)."
+          },
+          {
+            "key": "baseCents",
+            "label": "Valor ilíquido",
+            "value": null,
+            "hint": "Não encontrado."
+          },
+          {
+            "key": "ivaCents",
+            "label": "IVA",
+            "value": null,
+            "hint": "Não encontrado."
+          },
+          {
+            "key": "ivaRateBp",
+            "label": "Taxa de IVA",
+            "value": null,
+            "hint": "Não encontrada."
+          },
+          {
+            "key": "totalCents",
+            "label": "Total do documento",
+            "value": null,
+            "hint": "Não encontrado."
+          },
+          {
+            "key": "retentionCents",
+            "label": "Retenção na fonte",
+            "value": null,
+            "hint": "Não encontrada."
+          },
+          {
+            "key": "netCents",
+            "label": "Total a pagar",
+            "value": null,
+            "hint": "Não encontrado."
+          }
+        ],
+        "checks": [],
+        "problems": [
+          "Não foi encontrado texto no PDF. Se for um documento digitalizado (uma imagem), não há texto para ler: o ficheiro pode ser guardado no cofre e a fatura registada à mão.",
+          "Não foi encontrada a secção do prestador de serviços (\"DADOS DO TRANSMITENTE…\"): pelo documento sozinho não é possível confirmar que esta fatura é tua.",
+          "Não foi lido o valor ilíquido (\"Valor ilíquido\" ou \"Base de incidência\"). Sem ele não há fatura para registar: escreve-o no formulário a partir do documento."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+# `cargo deny` configuration, for the day the tool is installed; `cargo xtask ci`
+# enforces the same two promises without it (no network crate in the lockfile,
+# no unsafe block in our own sources).
+#
+# The licence list is the set this workspace accepts as compatible with
+# AGPL-3.0-only. A crate outside it is a deliberate decision, not an accident.
+
+[licenses]
+allow = [
+  "AGPL-3.0-only",
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "MPL-2.0",
+  "BSL-1.0",
+  "CC0-1.0",
+  "Unlicense",
+  "OFL-1.1",
+]
+confidence-threshold = 0.93
+
+[bans]
+# The application has no socket. A crate in this list would give it one, and the
+# no-network guarantee in SECURITY.md would stop being true.
+deny = [
+  { name = "reqwest" },
+  { name = "hyper" },
+  { name = "rustls" },
+  { name = "native-tls" },
+  { name = "openssl" },
+  { name = "openssl-sys" },
+  { name = "ureq" },
+  { name = "curl" },
+  { name = "curl-sys" },
+  { name = "isahc" },
+  { name = "surf" },
+  { name = "awc" },
+]
+
+[advisories]
+ignore = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

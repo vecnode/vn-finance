@@ -1,0 +1,750 @@
+{
+  "scope": [
+    {
+      "input": "AT",
+      "scope": "eu"
+    },
+    {
+      "input": "BE",
+      "scope": "eu"
+    },
+    {
+      "input": "BG",
+      "scope": "eu"
+    },
+    {
+      "input": "HR",
+      "scope": "eu"
+    },
+    {
+      "input": "CY",
+      "scope": "eu"
+    },
+    {
+      "input": "CZ",
+      "scope": "eu"
+    },
+    {
+      "input": "DK",
+      "scope": "eu"
+    },
+    {
+      "input": "EE",
+      "scope": "eu"
+    },
+    {
+      "input": "FI",
+      "scope": "eu"
+    },
+    {
+      "input": "FR",
+      "scope": "eu"
+    },
+    {
+      "input": "DE",
+      "scope": "eu"
+    },
+    {
+      "input": "GR",
+      "scope": "eu"
+    },
+    {
+      "input": "HU",
+      "scope": "eu"
+    },
+    {
+      "input": "IE",
+      "scope": "eu"
+    },
+    {
+      "input": "IT",
+      "scope": "eu"
+    },
+    {
+      "input": "LV",
+      "scope": "eu"
+    },
+    {
+      "input": "LT",
+      "scope": "eu"
+    },
+    {
+      "input": "LU",
+      "scope": "eu"
+    },
+    {
+      "input": "MT",
+      "scope": "eu"
+    },
+    {
+      "input": "NL",
+      "scope": "eu"
+    },
+    {
+      "input": "PL",
+      "scope": "eu"
+    },
+    {
+      "input": "PT",
+      "scope": "national"
+    },
+    {
+      "input": "RO",
+      "scope": "eu"
+    },
+    {
+      "input": "SK",
+      "scope": "eu"
+    },
+    {
+      "input": "SI",
+      "scope": "eu"
+    },
+    {
+      "input": "ES",
+      "scope": "eu"
+    },
+    {
+      "input": "SE",
+      "scope": "eu"
+    },
+    {
+      "input": "US",
+      "scope": "nonEu"
+    },
+    {
+      "input": "GB",
+      "scope": "nonEu"
+    },
+    {
+      "input": "NO",
+      "scope": "nonEu"
+    },
+    {
+      "input": "CH",
+      "scope": "nonEu"
+    },
+    {
+      "input": "BR",
+      "scope": "nonEu"
+    },
+    {
+      "input": "AO",
+      "scope": "nonEu"
+    },
+    {
+      "input": "MZ",
+      "scope": "nonEu"
+    },
+    {
+      "input": "XX",
+      "scope": "nonEu"
+    },
+    {
+      "input": "",
+      "scope": "nonEu"
+    },
+    {
+      "input": "EU",
+      "scope": "nonEu"
+    },
+    {
+      "input": "PR",
+      "scope": "nonEu"
+    },
+    {
+      "input": "  ",
+      "scope": "nonEu"
+    },
+    {
+      "input": "at",
+      "scope": "eu"
+    },
+    {
+      "input": "be",
+      "scope": "eu"
+    },
+    {
+      "input": "bg",
+      "scope": "eu"
+    },
+    {
+      "input": "hr",
+      "scope": "eu"
+    },
+    {
+      "input": "cy",
+      "scope": "eu"
+    },
+    {
+      "input": "cz",
+      "scope": "eu"
+    },
+    {
+      "input": "dk",
+      "scope": "eu"
+    },
+    {
+      "input": "ee",
+      "scope": "eu"
+    },
+    {
+      "input": "fi",
+      "scope": "eu"
+    },
+    {
+      "input": "fr",
+      "scope": "eu"
+    },
+    {
+      "input": "de",
+      "scope": "eu"
+    },
+    {
+      "input": "gr",
+      "scope": "eu"
+    },
+    {
+      "input": "hu",
+      "scope": "eu"
+    },
+    {
+      "input": "ie",
+      "scope": "eu"
+    },
+    {
+      "input": "it",
+      "scope": "eu"
+    },
+    {
+      "input": "lv",
+      "scope": "eu"
+    },
+    {
+      "input": "lt",
+      "scope": "eu"
+    },
+    {
+      "input": "lu",
+      "scope": "eu"
+    },
+    {
+      "input": "mt",
+      "scope": "eu"
+    },
+    {
+      "input": "nl",
+      "scope": "eu"
+    },
+    {
+      "input": "pl",
+      "scope": "eu"
+    },
+    {
+      "input": "pt",
+      "scope": "national"
+    },
+    {
+      "input": "ro",
+      "scope": "eu"
+    },
+    {
+      "input": "sk",
+      "scope": "eu"
+    },
+    {
+      "input": "si",
+      "scope": "eu"
+    },
+    {
+      "input": "es",
+      "scope": "eu"
+    },
+    {
+      "input": "se",
+      "scope": "eu"
+    },
+    {
+      "input": " AT ",
+      "scope": "eu"
+    },
+    {
+      "input": " BE ",
+      "scope": "eu"
+    },
+    {
+      "input": " BG ",
+      "scope": "eu"
+    },
+    {
+      "input": " HR ",
+      "scope": "eu"
+    },
+    {
+      "input": " CY ",
+      "scope": "eu"
+    },
+    {
+      "input": " CZ ",
+      "scope": "eu"
+    },
+    {
+      "input": " DK ",
+      "scope": "eu"
+    },
+    {
+      "input": " EE ",
+      "scope": "eu"
+    },
+    {
+      "input": " FI ",
+      "scope": "eu"
+    },
+    {
+      "input": " FR ",
+      "scope": "eu"
+    },
+    {
+      "input": " DE ",
+      "scope": "eu"
+    },
+    {
+      "input": " GR ",
+      "scope": "eu"
+    },
+    {
+      "input": " HU ",
+      "scope": "eu"
+    },
+    {
+      "input": " IE ",
+      "scope": "eu"
+    },
+    {
+      "input": " IT ",
+      "scope": "eu"
+    },
+    {
+      "input": " LV ",
+      "scope": "eu"
+    },
+    {
+      "input": " LT ",
+      "scope": "eu"
+    },
+    {
+      "input": " LU ",
+      "scope": "eu"
+    },
+    {
+      "input": " MT ",
+      "scope": "eu"
+    },
+    {
+      "input": " NL ",
+      "scope": "eu"
+    },
+    {
+      "input": " PL ",
+      "scope": "eu"
+    },
+    {
+      "input": " PT ",
+      "scope": "national"
+    },
+    {
+      "input": " RO ",
+      "scope": "eu"
+    },
+    {
+      "input": " SK ",
+      "scope": "eu"
+    },
+    {
+      "input": " SI ",
+      "scope": "eu"
+    },
+    {
+      "input": " ES ",
+      "scope": "eu"
+    },
+    {
+      "input": " SE ",
+      "scope": "eu"
+    }
+  ],
+  "is_eu": [
+    {
+      "input": "AT",
+      "is_eu": true
+    },
+    {
+      "input": "BE",
+      "is_eu": true
+    },
+    {
+      "input": "BG",
+      "is_eu": true
+    },
+    {
+      "input": "HR",
+      "is_eu": true
+    },
+    {
+      "input": "CY",
+      "is_eu": true
+    },
+    {
+      "input": "CZ",
+      "is_eu": true
+    },
+    {
+      "input": "DK",
+      "is_eu": true
+    },
+    {
+      "input": "EE",
+      "is_eu": true
+    },
+    {
+      "input": "FI",
+      "is_eu": true
+    },
+    {
+      "input": "FR",
+      "is_eu": true
+    },
+    {
+      "input": "DE",
+      "is_eu": true
+    },
+    {
+      "input": "GR",
+      "is_eu": true
+    },
+    {
+      "input": "HU",
+      "is_eu": true
+    },
+    {
+      "input": "IE",
+      "is_eu": true
+    },
+    {
+      "input": "IT",
+      "is_eu": true
+    },
+    {
+      "input": "LV",
+      "is_eu": true
+    },
+    {
+      "input": "LT",
+      "is_eu": true
+    },
+    {
+      "input": "LU",
+      "is_eu": true
+    },
+    {
+      "input": "MT",
+      "is_eu": true
+    },
+    {
+      "input": "NL",
+      "is_eu": true
+    },
+    {
+      "input": "PL",
+      "is_eu": true
+    },
+    {
+      "input": "PT",
+      "is_eu": false
+    },
+    {
+      "input": "RO",
+      "is_eu": true
+    },
+    {
+      "input": "SK",
+      "is_eu": true
+    },
+    {
+      "input": "SI",
+      "is_eu": true
+    },
+    {
+      "input": "ES",
+      "is_eu": true
+    },
+    {
+      "input": "SE",
+      "is_eu": true
+    },
+    {
+      "input": "US",
+      "is_eu": false
+    },
+    {
+      "input": "GB",
+      "is_eu": false
+    },
+    {
+      "input": "NO",
+      "is_eu": false
+    },
+    {
+      "input": "CH",
+      "is_eu": false
+    },
+    {
+      "input": "BR",
+      "is_eu": false
+    },
+    {
+      "input": "AO",
+      "is_eu": false
+    },
+    {
+      "input": "MZ",
+      "is_eu": false
+    },
+    {
+      "input": "XX",
+      "is_eu": false
+    },
+    {
+      "input": "",
+      "is_eu": false
+    },
+    {
+      "input": "EU",
+      "is_eu": false
+    },
+    {
+      "input": "PR",
+      "is_eu": false
+    },
+    {
+      "input": "  ",
+      "is_eu": false
+    },
+    {
+      "input": "at",
+      "is_eu": true
+    },
+    {
+      "input": "be",
+      "is_eu": true
+    },
+    {
+      "input": "bg",
+      "is_eu": true
+    },
+    {
+      "input": "hr",
+      "is_eu": true
+    },
+    {
+      "input": "cy",
+      "is_eu": true
+    },
+    {
+      "input": "cz",
+      "is_eu": true
+    },
+    {
+      "input": "dk",
+      "is_eu": true
+    },
+    {
+      "input": "ee",
+      "is_eu": true
+    },
+    {
+      "input": "fi",
+      "is_eu": true
+    },
+    {
+      "input": "fr",
+      "is_eu": true
+    },
+    {
+      "input": "de",
+      "is_eu": true
+    },
+    {
+      "input": "gr",
+      "is_eu": true
+    },
+    {
+      "input": "hu",
+      "is_eu": true
+    },
+    {
+      "input": "ie",
+      "is_eu": true
+    },
+    {
+      "input": "it",
+      "is_eu": true
+    },
+    {
+      "input": "lv",
+      "is_eu": true
+    },
+    {
+      "input": "lt",
+      "is_eu": true
+    },
+    {
+      "input": "lu",
+      "is_eu": true
+    },
+    {
+      "input": "mt",
+      "is_eu": true
+    },
+    {
+      "input": "nl",
+      "is_eu": true
+    },
+    {
+      "input": "pl",
+      "is_eu": true
+    },
+    {
+      "input": "pt",
+      "is_eu": false
+    },
+    {
+      "input": "ro",
+      "is_eu": true
+    },
+    {
+      "input": "sk",
+      "is_eu": true
+    },
+    {
+      "input": "si",
+      "is_eu": true
+    },
+    {
+      "input": "es",
+      "is_eu": true
+    },
+    {
+      "input": "se",
+      "is_eu": true
+    },
+    {
+      "input": " AT ",
+      "is_eu": true
+    },
+    {
+      "input": " BE ",
+      "is_eu": true
+    },
+    {
+      "input": " BG ",
+      "is_eu": true
+    },
+    {
+      "input": " HR ",
+      "is_eu": true
+    },
+    {
+      "input": " CY ",
+      "is_eu": true
+    },
+    {
+      "input": " CZ ",
+      "is_eu": true
+    },
+    {
+      "input": " DK ",
+      "is_eu": true
+    },
+    {
+      "input": " EE ",
+      "is_eu": true
+    },
+    {
+      "input": " FI ",
+      "is_eu": true
+    },
+    {
+      "input": " FR ",
+      "is_eu": true
+    },
+    {
+      "input": " DE ",
+      "is_eu": true
+    },
+    {
+      "input": " GR ",
+      "is_eu": true
+    },
+    {
+      "input": " HU ",
+      "is_eu": true
+    },
+    {
+      "input": " IE ",
+      "is_eu": true
+    },
+    {
+      "input": " IT ",
+      "is_eu": true
+    },
+    {
+      "input": " LV ",
+      "is_eu": true
+    },
+    {
+      "input": " LT ",
+      "is_eu": true
+    },
+    {
+      "input": " LU ",
+      "is_eu": true
+    },
+    {
+      "input": " MT ",
+      "is_eu": true
+    },
+    {
+      "input": " NL ",
+      "is_eu": true
+    },
+    {
+      "input": " PL ",
+      "is_eu": true
+    },
+    {
+      "input": " PT ",
+      "is_eu": false
+    },
+    {
+      "input": " RO ",
+      "is_eu": true
+    },
+    {
+      "input": " SK ",
+      "is_eu": true
+    },
+    {
+      "input": " SI ",
+      "is_eu": true
+    },
+    {
+      "input": " ES ",
+      "is_eu": true
+    },
+    {
+      "input": " SE ",
+      "is_eu": true
+    }
+  ]
+}

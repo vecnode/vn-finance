@@ -1,0 +1,1340 @@
+{
+  "invoices": [
+    {
+      "id": "inv_FR20261",
+      "number": "FR 2026/1",
+      "date": "2026-01-15",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "PT",
+      "description": "Consultoria",
+      "baseCents": 100000,
+      "ivaRateBp": 2300,
+      "vatTreatment": "iva_pt",
+      "retentionBp": 2300,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    },
+    {
+      "id": "inv_FR20262",
+      "number": "FR 2026/2",
+      "date": "2026-03-31",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "PT",
+      "description": "Consultoria",
+      "baseCents": 50000,
+      "ivaRateBp": 2300,
+      "vatTreatment": "iva_pt",
+      "retentionBp": 2300,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    },
+    {
+      "id": "inv_FR20263",
+      "number": "FR 2026/3",
+      "date": "2026-04-01",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "PT",
+      "description": "Consultoria",
+      "baseCents": 999999,
+      "ivaRateBp": 2300,
+      "vatTreatment": "iva_pt",
+      "retentionBp": 2300,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    },
+    {
+      "id": "inv_FR20264",
+      "number": "FR 2026/4",
+      "date": "2026-06-20",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "DE",
+      "description": "Consultoria",
+      "baseCents": 400000,
+      "ivaRateBp": 0,
+      "vatTreatment": "isento_art53",
+      "retentionBp": 0,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    },
+    {
+      "id": "inv_FR20265",
+      "number": "FR 2026/5",
+      "date": "2026-12-31",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "US",
+      "description": "Consultoria",
+      "baseCents": 250000,
+      "ivaRateBp": 0,
+      "vatTreatment": "isento_art53",
+      "retentionBp": 0,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    },
+    {
+      "id": "inv_FR20251",
+      "number": "FR 2025/1",
+      "date": "2025-11-10",
+      "clientName": "Cliente Exemplo",
+      "clientNif": "501234560",
+      "clientCountry": "PT",
+      "description": "Consultoria",
+      "baseCents": 300000,
+      "ivaRateBp": 2300,
+      "vatTreatment": "iva_pt",
+      "retentionBp": 2300,
+      "atcud": null,
+      "status": "issued",
+      "paymentProofInVault": false
+    }
+  ],
+  "invoice_totals": [
+    {
+      "invoice": {
+        "id": "inv_FR20261",
+        "number": "FR 2026/1",
+        "date": "2026-01-15",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "PT",
+        "description": "Consultoria",
+        "baseCents": 100000,
+        "ivaRateBp": 2300,
+        "vatTreatment": "iva_pt",
+        "retentionBp": 2300,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 100000,
+        "ivaCents": 23000,
+        "retentionCents": 23000,
+        "netReceivableCents": 100000
+      }
+    },
+    {
+      "invoice": {
+        "id": "inv_FR20262",
+        "number": "FR 2026/2",
+        "date": "2026-03-31",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "PT",
+        "description": "Consultoria",
+        "baseCents": 50000,
+        "ivaRateBp": 2300,
+        "vatTreatment": "iva_pt",
+        "retentionBp": 2300,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 50000,
+        "ivaCents": 11500,
+        "retentionCents": 11500,
+        "netReceivableCents": 50000
+      }
+    },
+    {
+      "invoice": {
+        "id": "inv_FR20263",
+        "number": "FR 2026/3",
+        "date": "2026-04-01",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "PT",
+        "description": "Consultoria",
+        "baseCents": 999999,
+        "ivaRateBp": 2300,
+        "vatTreatment": "iva_pt",
+        "retentionBp": 2300,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 999999,
+        "ivaCents": 230000,
+        "retentionCents": 230000,
+        "netReceivableCents": 999999
+      }
+    },
+    {
+      "invoice": {
+        "id": "inv_FR20264",
+        "number": "FR 2026/4",
+        "date": "2026-06-20",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "DE",
+        "description": "Consultoria",
+        "baseCents": 400000,
+        "ivaRateBp": 0,
+        "vatTreatment": "isento_art53",
+        "retentionBp": 0,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 400000,
+        "ivaCents": 0,
+        "retentionCents": 0,
+        "netReceivableCents": 400000
+      }
+    },
+    {
+      "invoice": {
+        "id": "inv_FR20265",
+        "number": "FR 2026/5",
+        "date": "2026-12-31",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "US",
+        "description": "Consultoria",
+        "baseCents": 250000,
+        "ivaRateBp": 0,
+        "vatTreatment": "isento_art53",
+        "retentionBp": 0,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 250000,
+        "ivaCents": 0,
+        "retentionCents": 0,
+        "netReceivableCents": 250000
+      }
+    },
+    {
+      "invoice": {
+        "id": "inv_FR20251",
+        "number": "FR 2025/1",
+        "date": "2025-11-10",
+        "clientName": "Cliente Exemplo",
+        "clientNif": "501234560",
+        "clientCountry": "PT",
+        "description": "Consultoria",
+        "baseCents": 300000,
+        "ivaRateBp": 2300,
+        "vatTreatment": "iva_pt",
+        "retentionBp": 2300,
+        "atcud": null,
+        "status": "issued",
+        "paymentProofInVault": false
+      },
+      "totals": {
+        "baseCents": 300000,
+        "ivaCents": 69000,
+        "retentionCents": 69000,
+        "netReceivableCents": 300000
+      }
+    }
+  ],
+  "default_terms": [
+    {
+      "label": "0:PT",
+      "profile": null,
+      "country": "PT",
+      "terms": {
+        "vatTreatment": "iva_pt",
+        "ivaRateBp": 2300,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "0:pt",
+      "profile": null,
+      "country": "pt",
+      "terms": {
+        "vatTreatment": "iva_pt",
+        "ivaRateBp": 2300,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "0:DE",
+      "profile": null,
+      "country": "DE",
+      "terms": {
+        "vatTreatment": "autoliquidacao_ue",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "0:US",
+      "profile": null,
+      "country": "US",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "0:BR",
+      "profile": null,
+      "country": "BR",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "1:PT",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "PT",
+      "terms": {
+        "vatTreatment": "iva_pt",
+        "ivaRateBp": 2300,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "1:pt",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "pt",
+      "terms": {
+        "vatTreatment": "iva_pt",
+        "ivaRateBp": 2300,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "1:DE",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "DE",
+      "terms": {
+        "vatTreatment": "autoliquidacao_ue",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "1:US",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "US",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "1:BR",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "BR",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "2:PT",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "PT",
+      "terms": {
+        "vatTreatment": "isento_art53",
+        "ivaRateBp": 0,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "2:pt",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "pt",
+      "terms": {
+        "vatTreatment": "isento_art53",
+        "ivaRateBp": 0,
+        "retentionBp": 2300
+      }
+    },
+    {
+      "label": "2:DE",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "DE",
+      "terms": {
+        "vatTreatment": "autoliquidacao_ue",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "2:US",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "US",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    },
+    {
+      "label": "2:BR",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "country": "BR",
+      "terms": {
+        "vatTreatment": "exportacao",
+        "ivaRateBp": 0,
+        "retentionBp": 0
+      }
+    }
+  ],
+  "period_totals": [
+    {
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "totals": {
+        "baseCents": 150000,
+        "ivaLiquidadoCents": 34500,
+        "retencaoSofridaCents": 34500,
+        "invoiceCount": 2
+      }
+    },
+    {
+      "start": "2026-01-01",
+      "end": "2026-12-31",
+      "totals": {
+        "baseCents": 1799999,
+        "ivaLiquidadoCents": 264500,
+        "retencaoSofridaCents": 264500,
+        "invoiceCount": 5
+      }
+    },
+    {
+      "start": "2025-01-01",
+      "end": "2025-12-31",
+      "totals": {
+        "baseCents": 300000,
+        "ivaLiquidadoCents": 69000,
+        "retencaoSofridaCents": 69000,
+        "invoiceCount": 1
+      }
+    },
+    {
+      "start": "2026-07-01",
+      "end": "2026-06-30",
+      "totals": {
+        "baseCents": 0,
+        "ivaLiquidadoCents": 0,
+        "retencaoSofridaCents": 0,
+        "invoiceCount": 0
+      }
+    }
+  ],
+  "social_security": [
+    {
+      "service_income_cents": 0,
+      "estimate": {
+        "serviceIncomeCents": 0,
+        "relevantIncomeShareBp": 7000,
+        "relevantIncomeCents": 0,
+        "contributionRateBp": 2140,
+        "contributionCents": 0,
+        "instalmentsCents": [
+          0,
+          0,
+          0
+        ],
+        "limitations": []
+      }
+    },
+    {
+      "service_income_cents": 100000,
+      "estimate": {
+        "serviceIncomeCents": 100000,
+        "relevantIncomeShareBp": 7000,
+        "relevantIncomeCents": 70000,
+        "contributionRateBp": 2140,
+        "contributionCents": 14980,
+        "instalmentsCents": [
+          4994,
+          4993,
+          4993
+        ],
+        "limitations": []
+      }
+    },
+    {
+      "service_income_cents": 1500000,
+      "estimate": {
+        "serviceIncomeCents": 1500000,
+        "relevantIncomeShareBp": 7000,
+        "relevantIncomeCents": 1050000,
+        "contributionRateBp": 2140,
+        "contributionCents": 224700,
+        "instalmentsCents": [
+          74900,
+          74900,
+          74900
+        ],
+        "limitations": []
+      }
+    }
+  ],
+  "quarters": [
+    {
+      "year": 2025,
+      "quarter": 1,
+      "report": {
+        "year": 2025,
+        "quarter": 1,
+        "start": "2025-01-01",
+        "end": "2025-03-31",
+        "totals": {
+          "baseCents": 0,
+          "ivaLiquidadoCents": 0,
+          "retencaoSofridaCents": 0,
+          "invoiceCount": 0
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 0,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 0,
+          "contributionRateBp": 2140,
+          "contributionCents": 0,
+          "instalmentsCents": [
+            0,
+            0,
+            0
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2025,
+      "quarter": 2,
+      "report": {
+        "year": 2025,
+        "quarter": 2,
+        "start": "2025-04-01",
+        "end": "2025-06-30",
+        "totals": {
+          "baseCents": 0,
+          "ivaLiquidadoCents": 0,
+          "retencaoSofridaCents": 0,
+          "invoiceCount": 0
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 0,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 0,
+          "contributionRateBp": 2140,
+          "contributionCents": 0,
+          "instalmentsCents": [
+            0,
+            0,
+            0
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2025,
+      "quarter": 3,
+      "report": {
+        "year": 2025,
+        "quarter": 3,
+        "start": "2025-07-01",
+        "end": "2025-09-30",
+        "totals": {
+          "baseCents": 0,
+          "ivaLiquidadoCents": 0,
+          "retencaoSofridaCents": 0,
+          "invoiceCount": 0
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 0,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 0,
+          "contributionRateBp": 2140,
+          "contributionCents": 0,
+          "instalmentsCents": [
+            0,
+            0,
+            0
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2025,
+      "quarter": 4,
+      "report": {
+        "year": 2025,
+        "quarter": 4,
+        "start": "2025-10-01",
+        "end": "2025-12-31",
+        "totals": {
+          "baseCents": 300000,
+          "ivaLiquidadoCents": 69000,
+          "retencaoSofridaCents": 69000,
+          "invoiceCount": 1
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 300000,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 210000,
+          "contributionRateBp": 2140,
+          "contributionCents": 44940,
+          "instalmentsCents": [
+            14980,
+            14980,
+            14980
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2026,
+      "quarter": 1,
+      "report": {
+        "year": 2026,
+        "quarter": 1,
+        "start": "2026-01-01",
+        "end": "2026-03-31",
+        "totals": {
+          "baseCents": 150000,
+          "ivaLiquidadoCents": 34500,
+          "retencaoSofridaCents": 34500,
+          "invoiceCount": 2
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 150000,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 105000,
+          "contributionRateBp": 2140,
+          "contributionCents": 22470,
+          "instalmentsCents": [
+            7490,
+            7490,
+            7490
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2026,
+      "quarter": 2,
+      "report": {
+        "year": 2026,
+        "quarter": 2,
+        "start": "2026-04-01",
+        "end": "2026-06-30",
+        "totals": {
+          "baseCents": 1399999,
+          "ivaLiquidadoCents": 230000,
+          "retencaoSofridaCents": 230000,
+          "invoiceCount": 2
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 1399999,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 979999,
+          "contributionRateBp": 2140,
+          "contributionCents": 209720,
+          "instalmentsCents": [
+            69907,
+            69907,
+            69906
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2026,
+      "quarter": 3,
+      "report": {
+        "year": 2026,
+        "quarter": 3,
+        "start": "2026-07-01",
+        "end": "2026-09-30",
+        "totals": {
+          "baseCents": 0,
+          "ivaLiquidadoCents": 0,
+          "retencaoSofridaCents": 0,
+          "invoiceCount": 0
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 0,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 0,
+          "contributionRateBp": 2140,
+          "contributionCents": 0,
+          "instalmentsCents": [
+            0,
+            0,
+            0
+          ],
+          "limitations": []
+        }
+      }
+    },
+    {
+      "year": 2026,
+      "quarter": 4,
+      "report": {
+        "year": 2026,
+        "quarter": 4,
+        "start": "2026-10-01",
+        "end": "2026-12-31",
+        "totals": {
+          "baseCents": 250000,
+          "ivaLiquidadoCents": 0,
+          "retencaoSofridaCents": 0,
+          "invoiceCount": 1
+        },
+        "socialSecurity": {
+          "serviceIncomeCents": 250000,
+          "relevantIncomeShareBp": 7000,
+          "relevantIncomeCents": 175000,
+          "contributionRateBp": 2140,
+          "contributionCents": 37450,
+          "instalmentsCents": [
+            12484,
+            12483,
+            12483
+          ],
+          "limitations": []
+        }
+      }
+    }
+  ],
+  "irs_base": [
+    {
+      "year": 2026,
+      "eligible_expenses_cents": 0,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "estimate": {
+        "grossServiceIncomeCents": 1799999,
+        "coefficientBp": 7500,
+        "taxableFromCoefficientCents": 1349999,
+        "eligibleExpensesCents": 0,
+        "documentedExpensesReferenceCents": 270000,
+        "additionToTaxableIncomeCents": 270000,
+        "taxableIncomeCents": 1619999,
+        "withholdingCents": 264500,
+        "assumptions": [
+          "Coeficiente aplicado ao rendimento de serviços: 7500 pontos base, definido no perfil.",
+          "Referência de despesas: 15% dos rendimentos brutos de serviços = 2700,00 €.",
+          "Despesas elegíveis documentadas: 0,00 €."
+        ],
+        "limitations": [
+          "Estimativa para o regime simplificado. Não aplica as taxas do art. 68.º do CIRS: o rendimento tributável apresentado não é o imposto a pagar.",
+          "Não aplica deduções à coleta nem tributações autónomas. As retenções sofridas são creditadas no IRS final, não descontadas neste rendimento tributável.",
+          "Pressupõe que todas as faturas do ano são rendimento da categoria B e que as despesas indicadas são elegíveis nos termos do art. 31.º do CIRS."
+        ]
+      }
+    },
+    {
+      "year": 2026,
+      "eligible_expenses_cents": 150000,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "estimate": {
+        "grossServiceIncomeCents": 1799999,
+        "coefficientBp": 7500,
+        "taxableFromCoefficientCents": 1349999,
+        "eligibleExpensesCents": 150000,
+        "documentedExpensesReferenceCents": 270000,
+        "additionToTaxableIncomeCents": 120000,
+        "taxableIncomeCents": 1469999,
+        "withholdingCents": 264500,
+        "assumptions": [
+          "Coeficiente aplicado ao rendimento de serviços: 7500 pontos base, definido no perfil.",
+          "Referência de despesas: 15% dos rendimentos brutos de serviços = 2700,00 €.",
+          "Despesas elegíveis documentadas: 1500,00 €."
+        ],
+        "limitations": [
+          "Estimativa para o regime simplificado. Não aplica as taxas do art. 68.º do CIRS: o rendimento tributável apresentado não é o imposto a pagar.",
+          "Não aplica deduções à coleta nem tributações autónomas. As retenções sofridas são creditadas no IRS final, não descontadas neste rendimento tributável.",
+          "Pressupõe que todas as faturas do ano são rendimento da categoria B e que as despesas indicadas são elegíveis nos termos do art. 31.º do CIRS."
+        ]
+      }
+    },
+    {
+      "year": 2026,
+      "eligible_expenses_cents": 200000,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "estimate": {
+        "grossServiceIncomeCents": 1799999,
+        "coefficientBp": 7500,
+        "taxableFromCoefficientCents": 1349999,
+        "eligibleExpensesCents": 200000,
+        "documentedExpensesReferenceCents": 270000,
+        "additionToTaxableIncomeCents": 70000,
+        "taxableIncomeCents": 1419999,
+        "withholdingCents": 264500,
+        "assumptions": [
+          "Coeficiente aplicado ao rendimento de serviços: 7500 pontos base, definido no perfil.",
+          "Referência de despesas: 15% dos rendimentos brutos de serviços = 2700,00 €.",
+          "Despesas elegíveis documentadas: 2000,00 €."
+        ],
+        "limitations": [
+          "Estimativa para o regime simplificado. Não aplica as taxas do art. 68.º do CIRS: o rendimento tributável apresentado não é o imposto a pagar.",
+          "Não aplica deduções à coleta nem tributações autónomas. As retenções sofridas são creditadas no IRS final, não descontadas neste rendimento tributável.",
+          "Pressupõe que todas as faturas do ano são rendimento da categoria B e que as despesas indicadas são elegíveis nos termos do art. 31.º do CIRS."
+        ]
+      }
+    },
+    {
+      "year": 2026,
+      "eligible_expenses_cents": 1000000,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "estimate": {
+        "grossServiceIncomeCents": 1799999,
+        "coefficientBp": 7500,
+        "taxableFromCoefficientCents": 1349999,
+        "eligibleExpensesCents": 1000000,
+        "documentedExpensesReferenceCents": 270000,
+        "additionToTaxableIncomeCents": 0,
+        "taxableIncomeCents": 1349999,
+        "withholdingCents": 264500,
+        "assumptions": [
+          "Coeficiente aplicado ao rendimento de serviços: 7500 pontos base, definido no perfil.",
+          "Referência de despesas: 15% dos rendimentos brutos de serviços = 2700,00 €.",
+          "Despesas elegíveis documentadas: 10 000,00 €."
+        ],
+        "limitations": [
+          "Estimativa para o regime simplificado. Não aplica as taxas do art. 68.º do CIRS: o rendimento tributável apresentado não é o imposto a pagar.",
+          "Não aplica deduções à coleta nem tributações autónomas. As retenções sofridas são creditadas no IRS final, não descontadas neste rendimento tributável.",
+          "Pressupõe que todas as faturas do ano são rendimento da categoria B e que as despesas indicadas são elegíveis nos termos do art. 31.º do CIRS."
+        ]
+      }
+    }
+  ],
+  "reserve": [
+    {
+      "as_of": "2026-09-20",
+      "low_bp": 2500,
+      "high_bp": 3500,
+      "estimate": {
+        "lowCents": 387500,
+        "highCents": 542500,
+        "basis": [
+          "25% a 35% do rendimento faturado no ano"
+        ],
+        "limitations": [
+          "Reserva calculada sobre 15 499,99 € de rendimento faturado até 2026-09-20.",
+          "Intervalo indicativo: não substitui o cálculo final do IRS nem o apuramento da Segurança Social."
+        ]
+      }
+    },
+    {
+      "as_of": "2026-12-31",
+      "low_bp": 2500,
+      "high_bp": 3500,
+      "estimate": {
+        "lowCents": 450000,
+        "highCents": 630000,
+        "basis": [
+          "25% a 35% do rendimento faturado no ano"
+        ],
+        "limitations": [
+          "Reserva calculada sobre 17 999,99 € de rendimento faturado até 2026-12-31.",
+          "Intervalo indicativo: não substitui o cálculo final do IRS nem o apuramento da Segurança Social."
+        ]
+      }
+    },
+    {
+      "as_of": "2026-09-20",
+      "low_bp": 1000,
+      "high_bp": 4000,
+      "estimate": {
+        "lowCents": 155000,
+        "highCents": 620000,
+        "basis": [
+          "10% a 40% do rendimento faturado no ano"
+        ],
+        "limitations": [
+          "Reserva calculada sobre 15 499,99 € de rendimento faturado até 2026-09-20.",
+          "Intervalo indicativo: não substitui o cálculo final do IRS nem o apuramento da Segurança Social."
+        ]
+      }
+    },
+    {
+      "as_of": "2025-12-31",
+      "low_bp": 2500,
+      "high_bp": 3500,
+      "estimate": {
+        "lowCents": 75000,
+        "highCents": 105000,
+        "basis": [
+          "25% a 35% do rendimento faturado no ano"
+        ],
+        "limitations": [
+          "Reserva calculada sobre 3000,00 € de rendimento faturado até 2025-12-31.",
+          "Intervalo indicativo: não substitui o cálculo final do IRS nem o apuramento da Segurança Social."
+        ]
+      }
+    }
+  ]
+}

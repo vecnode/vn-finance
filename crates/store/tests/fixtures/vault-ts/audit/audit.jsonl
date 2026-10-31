@@ -1,0 +1,5 @@
+{"action":"invoice.recorded","detail":"FR 2026/1","at":"2026-10-31T17:54:02.810Z"}
+{"action":"invoice.recorded","detail":"FR 2026/2","at":"2026-10-31T17:54:02.811Z"}
+{"action":"obligation.completed","detail":"iva.dp.trimestral@2026-05-20","at":"2026-10-31T17:54:02.812Z"}
+{"action":"document.added","detail":"283ced137973-fatura-recibo-2026-1.pdf","at":"2026-10-31T17:54:02.816Z"}
+{"action":"vault.opened","detail":"painel","at":"2026-09-20T08:00:00.000Z"}

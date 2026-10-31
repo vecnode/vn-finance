@@ -1,0 +1,2415 @@
+{
+  "cases": [
+    {
+      "name": "no-data",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 2,
+        "info": 0,
+        "total": 3
+      }
+    },
+    {
+      "name": "exemption-active",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "36 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_MISSING_ON_RESIDENT",
+          "severity": "attention",
+          "title": "Faturas a clientes residentes sem retenção na fonte",
+          "detail": "1 fatura(s) a clientes residentes não têm retenção na fonte (FR 1). Se o cliente é obrigado a reter, a retenção em falta tem de ser regularizada — o valor é creditado no IRS final e a diferença aparece no acerto. A taxa aplicável está no pacote de regras, verificada no art. 101.º do CIRS.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "irs.retencoesPagamento"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "ART53_EXEMPTION_ACTIVE",
+          "severity": "info",
+          "title": "Isenção do art. 53.º ativa",
+          "detail": "Volume de negócios do ano anterior: 5000,00 €, margem de 10 000,00 € até ao limite de 15 000,00 €. Faturação de 1000,00 € em território nacional este ano.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 3,
+        "info": 1,
+        "total": 5
+      }
+    },
+    {
+      "name": "exemption-inapplicable-historical",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 10000000
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "36 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_CEILING_EXCEEDED_HISTORY",
+          "severity": "urgent",
+          "title": "O regime do art. 53.º parece não ser aplicável",
+          "detail": "O perfil está enquadrado na isenção do art. 53.º, mas o volume de negócios do ano anterior (100 000,00 €) excedeu o limite. Confirma o enquadramento com um contabilista certificado antes de emitir mais faturas sem IVA.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 2,
+        "attention": 1,
+        "info": 0,
+        "total": 3
+      }
+    },
+    {
+      "name": "exemption-available",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_EXEMPTION_AVAILABLE",
+          "severity": "info",
+          "title": "Pode ser elegível para a isenção do art. 53.º",
+          "detail": "O volume de negócios do ano anterior (5000,00 €) ficou 10 000,00 € abaixo do limite de 15 000,00 € e não há operações de exportação no perfil. O enquadramento atual é o regime normal. A mudança para o regime de isenção é uma decisão declarativa: confirma-a com um contabilista certificado.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 1,
+        "info": 1,
+        "total": 3
+      }
+    },
+    {
+      "name": "margin-shrinking",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 1260000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "36 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_MISSING_ON_RESIDENT",
+          "severity": "attention",
+          "title": "Faturas a clientes residentes sem retenção na fonte",
+          "detail": "1 fatura(s) a clientes residentes não têm retenção na fonte (FR 1). Se o cliente é obrigado a reter, a retenção em falta tem de ser regularizada — o valor é creditado no IRS final e a diferença aparece no acerto. A taxa aplicável está no pacote de regras, verificada no art. 101.º do CIRS.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "irs.retencoesPagamento"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "ART53_MARGIN_SHRINKING",
+          "severity": "attention",
+          "title": "Margem do art. 53.º a diminuir",
+          "detail": "Faturação em território nacional este ano: 12 600,00 €, acima de 80% do limite de 15 000,00 €. Faltam 2400,00 € para o limite.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_EXEMPTION_ACTIVE",
+          "severity": "info",
+          "title": "Isenção do art. 53.º ativa",
+          "detail": "Volume de negócios do ano anterior: 5000,00 €, margem de 10 000,00 € até ao limite de 15 000,00 €. Faturação de 12 600,00 € em território nacional este ano.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 4,
+        "info": 1,
+        "total": 6
+      }
+    },
+    {
+      "name": "transition-zone",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 1600000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "36 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_IN_TRANSITION_ZONE",
+          "severity": "urgent",
+          "title": "Zona de transição do art. 53.º",
+          "detail": "Faturação em território nacional este ano: 16 000,00 €, entre o limite de 15 000,00 € e 18 750,00 €. Nesta zona é entregue declaração de alterações nos 15 dias úteis seguintes ao fim do ano e o regime normal aplica-se a partir de 1 de janeiro seguinte.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_MISSING_ON_RESIDENT",
+          "severity": "attention",
+          "title": "Faturas a clientes residentes sem retenção na fonte",
+          "detail": "1 fatura(s) a clientes residentes não têm retenção na fonte (FR 1). Se o cliente é obrigado a reter, a retenção em falta tem de ser regularizada — o valor é creditado no IRS final e a diferença aparece no acerto. A taxa aplicável está no pacote de regras, verificada no art. 101.º do CIRS.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "irs.retencoesPagamento"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "ART53_EXEMPTION_ACTIVE",
+          "severity": "info",
+          "title": "Isenção do art. 53.º ativa",
+          "detail": "Volume de negócios do ano anterior: 5000,00 €, margem de 10 000,00 € até ao limite de 15 000,00 €. Faturação de 16 000,00 € em território nacional este ano.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 2,
+        "attention": 3,
+        "info": 1,
+        "total": 6
+      }
+    },
+    {
+      "name": "ceiling-crossed",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 2000000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "36 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_CEILING_CROSSED",
+          "severity": "urgent",
+          "title": "Limite do art. 53.º ultrapassado durante o ano",
+          "detail": "Faturação em território nacional este ano: 20 000,00 €, acima de 18 750,00 €. Acima deste valor o IVA passa a ser liquidado a partir do momento em que foi excedido. Confirma o procedimento com um contabilista certificado.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_MISSING_ON_RESIDENT",
+          "severity": "attention",
+          "title": "Faturas a clientes residentes sem retenção na fonte",
+          "detail": "1 fatura(s) a clientes residentes não têm retenção na fonte (FR 1). Se o cliente é obrigado a reter, a retenção em falta tem de ser regularizada — o valor é creditado no IRS final e a diferença aparece no acerto. A taxa aplicável está no pacote de regras, verificada no art. 101.º do CIRS.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "irs.retencoesPagamento"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "ART53_EXEMPTION_ACTIVE",
+          "severity": "info",
+          "title": "Isenção do art. 53.º ativa",
+          "detail": "Volume de negócios do ano anterior: 5000,00 €, margem de 10 000,00 € até ao limite de 15 000,00 €. Faturação de 20 000,00 € em território nacional este ano.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 2,
+        "attention": 3,
+        "info": 1,
+        "total": 6
+      }
+    },
+    {
+      "name": "eu-and-non-eu",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "DE",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        },
+        {
+          "id": "inv_FR2",
+          "number": "FR 2",
+          "date": "2026-02-02",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "US",
+          "description": "Consultoria",
+          "baseCents": 50000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "2 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1, FR 2). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1",
+            "FR 2"
+          ]
+        },
+        {
+          "code": "FOREIGN_CLIENTS_NOT_DECLARED",
+          "severity": "attention",
+          "title": "Faturação ao estrangeiro não declarada no perfil",
+          "detail": "Existem faturas a clientes fora de Portugal mas o perfil não indica operações intracomunitárias nem exportações. O enquadramento no perfil tem de refletir a realidade, porque é ele que determina quais obrigações entram na agenda.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "iva.recapitulativa",
+            "iva.dp.mensal",
+            "iva.dp.trimestral"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "EU_INVOICES_REVERSE_CHARGE",
+          "severity": "info",
+          "title": "Serviços a clientes da União Europeia",
+          "detail": "Faturação a clientes da UE este ano: 1000,00 €. Estas operações não levam IVA português (o cliente autoliquida), exigem um número de registo válido no VIES e entram na declaração recapitulativa. Confirma que os recibos indicam \"IVA - autoliquidação\" e que o VIES está válido.",
+          "legalBasis": [
+            "RITI art. 30.º n.º 1 alínea a) (envio até ao dia 20 do mês seguinte, contribuintes abrangidos pela alínea a) do n.º 1 do art. 41.º do CIVA)",
+            "RITI art. 30.º n.º 4 (a obrigação só existe nos períodos em que ocorram as operações abrangidas)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "iva.recapitulativa"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "NON_EU_CLIENTS_NO_PT_VAT",
+          "severity": "info",
+          "title": "Serviços a clientes fora da União Europeia",
+          "detail": "Faturação a clientes de países terceiros este ano: 500,00 €. Estas prestações não são sujeitas a IVA português e não contam para o limite do art. 53.º, que se mede em território nacional. Guarda o comprovativo de que o cliente está estabelecido fora da UE.",
+          "legalBasis": [
+            "CIVA art. 6.º (localização das prestações de serviços)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 2"
+          ]
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 4,
+        "info": 2,
+        "total": 7
+      }
+    },
+    {
+      "name": "foreign-declared",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": true,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "DE",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "42 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.recapitulativa.trimestral",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "iva.recapitulativa.trimestral",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.recapitulativa.trimestral",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "EU_INVOICES_REVERSE_CHARGE",
+          "severity": "info",
+          "title": "Serviços a clientes da União Europeia",
+          "detail": "Faturação a clientes da UE este ano: 1000,00 €. Estas operações não levam IVA português (o cliente autoliquida), exigem um número de registo válido no VIES e entram na declaração recapitulativa. Confirma que os recibos indicam \"IVA - autoliquidação\" e que o VIES está válido.",
+          "legalBasis": [
+            "RITI art. 30.º n.º 1 alínea a) (envio até ao dia 20 do mês seguinte, contribuintes abrangidos pela alínea a) do n.º 1 do art. 41.º do CIVA)",
+            "RITI art. 30.º n.º 4 (a obrigação só existe nos períodos em que ocorram as operações abrangidas)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "iva.recapitulativa"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 3,
+        "info": 1,
+        "total": 5
+      }
+    },
+    {
+      "name": "pt-iva-on-foreign-invoice",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "DE",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 2300,
+          "vatTreatment": "iva_pt",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "PT_IVA_CHARGED_ON_FOREIGN_INVOICE",
+          "severity": "urgent",
+          "title": "IVA português cobrado em faturas ao estrangeiro",
+          "detail": "1 fatura(s) a clientes fora de Portugal têm IVA português liquidado (FR 1: 23% tratado como IVA português). Numa prestação de serviços a um cliente da UE o IVA é devido no país do cliente e é o cliente que o autoliquida; a fatura não deve levar IVA português. Se o tratamento estiver errado, a fatura tem de ser corrigida, não apenas o registo.",
+          "legalBasis": [
+            "CIVA art. 6.º (localização das prestações de serviços)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "1 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "FOREIGN_CLIENTS_NOT_DECLARED",
+          "severity": "attention",
+          "title": "Faturação ao estrangeiro não declarada no perfil",
+          "detail": "Existem faturas a clientes fora de Portugal mas o perfil não indica operações intracomunitárias nem exportações. O enquadramento no perfil tem de refletir a realidade, porque é ele que determina quais obrigações entram na agenda.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "iva.recapitulativa",
+            "iva.dp.mensal",
+            "iva.dp.trimestral"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "EU_INVOICES_REVERSE_CHARGE",
+          "severity": "info",
+          "title": "Serviços a clientes da União Europeia",
+          "detail": "Faturação a clientes da UE este ano: 1000,00 €. Estas operações não levam IVA português (o cliente autoliquida), exigem um número de registo válido no VIES e entram na declaração recapitulativa. Confirma que os recibos indicam \"IVA - autoliquidação\" e que o VIES está válido.",
+          "legalBasis": [
+            "RITI art. 30.º n.º 1 alínea a) (envio até ao dia 20 do mês seguinte, contribuintes abrangidos pela alínea a) do n.º 1 do art. 41.º do CIVA)",
+            "RITI art. 30.º n.º 4 (a obrigação só existe nos períodos em que ocorram as operações abrangidas)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "iva.recapitulativa"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        }
+      ],
+      "summary": {
+        "urgent": 2,
+        "attention": 4,
+        "info": 1,
+        "total": 7
+      }
+    },
+    {
+      "name": "retention-problems",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR1",
+          "number": "FR 1",
+          "date": "2026-02-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 2300,
+          "vatTreatment": "iva_pt",
+          "retentionBp": 0,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        },
+        {
+          "id": "inv_FR2",
+          "number": "FR 2",
+          "date": "2026-02-02",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "DE",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 0,
+          "vatTreatment": "isento_art53",
+          "retentionBp": 2300,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_MISSING_ON_RESIDENT",
+          "severity": "attention",
+          "title": "Faturas a clientes residentes sem retenção na fonte",
+          "detail": "1 fatura(s) a clientes residentes não têm retenção na fonte (FR 1). Se o cliente é obrigado a reter, a retenção em falta tem de ser regularizada — o valor é creditado no IRS final e a diferença aparece no acerto. A taxa aplicável está no pacote de regras, verificada no art. 101.º do CIRS.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "irs.retencoesPagamento"
+          ],
+          "invoiceNumbers": [
+            "FR 1"
+          ]
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "2 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 1, FR 2). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 1",
+            "FR 2"
+          ]
+        },
+        {
+          "code": "FOREIGN_CLIENTS_NOT_DECLARED",
+          "severity": "attention",
+          "title": "Faturação ao estrangeiro não declarada no perfil",
+          "detail": "Existem faturas a clientes fora de Portugal mas o perfil não indica operações intracomunitárias nem exportações. O enquadramento no perfil tem de refletir a realidade, porque é ele que determina quais obrigações entram na agenda.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "iva.recapitulativa",
+            "iva.dp.mensal",
+            "iva.dp.trimestral"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "RETENTION_CHARGED_ON_NON_RESIDENT",
+          "severity": "attention",
+          "title": "Retenção na fonte em faturas ao estrangeiro",
+          "detail": "1 fatura(s) a clientes não residentes têm retenção na fonte (FR 2). Clientes fora de Portugal não fazem retenção de IRS português.",
+          "legalBasis": [
+            "CIRS art. 101.º (obrigação de retenção na fonte)"
+          ],
+          "sourceIds": [
+            "at-agenda-pag-2026",
+            "at-cirs-art101",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 2"
+          ]
+        },
+        {
+          "code": "EU_INVOICES_REVERSE_CHARGE",
+          "severity": "info",
+          "title": "Serviços a clientes da União Europeia",
+          "detail": "Faturação a clientes da UE este ano: 1000,00 €. Estas operações não levam IVA português (o cliente autoliquida), exigem um número de registo válido no VIES e entram na declaração recapitulativa. Confirma que os recibos indicam \"IVA - autoliquidação\" e que o VIES está válido.",
+          "legalBasis": [
+            "RITI art. 30.º n.º 1 alínea a) (envio até ao dia 20 do mês seguinte, contribuintes abrangidos pela alínea a) do n.º 1 do art. 41.º do CIVA)",
+            "RITI art. 30.º n.º 4 (a obrigação só existe nos períodos em que ocorram as operações abrangidas)"
+          ],
+          "sourceIds": [
+            "at-riti-art30",
+            "at-agenda-decl-2026",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [
+            "iva.recapitulativa"
+          ],
+          "invoiceNumbers": [
+            "FR 2"
+          ]
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 6,
+        "info": 1,
+        "total": 8
+      }
+    },
+    {
+      "name": "old-unpaid-and-duplicates",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false,
+          "turnoverPreviousYearCents": 500000
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [
+        {
+          "id": "inv_FR9",
+          "number": "FR 9",
+          "date": "2026-01-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 2300,
+          "vatTreatment": "iva_pt",
+          "retentionBp": 2300,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        },
+        {
+          "id": "inv_FR9",
+          "number": "FR 9",
+          "date": "2026-01-02",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 2300,
+          "vatTreatment": "iva_pt",
+          "retentionBp": 2300,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        },
+        {
+          "id": "inv_FR8",
+          "number": "FR 8",
+          "date": "2026-08-01",
+          "clientName": "Cliente Exemplo",
+          "clientNif": "501234560",
+          "clientCountry": "PT",
+          "description": "Consultoria",
+          "baseCents": 100000,
+          "ivaRateBp": 2300,
+          "vatTreatment": "iva_pt",
+          "retentionBp": 2300,
+          "atcud": null,
+          "status": "issued",
+          "paymentProofInVault": false
+        }
+      ],
+      "today": "2026-09-20",
+      "documented": [],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "DUPLICATE_INVOICE_NUMBER",
+          "severity": "urgent",
+          "title": "Números de fatura repetidos",
+          "detail": "Há números de fatura usados mais de uma vez (FR 9). A numeração sequencial é uma obrigação de faturação e um número repetido é o tipo de erro que faz uma fatura ser recusada.",
+          "legalBasis": [
+            "CIVA art. 36.º (requisitos de emissão e numeração)"
+          ],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 9"
+          ]
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_PAYMENT_PROOF",
+          "severity": "attention",
+          "title": "Faturas sem comprovativo de pagamento",
+          "detail": "2 fatura(s) emitidas há mais de 60 dias não têm comprovativo de recebimento no cofre (FR 9, FR 9). O comprovativo é o que liga o rendimento declarado ao dinheiro que entrou.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": [
+            "FR 9",
+            "FR 9"
+          ]
+        },
+        {
+          "code": "ART53_EXEMPTION_AVAILABLE",
+          "severity": "info",
+          "title": "Pode ser elegível para a isenção do art. 53.º",
+          "detail": "O volume de negócios do ano anterior (5000,00 €) ficou 10 000,00 € abaixo do limite de 15 000,00 € e não há operações de exportação no perfil. O enquadramento atual é o regime normal. A mudança para o regime de isenção é uma decisão declarativa: confirma-a com um contabilista certificado.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 2,
+        "attention": 2,
+        "info": 1,
+        "total": 5
+      }
+    },
+    {
+      "name": "agenda-obligations",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "invoices": [],
+      "today": "2026-09-20",
+      "documented": [
+        "ss.declaracaoTrimestral"
+      ],
+      "due_soon_days": 30,
+      "flags": [
+        {
+          "code": "OBLIGATIONS_OVERDUE",
+          "severity": "urgent",
+          "title": "40 obrigação(ões) em atraso",
+          "detail": "2026-02-02: Declaração anual de rendimentos de trabalhador independente (confirmacao dos rendimentos do ano anterior)\n2026-02-05: Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência\n2026-02-05: Comunicação mensal dos dados de faturação por ficheiro SAF-T (PT) de faturação (obrigados a produzir o ficheiro que não comuniquem em tempo real)\n2026-02-20: Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior\n2026-02-20: Pagamento mensal das contribuições para a Segurança Social (trabalhador independente)",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "ss.declaracaoAnual",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.validacaoDespesas",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "irs.modelo3",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "ss.declaracaoTrimestral",
+            "iva.dp.trimestral",
+            "ss.contribuicoesMensais",
+            "iva.pagamento.trimestral",
+            "efatura.comunicacaoFaturas",
+            "irs.retencoesPagamento",
+            "saft.mensal",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "MISSING_DOCUMENTS_BEFORE_DEADLINE",
+          "severity": "attention",
+          "title": "Documentos em falta para prazos próximos",
+          "detail": "2026-09-21 — Pagamentos por conta de IRS (titulares de rendimentos da categoria B): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento das importâncias retidas na fonte de IRS/IRC relativas ao mês anterior: falta um de 3 documento(s) obrigatório(s) no cofre\n2026-09-21 — Pagamento mensal das contribuições para a Segurança Social (trabalhador independente): falta um de 2 documento(s) obrigatório(s) no cofre\n2026-10-06 — Comunicação dos elementos das faturas emitidas no mês anterior ou da sua inexistência: falta um de 2 documento(s) obrigatório(s) no cofre",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [
+            "irs.pagamentosPorConta",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais",
+            "efatura.comunicacaoFaturas",
+            "saft.mensal",
+            "irs.retencoesPagamento",
+            "ss.contribuicoesMensais"
+          ],
+          "invoiceNumbers": []
+        },
+        {
+          "code": "ART53_NO_TURNOVER_INPUT",
+          "severity": "attention",
+          "title": "Falta o volume de negócios do ano anterior",
+          "detail": "O enquadramento no regime especial de isenção do art. 53.º do CIVA depende do volume de negócios em território nacional do ano civil anterior. Enquanto esse valor não for indicado, a aplicação não avalia a isenção nem avisa quando o limite se aproxima. Regista-o com `vnfin init --turnover-ano-anterior <valor>` ou editando o perfil no cofre.",
+          "legalBasis": [
+            "CIVA art. 53.º"
+          ],
+          "sourceIds": [
+            "at-faq-art53-iva",
+            "at-folheto-inicio-atividade"
+          ],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ],
+      "summary": {
+        "urgent": 1,
+        "attention": 2,
+        "info": 0,
+        "total": 3
+      }
+    }
+  ],
+  "pack_health": [
+    {
+      "today": "2025-12-31",
+      "flags": [
+        {
+          "code": "RULE_PACK_STALE",
+          "severity": "info",
+          "title": "Pacote de regras de outro ano",
+          "detail": "Pacote de regras de 2026, à frente do ano em curso (2025).",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ]
+    },
+    {
+      "today": "2026-09-20",
+      "flags": []
+    },
+    {
+      "today": "2027-01-15",
+      "flags": [
+        {
+          "code": "RULE_PACK_STALE",
+          "severity": "urgent",
+          "title": "Pacote de regras desatualizado",
+          "detail": "O pacote de regras é de 2026 mas o ano em curso é 2027. As datas publicadas não cobrem este ano: os prazos são provisórios e têm de ser conferidos.",
+          "legalBasis": [],
+          "sourceIds": [],
+          "ruleIds": [],
+          "invoiceNumbers": []
+        }
+      ]
+    }
+  ]
+}

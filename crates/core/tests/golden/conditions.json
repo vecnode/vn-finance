@@ -1,0 +1,3743 @@
+{
+  "profiles": {
+    "rich": {
+      "nif": "123456789",
+      "name": "Pessoa Exemplo",
+      "residentPT": true,
+      "isCompany": false,
+      "activity": {
+        "categoryB": true,
+        "startDate": "2019-04-01",
+        "cae": [
+          {
+            "code": "62010",
+            "description": "Atividades de programação informática",
+            "role": "principal"
+          }
+        ],
+        "intraCommunityOperations": true,
+        "exports": false,
+        "hasEmployees": false,
+        "usesCertifiedInvoicingSoftware": true,
+        "usesAtWebservice": false,
+        "intraCommunityOperationsAbove50k": false
+      },
+      "iva": {
+        "regime": "trimestral"
+      },
+      "irs": {
+        "regime": "simplificado",
+        "coefficientBp": 7500
+      },
+      "ss": {
+        "startupExemptionActive": false
+      }
+    },
+    "sparse": {
+      "nif": "123456789",
+      "name": "Pessoa Exemplo",
+      "residentPT": true,
+      "isCompany": false,
+      "activity": {
+        "categoryB": true,
+        "startDate": "2019-04-01",
+        "cae": [
+          {
+            "code": "62010",
+            "description": "Atividades de programação informática",
+            "role": "principal"
+          }
+        ],
+        "intraCommunityOperations": false,
+        "exports": false,
+        "hasEmployees": false,
+        "usesCertifiedInvoicingSoftware": true,
+        "usesAtWebservice": false
+      },
+      "iva": {
+        "regime": "isento_art53"
+      },
+      "irs": {
+        "regime": "simplificado",
+        "coefficientBp": 7500
+      },
+      "ss": {
+        "startupExemptionActive": false
+      }
+    }
+  },
+  "cases": [
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "eq",
+        "value": "trimestral"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "eq",
+        "value": "mensal"
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige \"mensal\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "ne",
+        "value": "trimestral"
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige algo diferente de \"trimestral\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "ne",
+        "value": "mensal"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "in",
+        "value": [
+          "trimestral"
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"trimestral\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "iva.regime",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "eq",
+        "value": "simplificado"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "eq",
+        "value": "organizada"
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige \"organizada\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "ne",
+        "value": "simplificado"
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige algo diferente de \"simplificado\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "ne",
+        "value": "organizada"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "in",
+        "value": [
+          "simplificado"
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "irs.regime",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.exports",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "rich",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "eq",
+        "value": "trimestral"
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige \"trimestral\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "eq",
+        "value": "mensal"
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige \"mensal\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "ne",
+        "value": "trimestral"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "ne",
+        "value": "mensal"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "in",
+        "value": [
+          "trimestral"
+        ]
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige um de: trimestral)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "iva.regime é \"isento_art53\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "iva.regime",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "eq",
+        "value": "simplificado"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "eq",
+        "value": "organizada"
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige \"organizada\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "ne",
+        "value": "simplificado"
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige algo diferente de \"simplificado\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "ne",
+        "value": "organizada"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "in",
+        "value": [
+          "simplificado"
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "irs.regime é \"simplificado\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "irs.regime",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.residentPT é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.residentPT",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "profile.isCompany é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "profile.isCompany",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.categoryB é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.categoryB",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperations é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperations",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k é \"(sem valor)\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.intraCommunityOperationsAbove50k",
+        "op": "exists"
+      },
+      "applies": false,
+      "reason": "activity.intraCommunityOperationsAbove50k não está definido"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.exports é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.exports",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.hasEmployees é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.hasEmployees",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "eq",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "eq",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "ne",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige algo diferente de \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "ne",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesCertifiedInvoicingSoftware é \"true\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesCertifiedInvoicingSoftware",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "activity.usesAtWebservice é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "activity.usesAtWebservice",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "eq",
+        "value": true
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige \"true\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "eq",
+        "value": false
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "ne",
+        "value": true
+      },
+      "applies": true,
+      "reason": null
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "ne",
+        "value": false
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige algo diferente de \"false\")"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "in",
+        "value": [
+          true
+        ]
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige um de: true)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "in",
+        "value": [
+          "nao-existe"
+        ]
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige um de: nao-existe)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "gte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige gte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lt",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lt 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lt",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lt 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lte",
+        "value": 0
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lte 0)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "lte",
+        "value": 1
+      },
+      "applies": false,
+      "reason": "ss.startupExemptionActive é \"false\" (a regra exige lte 1)"
+    },
+    {
+      "profile": "sparse",
+      "condition": {
+        "field": "ss.startupExemptionActive",
+        "op": "exists"
+      },
+      "applies": true,
+      "reason": null
+    }
+  ]
+}

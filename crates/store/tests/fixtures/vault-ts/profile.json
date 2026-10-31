@@ -1,0 +1,36 @@
+{
+  "nif": "123456789",
+  "name": "Pessoa Exemplo",
+  "residentPT": true,
+  "isCompany": false,
+  "trackingStart": "2026-01-01",
+  "activity": {
+    "categoryB": true,
+    "startDate": "2019-04-01",
+    "cae": [
+      {
+        "code": "62010",
+        "description": "Atividades de programação informática",
+        "role": "principal"
+      }
+    ],
+    "turnoverPreviousYearCents": 500000,
+    "turnoverCurrentYearExpectedCents": 1800000,
+    "intraCommunityOperations": false,
+    "exports": false,
+    "hasEmployees": false,
+    "usesCertifiedInvoicingSoftware": true,
+    "usesAtWebservice": false
+  },
+  "iva": {
+    "regime": "trimestral"
+  },
+  "irs": {
+    "regime": "simplificado",
+    "coefficientBp": 7500
+  },
+  "ss": {
+    "startupExemptionActive": false,
+    "firstActivityDate": "2019-04-01"
+  }
+}

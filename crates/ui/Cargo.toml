@@ -1,0 +1,25 @@
+[package]
+name = "vnf-ui"
+description = "vn-finance's egui interface: theme, widgets, icons and the ten pages"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+vnf-core = { workspace = true }
+vnf-store = { workspace = true }
+egui = { workspace = true }
+egui_extras = { workspace = true }
+# Only for the `App` trait and `CreationContext`; the renderer and the window live in
+# the binary, so a UI test never opens one.
+eframe = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+serde_json = { workspace = true }

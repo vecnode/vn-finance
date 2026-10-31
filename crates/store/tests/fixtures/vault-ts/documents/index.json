@@ -1,0 +1,11 @@
+[
+  {
+    "file": "documents/283ced137973-fatura-recibo-2026-1.pdf",
+    "originalPath": null,
+    "sha256": "283ced137973991e7f0b632bed1e8f324c5ee468681de225d081466ba1eea5c2",
+    "addedAt": "2026-10-31T17:54:02.815Z",
+    "kind": "fatura",
+    "obligationId": "iva.dp.trimestral",
+    "invoiceId": "inv_legado_1"
+  }
+]

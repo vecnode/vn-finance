@@ -1,0 +1,90 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+rust-version = "1.95"
+repository = "https://github.com/vecnode/vn-finance"
+homepage = "https://github.com/vecnode/vn-finance"
+authors = ["vecnode"]
+keywords = ["tax", "portugal", "egui", "local-first"]
+categories = ["finance", "gui"]
+
+# The lint table is the "safe Rust" promise in machine-checkable form: no unsafe
+# block anywhere we write, no panicking escape hatch in library code, and a
+# missing doc comment is a warning that `-D warnings` turns into a failure.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+manual_let_else = "warn"
+redundant_else = "warn"
+semicolon_if_nothing_returned = "warn"
+
+[workspace.dependencies]
+vnf-core = { path = "crates/core" }
+vnf-store = { path = "crates/store" }
+vnf-ui = { path = "crates/ui" }
+
+serde = { version = "1.0.229", features = ["derive"] }
+# `preserve_order` matters twice: the vault files keep the field order the reference
+# writes, so a diff between a file from each implementation is empty; and the pack
+# validator walks the constants in the order the JSON has them, which is the order
+# JavaScript's `Object.keys` gives. The default (a sorted map) would silently change
+# both.
+serde_json = { version = "1.0.152", features = ["preserve_order"] }
+sha2 = "0.11.1"
+unicode-normalization = "0.1.24"
+
+# The interface. Pinned to the same versions vn-ranger draws with, so the two
+# applications in the suite look like the same suite and a widget written for one
+# compiles for the other.
+egui = "0.37.0"
+egui_extras = { version = "0.37.0", default-features = false }
+eframe = { version = "0.37.0", default-features = false }
+
+# An advisory lock, so two processes cannot each append half of the ledger and
+# both believe they wrote it. `fs4` is a safe wrapper over the platform's own file
+# lock and releases it when the handle closes, which a lock file cannot promise.
+fs4 = "0.13.1"
+# Tests get a real temporary directory rather than a name they invent.
+tempfile = "3.27.0"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+
+# CI compiles without the development concessions and keeps enough debug info to
+# say where a failure was, while every dependency stays unoptimised so a check
+# costs seconds rather than minutes.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+incremental = false
+
+[profile.ci.package."*"]
+opt-level = 0
+debug = "line-tables-only"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+# Money is integer cents, and an arithmetic overflow that wraps in silence is a
+# wrong figure nobody notices. The checked operations in `vnf-core` are the first
+# line; this is the second, and the cost on this workload is unmeasurable.
+overflow-checks = true

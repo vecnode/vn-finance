@@ -106,6 +106,12 @@ cargo run --release --package xtask -- notices            # regenerate THIRD-PAR
 
 Notes:
 
+- **`apps/vnfin` is the workspace's default member.** `cargo build --release` and
+  `cargo run --release` at the root build the application and not `xtask`, which is a
+  helper that is only ever called by name (`cargo xtask …`). Building from inside
+  `apps/vnfin` is the same build, and `target/` stays at the root either way — one build
+  directory, not one per crate. The gate passes `--workspace`, so it still reaches every
+  crate.
 - **A new test file is picked up automatically** (unlike the TypeScript suite, which
   listed its files by hand).
 - Rust 1.95 or newer; the toolchain file pins it.

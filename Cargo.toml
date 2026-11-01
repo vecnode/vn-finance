@@ -1,6 +1,12 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
+# A bare `cargo build` builds the product, not the build tool: with two binaries in the
+# workspace, `cargo run` and `cargo build` cannot guess which one was meant, and the answer
+# was an error telling you to pass `-p`. `xtask` is a helper the gate runs by name, so it
+# stays a member and out of the default set — and `--workspace`, which is what
+# `cargo xtask ci` passes, still reaches every crate.
+default-members = ["apps/vnfin"]
 
 [workspace.package]
 version = "0.2.0"

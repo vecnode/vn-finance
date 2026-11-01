@@ -26,6 +26,11 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: '0'
   STEM: vn-finance
+  # `prepare` and `checksums` publish without checking the repository out, and `gh`
+  # otherwise reads the repository from the git remote it cannot find: "failed to run
+  # git: fatal: not a git repository". Naming the repository is what the GitHub CLI asks
+  # for in that case.
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   # The gate calls the workflow a pull request runs rather than a copy of it, so the two

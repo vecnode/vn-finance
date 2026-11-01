@@ -1,0 +1,1479 @@
+{
+  "default_cae": {
+    "code": "62010",
+    "description": "Atividades de programação informática",
+    "role": "principal"
+  },
+  "iva_regimes": [
+    "isento_art53",
+    "trimestral",
+    "mensal"
+  ],
+  "irs_regimes": [
+    "simplificado",
+    "organizada"
+  ],
+  "builds": [
+    {
+      "name": "minimal",
+      "draft": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo"
+      },
+      "current": null,
+      "coefficient_bp": null,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "1970-01-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "1970-01-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "full",
+      "draft": {
+        "nif": "123 456 789",
+        "name": "Pessoa Exemplo",
+        "ivaRegime": "trimestral",
+        "irsRegime": "simplificado",
+        "startDate": "2019-04-01",
+        "turnoverPreviousYearCents": 1500000,
+        "turnoverCurrentYearExpectedCents": 1800000,
+        "categoryB": true,
+        "residentPT": true,
+        "isCompany": false,
+        "intraCommunityOperations": true,
+        "intraCommunityOperationsAbove50k": false,
+        "exports": false,
+        "startupExemptionActive": false
+      },
+      "current": null,
+      "coefficient_bp": null,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "edit-keeps-unmentioned",
+      "draft": {
+        "name": "Outro Nome"
+      },
+      "current": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "coefficient_bp": null,
+      "profile": {
+        "nif": "123456789",
+        "name": "Outro Nome",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "null-deletes-a-turnover",
+      "draft": {
+        "turnoverPreviousYearCents": null
+      },
+      "current": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "coefficient_bp": null,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "absent-does-not-delete",
+      "draft": {},
+      "current": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "coefficient_bp": null,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "coefficient-override",
+      "draft": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo"
+      },
+      "current": null,
+      "coefficient_bp": 1500,
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "1970-01-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 1500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "1970-01-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "no-nif",
+      "draft": {
+        "name": "Sem NIF"
+      },
+      "current": null,
+      "coefficient_bp": null,
+      "profile": null,
+      "error": "o NIF é obrigatório para criar o perfil."
+    },
+    {
+      "name": "no-name",
+      "draft": {
+        "nif": "123456789"
+      },
+      "current": null,
+      "coefficient_bp": null,
+      "profile": null,
+      "error": "o nome é obrigatório para criar o perfil."
+    }
+  ],
+  "imports": [
+    {
+      "name": "round-trip",
+      "input": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "turnoverPreviousYearCents": 1500000,
+          "turnoverCurrentYearExpectedCents": 1800000,
+          "intraCommunityOperations": true,
+          "intraCommunityOperationsAbove50k": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "error": null
+    },
+    {
+      "name": "not-an-object",
+      "input": [
+        1,
+        2,
+        3
+      ],
+      "profile": null,
+      "error": "o ficheiro não contém um perfil: esperava um objeto JSON."
+    },
+    {
+      "name": "no-name",
+      "input": {
+        "nif": 123456789,
+        "name": 7
+      },
+      "profile": null,
+      "error": "o perfil importado tem de ter \"nif\" e \"name\" como texto."
+    },
+    {
+      "name": "unknown-iva-regime",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "iva": {
+          "regime": "trimestral "
+        }
+      },
+      "profile": null,
+      "error": "o regime de IVA \"trimestral \" não é reconhecido (esperado: isento_art53, trimestral, mensal)."
+    },
+    {
+      "name": "bad-start-date",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "activity": {
+          "startDate": "2019-4-1"
+        }
+      },
+      "profile": null,
+      "error": "a data de início de atividade não está em formato AAAA-MM-DD."
+    },
+    {
+      "name": "negative-cents",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "activity": {
+          "turnoverPreviousYearCents": -5
+        }
+      },
+      "profile": null,
+      "error": "\"turnoverPreviousYearCents\" tem de ser um valor em cêntimos (inteiro, não negativo)."
+    },
+    {
+      "name": "empty-cae",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "activity": {
+          "cae": []
+        }
+      },
+      "profile": null,
+      "error": "\"activity.cae\" tem de ser uma lista com pelo menos um CAE."
+    },
+    {
+      "name": "bad-cae-role",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "activity": {
+          "cae": [
+            {
+              "code": "62010",
+              "description": "d",
+              "role": "outro"
+            }
+          ]
+        }
+      },
+      "profile": null,
+      "error": "o CAE 62010 tem de ter \"role\" principal ou secondary."
+    },
+    {
+      "name": "cae-as-string",
+      "input": {
+        "nif": "123456789",
+        "name": "X",
+        "activity": {
+          "cae": "62010"
+        }
+      },
+      "profile": null,
+      "error": "\"activity.cae\" tem de ser uma lista com pelo menos um CAE."
+    }
+  ],
+  "missing": [
+    {
+      "name": "valid-minimal",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "bad-nif-and-name",
+      "profile": {
+        "nif": "123456788",
+        "name": "   ",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "no-cae",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "secondary-only",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "d",
+              "role": "secondary"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "bad-start-date",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "01/04/2019",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "no-category-b",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": false,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "exempt-not-resident",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": false,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "exempt-with-exports",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": true,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado"
+      ]
+    },
+    {
+      "name": "zero-coefficient",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 0
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado",
+        "se faturas a clientes fora de Portugal (UE ou países terceiros) — determina a declaração recapitulativa, o VIES e o tratamento de IVA nas faturas"
+      ]
+    },
+    {
+      "name": "intra-community-exempt",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": true,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "inputs": [
+        "volume de negócios do ano anterior em território nacional — obrigatório para avaliar o art. 53.º do CIVA e para avisar quando o limite se aproxima",
+        "estimativa de volume de negócios para o ano corrente — é o que permite avisar a meio do ano se o limite do art. 53.º está a ser ultrapassado"
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "name": "valid-minimal",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "bad-nif-and-name",
+      "profile": {
+        "nif": "123456788",
+        "name": "   ",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "error",
+          "field": "nif",
+          "message": "\"123456788\" não é um NIF válido (o dígito de controlo não confere)."
+        },
+        {
+          "level": "error",
+          "field": "name",
+          "message": "o nome do contribuinte está vazio."
+        },
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "no-cae",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "error",
+          "field": "activity.cae",
+          "message": "não há qualquer CAE definido."
+        },
+        {
+          "level": "warning",
+          "field": "activity.cae",
+          "message": "não há CAE principal definido; o CAE principal determina a atividade declarada."
+        },
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "secondary-only",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "d",
+              "role": "secondary"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.cae",
+          "message": "não há CAE principal definido; o CAE principal determina a atividade declarada."
+        },
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "bad-start-date",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "01/04/2019",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "error",
+          "field": "activity.startDate",
+          "message": "a data de início de atividade não está em formato AAAA-MM-DD."
+        },
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "no-category-b",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": false,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.categoryB",
+          "message": "sem atividade aberta na categoria B não é possível emitir recibos verdes: confirma o início de atividade."
+        },
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        }
+      ]
+    },
+    {
+      "name": "exempt-not-resident",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": false,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        },
+        {
+          "level": "error",
+          "field": "iva.regime",
+          "message": "o regime especial de isenção do art. 53.º do CIVA exige domicílio ou sede em território nacional."
+        }
+      ]
+    },
+    {
+      "name": "exempt-with-exports",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": true,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        },
+        {
+          "level": "error",
+          "field": "iva.regime",
+          "message": "o regime especial de isenção do art. 53.º do CIVA não é aplicável a quem pratique operações de exportação ou atividades conexas. O perfil indica exportações."
+        }
+      ]
+    },
+    {
+      "name": "zero-coefficient",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": false,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "trimestral"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 0
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        },
+        {
+          "level": "error",
+          "field": "irs.coefficientBp",
+          "message": "o coeficiente do regime simplificado tem de ser positivo."
+        }
+      ]
+    },
+    {
+      "name": "intra-community-exempt",
+      "profile": {
+        "nif": "123456789",
+        "name": "Pessoa Exemplo",
+        "residentPT": true,
+        "isCompany": false,
+        "activity": {
+          "categoryB": true,
+          "startDate": "2019-04-01",
+          "cae": [
+            {
+              "code": "62010",
+              "description": "Atividades de programação informática",
+              "role": "principal"
+            }
+          ],
+          "intraCommunityOperations": true,
+          "exports": false,
+          "hasEmployees": false,
+          "usesCertifiedInvoicingSoftware": true,
+          "usesAtWebservice": false
+        },
+        "iva": {
+          "regime": "isento_art53"
+        },
+        "irs": {
+          "regime": "simplificado",
+          "coefficientBp": 7500
+        },
+        "ss": {
+          "startupExemptionActive": false,
+          "firstActivityDate": "2019-04-01"
+        }
+      },
+      "problems": [
+        {
+          "level": "warning",
+          "field": "activity.turnoverPreviousYearCents",
+          "message": "falta o volume de negócios do ano anterior em território nacional. Sem esse valor a aplicação não pode avaliar a isenção do art. 53.º do CIVA nem avisar quando o limite se aproxima."
+        },
+        {
+          "level": "warning",
+          "field": "activity.intraCommunityOperations",
+          "message": "há operações intracomunitárias: confirma o registo no VIES e a obrigação de declaração recapitulativa."
+        }
+      ]
+    }
+  ]
+}

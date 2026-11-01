@@ -18,6 +18,12 @@ profile.json
 **/audit/*.jsonl
 **/documents/index.json
 
+# The golden fixtures are named after the files the domain reads, and one of them is
+# `profile.json`. The rule above is about a vault and this file is not one: without this
+# line the rule swallows a 45 KiB test fixture, git never stores it, and a fresh clone
+# cannot compile the golden test at all. That is what the first Linux CI run found.
+!crates/core/tests/golden/profile.json
+
 # Exported backups
 exports/
 *.vnfin-backup

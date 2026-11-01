@@ -1,0 +1,374 @@
+# vn-finance mark manifest
+#
+# Generated from the files in this directory. Every digest is the file's own.
+# Regenerate this file whenever a mark or a rendered size changes.
+
+[mark]
+name = "vn-finance"
+version = "1.0"
+date = "2026-11-01"
+grid = 24
+stroke = 2.914
+facets = 6
+viewbox = "0 0 24 24"
+geometry = "hexagon (12,2.8) (20.8,7.4) (20.8,16.6) (12,21.2) (3.2,16.6) (3.2,7.4); crown ridge (3.2,7.4)-(12,12)-(20.8,7.4); spine (12,2.8)-(12,21.2); girdle (12,15.4)-(3.2,16.6) and (12,15.4)-(20.8,16.6)"
+
+[palette]
+cobalt = "#1D4ED8"
+cobalt_highlight = "#7BA2FF"
+cobalt_deep = "#16339E"
+ink = "#0B0D10"
+paper = "#FFFFFF"
+muted = "#9AA1AC"
+
+[contrast]
+white_on_cobalt = "6.70:1"
+cobalt_highlight_on_ink = "7.83:1"
+white_on_cobalt_deep = "10.49:1"
+cobalt_on_ink = "2.90:1 (non-text only)"
+cobalt_on_paper = "6.70:1"
+
+[application_icon]
+tile_px = 1024
+tile_radius_px = 308
+mark_scale = 22.73
+mark_translate_px = 239.25
+tile_fill = "#0B0D10"
+ridge = "#FFFFFF"
+rgba_px = 64
+
+[suite]
+rule = "same crystal, one colour per application"
+vn-launcher = "no inlay"
+vn-ranger = "ember inlay"
+vn-finance = "cobalt inlay"
+
+[[file]]
+path = "contact-sheet.png"
+variant = "sheet"
+format = "png"
+size = "1600x1000"
+background = "ink"
+purpose = "Design reference sheet: variants, sizes, palette and contrast."
+bytes = 112254
+sha256 = "3e723153ec0c823a2186040cad256a959774f5ae99d44b30592158a793183219"
+
+[[file]]
+path = "vn-finance-16.png"
+variant = "light"
+format = "png"
+size = "16"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 616
+sha256 = "3fb4103b8671ec000bfd025d2e14dd2a3adfdb7e6fba5f797490a5548204e7aa"
+
+[[file]]
+path = "vn-finance-24.png"
+variant = "light"
+format = "png"
+size = "24"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 1009
+sha256 = "909f83aecc90d530c3bee8f7887e3a98a0d0b91095c8217c49d5ad00169327d9"
+
+[[file]]
+path = "vn-finance-32.png"
+variant = "light"
+format = "png"
+size = "32"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 1360
+sha256 = "bf8180816c732b45405e0fd715cc1cd30eeac999cf07ebdde3ff3063732f0f8f"
+
+[[file]]
+path = "vn-finance-48.png"
+variant = "light"
+format = "png"
+size = "48"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 2036
+sha256 = "afb3cf981b18d9c56a6e0df830d26ab28cad04166c6b2202624cb25c9b8c64fd"
+
+[[file]]
+path = "vn-finance-64.png"
+variant = "light"
+format = "png"
+size = "64"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 2711
+sha256 = "c382e6b62b2a4b603891469a8da32a8f8207a961a736e368a789c191b6f38ccc"
+
+[[file]]
+path = "vn-finance-128.png"
+variant = "light"
+format = "png"
+size = "128"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 5865
+sha256 = "8bc7f5af245f46ab410805fc6ad8c102ef0eaa899e148d69641abaa9e5ad8594"
+
+[[file]]
+path = "vn-finance-256.png"
+variant = "light"
+format = "png"
+size = "256"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 11804
+sha256 = "7e73f4f5351be035437317904d20c001094d2ee83e79fddcc6255158ff3b950e"
+
+[[file]]
+path = "vn-finance-512.png"
+variant = "light"
+format = "png"
+size = "512"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 24454
+sha256 = "17222edd75f9357b001ff00c4b36d8f24a9e7c4f458fa9a6a9a6d04509596d40"
+
+[[file]]
+path = "vn-finance-1024.png"
+variant = "light"
+format = "png"
+size = "1024"
+background = "transparent"
+purpose = "Raster for light surfaces; ink linework, cobalt inlay."
+bytes = 55312
+sha256 = "83d5daf6df2da721fa6b77de7c0a385a746a5764c9025a467370adb41cbc7a25"
+
+[[file]]
+path = "vn-finance-app-16.png"
+variant = "app"
+format = "png"
+size = "16"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 527
+sha256 = "a5f77f9d05f0685b6fd377c503fb7173297ad9a76553e5427feec31f2c9adbb9"
+
+[[file]]
+path = "vn-finance-app-24.png"
+variant = "app"
+format = "png"
+size = "24"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 823
+sha256 = "bf9a80cf1d81607f53a77e4c73de5c202e0338b445f242336472a68fa6a175f4"
+
+[[file]]
+path = "vn-finance-app-32.png"
+variant = "app"
+format = "png"
+size = "32"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 1067
+sha256 = "5ef7ee6e7646df088d81a67dfe53bceff8335ed4d3c2287d181c617c457d3786"
+
+[[file]]
+path = "vn-finance-app-48.png"
+variant = "app"
+format = "png"
+size = "48"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 1579
+sha256 = "6fcbdda96d9a4033a14d142e2bd971e8fe4d5e4f46456fe608f7ca62b10787da"
+
+[[file]]
+path = "vn-finance-app-64.png"
+variant = "app"
+format = "png"
+size = "64"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 2175
+sha256 = "e1fbf4ef26398ae7fde9a6edd628c2ea26deab220a9c3b4fc1f084381d723063"
+
+[[file]]
+path = "vn-finance-app-128.png"
+variant = "app"
+format = "png"
+size = "128"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 4411
+sha256 = "957b7716c82a16abda0a8c4bf2dd2b140becd2bfa0f57855d85f1f3c85131255"
+
+[[file]]
+path = "vn-finance-app-256.png"
+variant = "app"
+format = "png"
+size = "256"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 9194
+sha256 = "978ae107157c94606b420e2b1b96c2f802c0d491905c91a843da0503682b21dc"
+
+[[file]]
+path = "vn-finance-app-512.png"
+variant = "app"
+format = "png"
+size = "512"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 19404
+sha256 = "e5fc3e72a4332b16e1703e54c0185563fd2f7f32ec39a722c282f6fe07d13f6b"
+
+[[file]]
+path = "vn-finance-app-1024.png"
+variant = "app"
+format = "png"
+size = "1024"
+background = "black tile"
+purpose = "Raster application icon; ink tile, white linework, cobalt inlay."
+bytes = 41088
+sha256 = "805462fcdb3967773a2370fdc93c29f71e3cb698f9dfdac761c4eb1b63642ff6"
+
+[[file]]
+path = "vn-finance-app.rgba"
+variant = "app"
+format = "rgba"
+size = "any"
+background = "black tile"
+purpose = "Unmultiplied RGBA for egui::IconData (16,384 bytes)."
+bytes = 16384
+sha256 = "6082d240ac54f5178aed9d54f247d852363b711aacbaef043a7ac6e0f4bdb5b5"
+
+[[file]]
+path = "vn-finance-app.svg"
+variant = "app"
+format = "svg"
+size = "any"
+background = "black tile"
+purpose = "Application icon source; ink tile, white linework, cobalt inlay."
+bytes = 1011
+sha256 = "560cb6095840b605d06712ebe2fef57b5cb1027f02ef16d27df54b853ec46764"
+
+[[file]]
+path = "vn-finance-white.rgba"
+variant = "dark"
+format = "rgba"
+size = "any"
+background = "transparent"
+purpose = "Unmultiplied RGBA for the tray icon: the bare crystal with no tile (16,384 bytes)."
+bytes = 16384
+sha256 = "8c18db23916beea0107704f9586e13f056b72699dd3f862c9c0650e8770bcb97"
+
+[[file]]
+path = "vn-finance-white-16.png"
+variant = "dark"
+format = "png"
+size = "16"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 552
+sha256 = "be93137dd9102727ee72cfbb2acc829a2cba4d7e5baadb2353897eca5910a7d8"
+
+[[file]]
+path = "vn-finance-white-24.png"
+variant = "dark"
+format = "png"
+size = "24"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 857
+sha256 = "c15d9eccc0693d3b94a591b3d303f43f2b8f0cb99746d9bb6b6f4ec3ed28eb58"
+
+[[file]]
+path = "vn-finance-white-32.png"
+variant = "dark"
+format = "png"
+size = "32"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 1122
+sha256 = "ab3d6964da1da3374726ecacf6e059262f190e50b3ce1c2426004b0f93c69f73"
+
+[[file]]
+path = "vn-finance-white-48.png"
+variant = "dark"
+format = "png"
+size = "48"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 1699
+sha256 = "e02317753e79d68c5f4c3612591a4baadd4694e9286c63b71be5739202971517"
+
+[[file]]
+path = "vn-finance-white-64.png"
+variant = "dark"
+format = "png"
+size = "64"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 2301
+sha256 = "d72b6db0cd0c2da7c99c7d365876e409a2b7ebd0037aefed39bff1083ead1a94"
+
+[[file]]
+path = "vn-finance-white-128.png"
+variant = "dark"
+format = "png"
+size = "128"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 4801
+sha256 = "30f02145b51901c3804a6c1cdc1d002ea07c0f9c9b8c5b19ba133661f2b9a587"
+
+[[file]]
+path = "vn-finance-white-256.png"
+variant = "dark"
+format = "png"
+size = "256"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 9686
+sha256 = "78663e3ca932f20dbb76454d5a5bae0c26b4ea0c7895f28afcdc1b71f1668627"
+
+[[file]]
+path = "vn-finance-white-512.png"
+variant = "dark"
+format = "png"
+size = "512"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 19675
+sha256 = "1e5375fb0694ae0103249d5a2bc714a00b381125e78012bcbb449f0d10ca5ea0"
+
+[[file]]
+path = "vn-finance-white-1024.png"
+variant = "dark"
+format = "png"
+size = "1024"
+background = "transparent"
+purpose = "Raster for dark surfaces; white linework, cobalt inlay."
+bytes = 44831
+sha256 = "11ff36c576e6a1a04a53d00c98090184dd4351ad9ea3f45094b9d7e8d0da2c46"
+
+[[file]]
+path = "vn-finance-white.svg"
+variant = "dark"
+format = "svg"
+size = "any"
+background = "transparent"
+purpose = "Primary vector for dark surfaces; white linework, cobalt inlay."
+bytes = 863
+sha256 = "83b12c3b033f9b4edf8cb53b42377291a39b612d28c4b4ce8eb94367f924074e"
+
+[[file]]
+path = "vn-finance.svg"
+variant = "light"
+format = "svg"
+size = "any"
+background = "transparent"
+purpose = "Primary vector; ink linework, cobalt inlay."
+bytes = 863
+sha256 = "5c7578f4ef0f47405968150d11dc0d9acc3e3cc54829890d390fa94f67ec07c0"

@@ -195,6 +195,16 @@ pub const SECTION_TITLE: f32 = 17.0;
 /// The application's name in the header.
 pub const PAGE_TITLE: f32 = 16.0;
 
+/// The application mark beside that name.
+///
+/// It is the height of the two lines it names — measured, not chosen: `PAGE_TITLE` and
+/// `BODY_SMALL` lay out to a 35-point block, and a 34-point square is the largest mark
+/// that fits against it without the header growing. That matters because the rail's fit
+/// is computed from the window's minimum height; a mark that added points to the header
+/// would take them from the last page button. A mark the size of the title alone read as
+/// a bullet, and one the size of the whole bar read as another application's logo.
+pub const MARK: f32 = 34.0;
+
 /// A figure: the one number a page is about.
 pub const FIGURE: f32 = 24.0;
 

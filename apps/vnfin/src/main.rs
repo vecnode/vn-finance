@@ -16,7 +16,16 @@
 mod clock;
 
 use vnf_ui::app::{Failure, WINDOW_MIN, WINDOW_START};
-use vnf_ui::{App, Session};
+use vnf_ui::{App, Session, brand};
+
+/// The icon is square and this many pixels on a side.
+///
+/// The bytes are the application tile from `assets/logo/`, and they are the same bytes
+/// the header paints: one constant, so the title bar and the window cannot disagree.
+/// The tile's ink fill is what keeps a white crystal readable on a light title bar as
+/// well as a dark one, and it costs the application no image decoder
+/// (`assets/logo/BRAND.md`).
+const ICON_SIZE: u32 = 64;
 
 fn main() -> eframe::Result<()> {
     let today = clock::today_in_lisbon();
@@ -31,7 +40,12 @@ fn main() -> eframe::Result<()> {
             // Both sizes live in the interface crate: the smallest allowed height is
             // what keeps the rail's ten pages and the profile on screen, so the number
             // belongs beside the rail rather than beside the window's title bar.
-            .with_min_inner_size(WINDOW_MIN),
+            .with_min_inner_size(WINDOW_MIN)
+            .with_icon(egui::IconData {
+                rgba: brand::TILE.to_vec(),
+                width: ICON_SIZE,
+                height: ICON_SIZE,
+            }),
         ..Default::default()
     };
 

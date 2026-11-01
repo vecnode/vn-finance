@@ -73,8 +73,9 @@ dashboard.
 | `crates/core/` | The domain: money, dates, calendar, conditions, rules, profile, estimates, flags, NIF, the PDF reader and the `fatura-recibo` parser |
 | `crates/core/tests/golden/` | Parity fixtures generated from the TypeScript implementation, and the tests that assert them |
 | `crates/store/` | The vault: locations, atomic writes, append-only ledgers, the document index, the lock, the view model |
-| `crates/ui/` | The window: theme, widgets, icons, the ten pages, the profile form, the receipt flow |
+| `crates/ui/` | The window: theme, widgets, icons, the mark, the ten pages, the profile form, the receipt flow |
 | `apps/vnfin/` | The binary |
+| `assets/logo/` | The mark: the three SVGs, the rendered PNGs at nine sizes, the two `.rgba` icons, `BRAND.md` the design record and `MANIFEST.toml` the digests |
 | `xtask/` | `cargo xtask ci` — the gate |
 | `rules/pt/2026.json` | The versioned rule pack: constants, obligations, sources, verification status |
 | `design/` | The reviewed mockup the window's structure and colour were ported from |

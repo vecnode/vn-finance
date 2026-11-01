@@ -10,6 +10,7 @@ use vnf_core::profile::ProblemLevel;
 use vnf_store::model::DashboardModel;
 use vnf_store::risk::RiskLevel;
 
+use crate::brand;
 use crate::icons::{self, Icon};
 use crate::pages::{self, agenda, profile, receipt_form};
 use crate::session::Session;
@@ -195,6 +196,11 @@ pub struct App {
     receipt: receipt_form::Form,
     /// The profile form, and whether it is open.
     profile: profile::Form,
+    /// The application mark, uploaded once on the first frame.
+    ///
+    /// It lives here rather than being uploaded where it is painted because a texture is
+    /// freed when its handle drops: one upload per window, not one per frame.
+    mark: Option<egui::TextureHandle>,
 }
 
 impl App {
@@ -223,6 +229,7 @@ impl App {
             quarter: pages::painel::current_quarter(today),
             receipt: receipt_form::Form::default(),
             profile: profile::Form::default(),
+            mark: None,
         };
         app.reload();
         app
@@ -389,30 +396,41 @@ impl App {
         }
     }
 
-    /// The header: what the window is, and which page it is showing.
+    /// The header: the application's mark and name, and which page is showing.
     ///
-    /// Deliberately two lines and nothing else. The facts that used to sit on the right
-    /// — the folder, the exercise, the pack's counts, today — are all on the
+    /// Deliberately a mark and two lines, and nothing else. The facts that used to sit on
+    /// the right — the folder, the exercise, the pack's counts, today — are all on the
     /// Diagnóstico page, where somebody asking about them can read them properly
     /// instead of squinting at a caption.
     fn header(&mut self, ui: &mut egui::Ui) {
         let palette = theme::palette(ui.ctx());
         ui.add_space(6.0);
-        ui.vertical(|ui| {
-            // Two lines that belong together: the gap the window uses between widgets
-            // is a paragraph gap, and here it separated a title from its own subtitle.
-            ui.spacing_mut().item_spacing.y = 1.0;
-            ui.label(
-                egui::RichText::new("vn-finance")
-                    .size(theme::PAGE_TITLE)
-                    .strong()
-                    .color(palette.text),
-            );
-            ui.label(
-                egui::RichText::new(format!("{} — {}", self.page.label(), self.page.subtitle()))
-                    .size(theme::BODY_SMALL)
-                    .color(palette.text_3),
-            );
+        // The mark and the two lines it belongs to. `horizontal` and not
+        // `horizontal_centered`: the latter allocates the *available* height, which in a
+        // panel that sizes itself from its content is a loop — the header grew 16 points
+        // a frame and swallowed the rail. The mark is cut to the height of the text block
+        // below, so there is nothing to centre.
+        ui.horizontal(|ui| {
+            if let Some(mark) = self.mark.as_ref() {
+                brand::inline(ui, theme::MARK, mark);
+                ui.add_space(9.0);
+            }
+            ui.vertical(|ui| {
+                // Two lines that belong together: the gap the window uses between widgets
+                // is a paragraph gap, and here it separated a title from its own subtitle.
+                ui.spacing_mut().item_spacing.y = 1.0;
+                ui.label(
+                    egui::RichText::new("vn-finance")
+                        .size(theme::PAGE_TITLE)
+                        .strong()
+                        .color(palette.text),
+                );
+                ui.label(
+                    egui::RichText::new(format!("{} — {}", self.page.label(), self.page.subtitle()))
+                        .size(theme::BODY_SMALL)
+                        .color(palette.text_3),
+                );
+            })
         });
         ui.add_space(7.0);
         let (rect, _) =
@@ -725,6 +743,12 @@ impl App {
             self.theme_applied = true;
         }
         let palette = theme::palette(&ctx);
+
+        // One upload per window, on the first frame: a texture lives as long as its
+        // handle, and the header paints this one on every frame after.
+        if self.mark.is_none() {
+            self.mark = Some(brand::texture(&ctx));
+        }
 
         egui::Panel::top("header")
             .frame(

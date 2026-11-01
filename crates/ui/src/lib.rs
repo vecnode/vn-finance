@@ -10,6 +10,7 @@
 #![allow(unreachable_pub)]
 
 pub mod app;
+pub mod brand;
 pub mod icons;
 pub mod pages;
 pub mod session;

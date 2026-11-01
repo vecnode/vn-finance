@@ -9,3 +9,7 @@
 *.gif binary
 *.ico binary
 *.woff2 binary
+
+# The application icon's raw bytes, read straight into egui::IconData. A text filter
+# that "normalised" line endings here would corrupt the icon without saying so.
+*.rgba binary

@@ -45,9 +45,13 @@ appears in a list with others it is `FIGURE_ROW`; if it is the page's answer it 
 
 ## Layout
 
-- **The header** is two lines: `vn-finance`, then `Page — subtitle`. Nothing else lives
-  there: the folder, the exercise year, the pack's counts and today's date are on
-  Diagnóstico, where somebody asking about them can read them properly.
+- **The header** is the application mark and two lines: `vn-finance`, then
+  `Page — subtitle`. Nothing else lives there: the folder, the exercise year, the pack's
+  counts and today's date are on Diagnóstico, where somebody asking about them can read
+  them properly. The mark is a `theme::MARK`-point square from `brand.rs`, drawn from the
+  same bytes as the window icon; it is the application tile and not the bare crystal,
+  because a tile reads at that size and needs no second piece of artwork for the theme
+  (`assets/logo/BRAND.md`).
 - **The rail** lists the pages in three groups, ends with **Perfil**, and does not scroll.
   It is 264 points wide. The privacy lines stay pinned at its foot.
 - **A page starts with its own heading** — except where the window's header already states

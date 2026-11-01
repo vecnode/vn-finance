@@ -100,10 +100,13 @@ pub fn write_bytes_atomic(path: &Path, bytes: &[u8]) -> Result<(), StoreError> {
 /// is nothing safe to add here.
 fn sync_parent(path: &Path) {
     #[cfg(unix)]
-    if let Some(parent) = path.parent() {
-        if let Ok(handle) = std::fs::File::open(parent) {
-            let _ = handle.sync_all();
-        }
+    // One `if` and not two: clippy asks for the let-chain, and the chain is also what
+    // says the two facts are one condition — there is no directory to sync when there is
+    // no parent, and nothing to sync when the parent will not open.
+    if let Some(parent) = path.parent()
+        && let Ok(handle) = std::fs::File::open(parent)
+    {
+        let _ = handle.sync_all();
     }
     #[cfg(not(unix))]
     let _ = path;

@@ -1,19 +1,23 @@
 name: Release
 
-# Three platforms, one artefact each, built from the same commit that passed CI.
+# A tag is what publishes a release, and the build is what attaches the binaries to it:
+# a release cannot exist half-finished, because it is created as a draft and only
+# published once every archive and `SHA256SUMS.txt` are on it.
 #
-# The matrix is not `cargo build` three times: each platform wants a different shape,
-# and getting it wrong is only discovered by somebody who downloads the file. Windows
-# links the C runtime statically so the binary runs on a machine with no redistributable
-# installed; macOS ships one universal binary rather than two downloads nobody knows how
-# to choose between; Linux is built on the oldest supported Ubuntu so the glibc it needs
-# is the one an LTS has.
+# Three platforms, one archive each, from the commit that passed the gate. Nothing else
+# lives here — no schedule, no nightly, no signing key, no second artefact shape. The
+# Linux build is the oldest Ubuntu LTS, so the glibc it needs is one a supported
+# distribution has, and the Windows build links the C runtime statically so the binary
+# runs on a machine with no redistributable installed.
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build and attach binaries to'
+        required: true
 
 permissions:
   contents: write
@@ -21,52 +25,100 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: '0'
+  STEM: vn-finance
 
 jobs:
-  # Nothing is published from a tree that has not passed the gate.
+  # The gate calls the workflow a pull request runs rather than a copy of it, so the two
+  # cannot drift: a red check stops the release here, before a draft exists to be
+  # published.
   gate:
+    name: Gate
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
 
+  prepare:
+    name: Prepare release
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            exit 0
+          fi
+          cat > notes.md <<EOF
+          Um assistente fiscal local para quem trabalha por conta própria. Uma janela, uma
+          pasta de dados, sem rede.
+
+          Descarrega o ficheiro do teu sistema, confirma-o contra o \`SHA256SUMS.txt\`, e
+          executa-o. Não há nada a instalar: a aplicação abre o cofre em \`~/.vn-finance\`
+          (\`%USERPROFILE%\\.vn-finance\` no Windows) e cria-o no primeiro arranque.
+
+          | Sistema | Ficheiro |
+          | --- | --- |
+          | Windows 10/11, 64 bits | \`${STEM}-${VERSION}-windows-x86_64.zip\` |
+          | macOS 11+, Apple silicon | \`${STEM}-${VERSION}-macos-aarch64.tar.gz\` |
+          | Linux, 64 bits (glibc 2.35+) | \`${STEM}-${VERSION}-linux-x86_64.tar.gz\` |
+
+          O binário de Linux precisa das bibliotecas de janelas do sistema (X11 ou Wayland,
+          e OpenGL), que qualquer distribuição de ambiente de trabalho já tem.
+
+          O código-fonte de todos estes ficheiros é a etiqueta \`${TAG}\`, sob a GNU AGPL v3.
+          EOF
+          gh release create "$TAG" --draft --title "${STEM} ${VERSION}" --notes-file notes.md
+
   build:
     name: ${{ matrix.target }}
-    needs: gate
+    needs: prepare
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            name: vnfin-windows-x86_64
-            binary: target/x86_64-pc-windows-msvc/release/vnfin.exe
-            archive: zip
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-22.04
-            name: vnfin-linux-x86_64
-            binary: target/x86_64-unknown-linux-gnu/release/vnfin
-            archive: tar.gz
-          - target: universal-apple-darwin
-            os: macos-latest
-            name: vnfin-macos-universal
-            binary: target/universal-apple-darwin/release/vnfin
-            archive: tar.gz
-
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            system: windows
+            arch: x86_64
+            ext: zip
+            rustflags: '-C target-feature=+crt-static'
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            system: linux
+            arch: x86_64
+            ext: tar.gz
+            rustflags: ''
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            system: macos
+            arch: aarch64
+            ext: tar.gz
+            rustflags: ''
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target == 'universal-apple-darwin' && 'x86_64-apple-darwin,aarch64-apple-darwin' || matrix.target }}
+          targets: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: vn-finance-release
+          key: release-${{ matrix.target }}
           cache-on-failure: true
 
-      - name: Linux window dependencies
+      # The window needs the platform's own windowing and graphics libraries on Linux.
+      # They are C, and no pure-Rust replacement exists; this is the same list the CI
+      # gate installs, and it is the only place the build needs one.
+      - name: Linux GUI dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -74,107 +126,70 @@ jobs:
             libxkbcommon-dev libwayland-dev libx11-dev libxi-dev \
             libxcursor-dev libxrandr-dev libgl1-mesa-dev
 
-      # The two macOS architectures are built separately and fused, because a universal
-      # binary is the only macOS artefact a person can download without first knowing
-      # which Mac they have.
-      - name: Build (macOS universal)
-        if: matrix.target == 'universal-apple-darwin'
-        run: |
-          cargo build --release --locked -p vnfin --target x86_64-apple-darwin
-          cargo build --release --locked -p vnfin --target aarch64-apple-darwin
-          mkdir -p target/universal-apple-darwin/release
-          lipo -create \
-            target/x86_64-apple-darwin/release/vnfin \
-            target/aarch64-apple-darwin/release/vnfin \
-            -output target/universal-apple-darwin/release/vnfin
-
       - name: Build
-        if: matrix.target != 'universal-apple-darwin'
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
         run: cargo build --release --locked -p vnfin --target ${{ matrix.target }}
-        env:
-          # A Windows binary that needs the Visual C++ redistributable installed first
-          # is a binary that does not run on the machine it was downloaded to.
-          RUSTFLAGS: ${{ runner.os == 'Windows' && '-C target-feature=+crt-static' || '' }}
 
-      - name: Assemble the archive
+      - name: Package
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p dist
-          cp "${BINARY}" "dist/vnfin"
-          cp LICENSE "dist/LICENSE"
-          cp THIRD-PARTY-NOTICES.md "dist/THIRD-PARTY-NOTICES.md"
-          cp README.md "dist/README.md"
-          if [ "${{ matrix.archive }}" = "zip" ]; then
-            cp "${BINARY}" "dist/vnfin.exe"
-            rm -f "dist/vnfin"
-            (cd dist && 7z a -tzip "../${{ matrix.name }}.zip" .)
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          NAME="${STEM}-${VERSION}-${{ matrix.system }}-${{ matrix.arch }}"
+          ROOT="${STEM}-${VERSION}"
+          mkdir -p "dist/${ROOT}"
+          cp README.md LICENSE THIRD-PARTY-NOTICES.md "dist/${ROOT}/"
+          if [ "${{ matrix.system }}" = "windows" ]; then
+            cp "target/${{ matrix.target }}/release/vnfin.exe" "dist/${ROOT}/"
+            # bsdtar writes forward-slash entries; the GNU tar in Git Bash does not make
+            # a zip at all, so the Windows bsdtar is called explicitly.
+            "/c/Windows/System32/tar.exe" -a -c -f "dist/${NAME}.zip" -C dist "${ROOT}"
           else
-            tar -C dist -czf "${{ matrix.name }}.tar.gz" .
+            cp "target/${{ matrix.target }}/release/vnfin" "dist/${ROOT}/"
+            (cd dist && tar -czf "${NAME}.tar.gz" "${ROOT}")
           fi
-        env:
-          BINARY: ${{ matrix.binary }}
+          cp "dist/${NAME}.${{ matrix.ext }}" .
+          echo "ASSET=${NAME}.${{ matrix.ext }}" >> "$GITHUB_ENV"
 
-      - name: Checksum
+      - name: Upload
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          gh release upload "$TAG" "$ASSET" --clobber
+
+  checksums:
+    name: SHA256SUMS.txt
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # A checksum file computed before the last upload is a lie, so this job waits for
+      # every build and re-downloads what was actually published.
+      - name: Collect and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if [ "${{ matrix.archive }}" = "zip" ]; then
-            sha256sum "${{ matrix.name }}.zip" > "${{ matrix.name }}.zip.sha256"
-          else
-            sha256sum "${{ matrix.name }}.tar.gz" > "${{ matrix.name }}.tar.gz.sha256"
-          fi
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}
-          path: |
-            ${{ matrix.name }}.${{ matrix.archive }}
-            ${{ matrix.name }}.${{ matrix.archive }}.sha256
-          if-no-files-found: error
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          mkdir -p assets
+          gh release download "$TAG" --pattern '*' --dir assets
+          rm -f assets/SHA256SUMS.txt
+          (cd assets && sha256sum ./* > SHA256SUMS.txt)
+          gh release upload "$TAG" assets/SHA256SUMS.txt --clobber
 
   publish:
-    name: Publish the release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
+    name: Publish
+    needs: checksums
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Write the release notes
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          {
-            echo "One window, one folder, no network."
-            echo
-            echo "Download the file for your system, verify it against the matching \`.sha256\`, and run it. There is nothing to install and nothing to configure: the application opens the vault at \`~/.vn-finance\` (or \`%USERPROFILE%\\.vn-finance\` on Windows)."
-            echo
-            echo "| Platform | File |"
-            echo "| --- | --- |"
-            echo "| Windows 10/11, 64-bit | \`vnfin-windows-x86_64.zip\` |"
-            echo "| macOS 11+, Intel or Apple silicon | \`vnfin-macos-universal.tar.gz\` |"
-            echo "| Linux, 64-bit (glibc 2.35+) | \`vnfin-linux-x86_64.tar.gz\` |"
-            echo
-            echo "The Linux build needs the system's own windowing libraries (X11 or Wayland, and OpenGL); they are present on any desktop distribution."
-            echo
-            echo "The source of every file here is the tag this release was built from, under the GNU AGPL v3."
-            echo
-            echo "SHA-256:"
-            echo '```'
-            cat artifacts/*.sha256
-            echo '```'
-          } > notes.md
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          body_path: notes.md
-          files: |
-            artifacts/vnfin-windows-x86_64.zip
-            artifacts/vnfin-macos-universal.tar.gz
-            artifacts/vnfin-linux-x86_64.tar.gz
-            artifacts/*.sha256
-          fail_on_unmatched_files: true
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          gh release edit "$TAG" --draft=false

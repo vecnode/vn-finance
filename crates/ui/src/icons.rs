@@ -28,6 +28,8 @@ pub enum Icon {
     Book,
     /// About: an information mark.
     Info,
+    /// The profile: a head over a pair of shoulders.
+    Person,
     /// Show or hide: an eye.
     Eye,
 }
@@ -145,6 +147,17 @@ pub fn draw(painter: &Painter, rect: Rect, colour: Color32, icon: Icon) {
             painter.circle_stroke(point(8.0, 8.0), 6.2 * scale, stroke);
             line(&[(8.0, 7.2), (8.0, 11.4)]);
             painter.circle_filled(point(8.0, 5.0), 0.8 * scale, colour);
+        }
+        Icon::Person => {
+            painter.circle_stroke(point(8.0, 5.0), 2.9 * scale, stroke);
+            // The shoulders: a semicircle, sampled, because egui has no arc primitive
+            // and a stroked path of twelve segments is indistinguishable from one.
+            let mut shoulders = Vec::with_capacity(13);
+            for step in 0..=12 {
+                let angle = std::f32::consts::PI * (1.0 + step as f32 / 12.0);
+                shoulders.push(point(8.0 + 4.8 * angle.cos(), 14.8 + 4.8 * angle.sin()));
+            }
+            painter.add(egui::Shape::line(shoulders, stroke));
         }
         Icon::Eye => {
             line(&[

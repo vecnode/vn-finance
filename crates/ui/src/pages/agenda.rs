@@ -75,14 +75,18 @@ impl Filter {
 }
 
 /// The table's columns.
+///
+/// The fixed widths add up to 496 and the obligation column takes what is left, so the
+/// table fills the content area without ever needing a horizontal bar: when the window
+/// is too narrow for these widths, `widths_for` scales the whole set down.
 fn columns() -> [Column; 6] {
     [
-        Column::at("Estado", 104.0),
+        Column::at("Estado", 96.0),
         Column::new("Obrigação"),
-        Column::at("Vence", 104.0),
-        Column::at("Base legal", 150.0),
+        Column::at("Vence", 96.0),
+        Column::at("Base legal", 132.0),
         Column::at("Docs", 56.0).right(),
-        Column::at("Ação", 124.0),
+        Column::at("Ação", 116.0),
     ]
 }
 
@@ -174,11 +178,19 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, filter: Filter, today: &str) ->
                 if instance.legal_basis.is_empty() {
                     cells_nothing(ui);
                 } else {
-                    ui.label(
-                        egui::RichText::new(instance.legal_basis.join(" · "))
-                            .size(theme::CAPTION)
-                            .color(theme::palette(ui.ctx()).text_3),
-                    );
+                    // The first article, clipped to one line, with the rest a hover away:
+                    // a decree that amended another decree three times is nine lines in a
+                    // column that has room for two, and one row then towers over the rest
+                    // of the table.
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new(&instance.legal_basis[0])
+                                .size(theme::CAPTION)
+                                .color(theme::palette(ui.ctx()).text_3),
+                        )
+                        .truncate(),
+                    )
+                    .on_hover_text(instance.legal_basis.join("\n"));
                 }
                 if instance.verification != Verification::Verified {
                     widgets::badge(ui, verification_label(instance.verification), Tone::Warn);

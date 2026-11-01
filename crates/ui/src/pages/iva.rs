@@ -37,15 +37,16 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str) -> Option<Action> 
         None => "Sem perfil",
     };
 
-    widgets::section(
+    // No heading here: the window's header already says "IVA — O IVA liquidado, por
+    // trimestre", and a second title two centimetres below it is the same words twice.
+    widgets::caption(ui, &format!("{declared} · {current}.º trimestre em curso"));
+    ui.add_space(6.0);
+    widgets::lead(
         ui,
-        "IVA",
-        Some(&format!("{declared} · {}.º trimestre em curso", current)),
-        Some(
-            "O IVA que cobraste aos clientes. É dinheiro que passou por ti: fica em dívida até à \
-             declaração periódica, e é por isso que a reserva recomendada também o tem em conta.",
-        ),
+        "O IVA que cobraste aos clientes. É dinheiro que passou por ti: fica em dívida até à \
+         declaração periódica, e é por isso que a reserva recomendada também o tem em conta.",
     );
+    ui.add_space(12.0);
 
     let total: i64 = model
         .quarters
@@ -91,9 +92,9 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str) -> Option<Action> 
                 widgets::caption(ui, &format!("{} – {}", quarter.start, quarter.end));
             });
             cells.mono(&quarter.totals.invoice_count.to_string());
-            cells.custom(|ui| money_right(ui, quarter.totals.base_cents));
-            cells.custom(|ui| money_right(ui, quarter.totals.iva_liquidado_cents));
-            cells.custom(|ui| money_right(ui, quarter.totals.retencao_sofrida_cents));
+            cells.figure(&format_eur(quarter.totals.base_cents));
+            cells.figure(&format_eur(quarter.totals.iva_liquidado_cents));
+            cells.figure(&format_eur(quarter.totals.retencao_sofrida_cents));
         },
     );
 
@@ -143,16 +144,4 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str) -> Option<Action> 
          o pacote de regras acrescenta as declarações próprias à agenda.",
     );
     action
-}
-
-/// A figure, right-aligned the way a column of money reads.
-fn money_right(ui: &mut Ui, cents: i64) {
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-        ui.label(
-            egui::RichText::new(format_eur(cents))
-                .size(theme::BODY_SMALL)
-                .monospace()
-                .color(theme::palette(ui.ctx()).text),
-        );
-    });
 }

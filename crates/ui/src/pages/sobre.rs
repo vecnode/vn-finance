@@ -40,8 +40,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                 ui.painter()
                     .circle_stroke(rect.center(), 6.0, egui::Stroke::new(1.0, palette.ok));
                 ui.painter().circle_filled(rect.center(), 2.5, palette.ok);
-                ui.scope(|ui| {
-                    ui.set_max_width(760.0);
+                widgets::capped(ui, 760.0, |ui| {
                     ui.label(
                         egui::RichText::new(line)
                             .size(theme::BODY_SMALL)
@@ -123,12 +122,6 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
         );
     });
 
-    ui.add_space(12.0);
-    widgets::footnote(
-        ui,
-        "Os valores e prazos vêm do pacote de regras embutido no binário, com a data de recolha de \
-         cada fonte. Um pacote desatualizado não inventa datas: diz que não as tem.",
-    );
     let _ = ui;
     action
 }

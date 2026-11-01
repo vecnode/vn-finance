@@ -139,7 +139,38 @@ impl Page {
     }
 }
 
+/// The size the window opens at.
+pub const WINDOW_START: [f32; 2] = [1180.0, 780.0];
+
+/// The smallest the window may be made.
+///
+/// The height is not an aesthetic choice. The rail lists ten pages in three groups and
+/// closes with the profile button, and the rail does not scroll, so the whole list has
+/// to fit above the privacy lines at its foot. Measured, the list ends at 614 points and
+/// the foot begins at `height - 64`, so 700 leaves the last row 22 points of air.
+/// `the_rail_fits_in_the_smallest_window` checks exactly that, so a page added to
+/// `Page::ALL` which pushes the list past this height fails the test instead of quietly
+/// hiding the last button under the foot.
+pub const WINDOW_MIN: [f32; 2] = [920.0, 700.0];
+
+/// The height of the rail's foot: the two lines that say where the data lives.
+///
+/// Fixed rather than measured from the text, because the rail's fit is computed from it
+/// and the calculation has to hold on the first frame, before any text has been laid
+/// out.
+pub const RAIL_FOOT: f32 = 64.0;
+
+/// The height of one row of the rail, page or button.
+///
+/// Not private, because "does the last row still fit" is a question the render test
+/// answers from the label it can see, and the row extends above and below that label.
+pub const RAIL_ROW: f32 = 32.0;
+
 /// The window.
+///
+/// One theme, the light one. The palette still carries a dark set — the contrast tests
+/// check both, and the day this window grows a switch the colours are ready — but the
+/// application itself is white, which is what it was asked to be.
 pub struct App {
     session: Session,
     model: Option<DashboardModel>,
@@ -148,19 +179,18 @@ pub struct App {
     page: Page,
     today: String,
     year: i64,
-    dark: bool,
-    theme_applied: Option<bool>,
-    reveal_nif: bool,
+    /// Whether the light palette has been pushed into the context yet.
+    ///
+    /// The window is painted from the theme it pins on its first frame: a test that
+    /// builds an `App` with no graphics context still draws the white window, and the
+    /// system's own dark mode cannot repaint it halfway through.
+    theme_applied: bool,
     /// A line under the header confirming the last thing that happened.
     status: Option<String>,
     /// Which agenda view is showing.
     filter: agenda::Filter,
     /// Which quarter the Segurança Social page shows.
     quarter: i64,
-    /// The path typed into the Cofre's archive field.
-    archive_path: String,
-    /// The kind chosen for the next archived document.
-    archive_kind: String,
     /// The receipt-import form, and whether it is open.
     receipt: receipt_form::Form,
     /// The profile form, and whether it is open.
@@ -171,14 +201,15 @@ impl App {
     /// Build the window from an open session.
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>, session: Session, today: &str, year: i64) -> Self {
-        let dark = theme::is_dark(&cc.egui_ctx);
-        theme::apply(&cc.egui_ctx, dark);
-        Self::build(session, today, year, dark)
+        theme::apply(&cc.egui_ctx, false);
+        let mut app = Self::build(session, today, year);
+        app.theme_applied = true;
+        app
     }
 
     /// Build the window without a graphics context, which is what a render test does.
     #[must_use]
-    pub fn build(session: Session, today: &str, year: i64, dark: bool) -> Self {
+    pub fn build(session: Session, today: &str, year: i64) -> Self {
         let mut app = Self {
             session,
             model: None,
@@ -186,14 +217,10 @@ impl App {
             page: Page::Painel,
             today: today.to_owned(),
             year,
-            dark,
-            theme_applied: Some(dark),
-            reveal_nif: false,
+            theme_applied: false,
             status: None,
             filter: agenda::Filter::default(),
             quarter: pages::painel::current_quarter(today),
-            archive_path: String::new(),
-            archive_kind: "comprovativo".to_owned(),
             receipt: receipt_form::Form::default(),
             profile: profile::Form::default(),
         };
@@ -329,11 +356,32 @@ impl App {
         let Some(invoice) = result.invoice else {
             return;
         };
+        // The PDF was archived before the invoice existed, so the index does not know
+        // what it belongs to. Now it does: the document the invoice table shows is the
+        // one this invoice was read from.
+        let document_file = self.receipt.document_file.clone();
         match self.session.vault().append_invoice(&invoice, &now) {
             Ok(()) => {
+                let linked = match &document_file {
+                    Some(file) => self
+                        .session
+                        .vault()
+                        .link_document_to_invoice(file, &invoice.id, &now),
+                    None => Ok(false),
+                };
                 self.receipt = receipt_form::Form::default();
                 self.reload();
-                self.status = Some(format!("Fatura {} registada no livro.", invoice.number));
+                self.status = Some(match linked {
+                    Ok(true) => format!(
+                        "Fatura {} registada no livro, e o PDF ligado no cofre.",
+                        invoice.number
+                    ),
+                    Ok(false) => format!("Fatura {} registada no livro.", invoice.number),
+                    Err(error) => format!(
+                        "Fatura {} registada no livro; o PDF não ficou ligado: {error}",
+                        invoice.number
+                    ),
+                });
             }
             Err(error) => {
                 self.receipt.problems = vec![error.to_string()];
@@ -341,168 +389,83 @@ impl App {
         }
     }
 
-    /// The header: what the window is, and the four facts about the year.
+    /// The header: what the window is, and which page it is showing.
+    ///
+    /// Deliberately two lines and nothing else. The facts that used to sit on the right
+    /// — the folder, the exercise, the pack's counts, today — are all on the
+    /// Diagnóstico page, where somebody asking about them can read them properly
+    /// instead of squinting at a caption.
     fn header(&mut self, ui: &mut egui::Ui) {
         let palette = theme::palette(ui.ctx());
-        let mut open_profile = false;
-        ui.add_space(10.0);
-        ui.horizontal(|ui| {
-            ui.vertical(|ui| {
-                ui.label(
-                    egui::RichText::new("vn-finance")
-                        .size(theme::PAGE_TITLE)
-                        .strong()
-                        .color(palette.text),
-                );
-                ui.label(
-                    egui::RichText::new(format!("{} — {}", self.page.label(), self.page.subtitle()))
-                        .size(theme::BODY_SMALL)
-                        .color(palette.text_3),
-                );
-            });
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if widgets::chip(ui, false, "Local · dados só neste computador").clicked() {
-                    // A chip is a statement, not a button; clicking it only explains.
-                    self.status = Some(
-                        "Nada sai deste computador: esta aplicação não abre ligações de rede.".to_owned(),
-                    );
-                }
-                if widgets::chip(ui, self.dark, if self.dark { "Escuro" } else { "Claro" }).clicked() {
-                    self.dark = !self.dark;
-                }
-                if widgets::chip(ui, false, "Perfil").clicked() {
-                    open_profile = true;
-                }
-                if let Some(model) = &self.model
-                    && !model.meta.data_dir.is_empty()
-                {
-                    ui.add(
-                        egui::Label::new(
-                            egui::RichText::new(&model.meta.data_dir)
-                                .size(theme::MONO)
-                                .monospace()
-                                .color(palette.text_3),
-                        )
-                        .truncate(),
-                    );
-                }
-                ui.label(
-                    egui::RichText::new(format!("Exercício {}", self.year))
-                        .size(theme::CAPTION)
-                        .color(palette.text_2),
-                );
-            });
-        });
         ui.add_space(6.0);
-        ui.horizontal(|ui| {
-            if let Some(model) = &self.model {
-                if let Some(profile) = &model.profile {
-                    let regime = match profile.iva.regime {
-                        vnf_core::types::IvaRegime::IsentoArt53 => "isento art. 53.º",
-                        vnf_core::types::IvaRegime::Mensal => "mensal",
-                        vnf_core::types::IvaRegime::Trimestral => "trimestral",
-                    };
+        ui.vertical(|ui| {
+            // Two lines that belong together: the gap the window uses between widgets
+            // is a paragraph gap, and here it separated a title from its own subtitle.
+            ui.spacing_mut().item_spacing.y = 1.0;
+            ui.label(
+                egui::RichText::new("vn-finance")
+                    .size(theme::PAGE_TITLE)
+                    .strong()
+                    .color(palette.text),
+            );
+            ui.label(
+                egui::RichText::new(format!("{} — {}", self.page.label(), self.page.subtitle()))
+                    .size(theme::BODY_SMALL)
+                    .color(palette.text_3),
+            );
+        });
+        ui.add_space(7.0);
+        let (rect, _) =
+            ui.allocate_exact_size(egui::Vec2::new(ui.available_width(), 1.0), egui::Sense::hover());
+        ui.painter().hline(
+            rect.x_range(),
+            rect.center().y,
+            egui::Stroke::new(1.0, palette.border),
+        );
+    }
+
+    /// The rail: the pages, the profile, and the privacy lines at its foot.
+    ///
+    /// No brand here: the window already says "vn-finance" in the header, and a second
+    /// copy at the top of the rail was two titles for one window. The rail starts at
+    /// the first group of pages, ends with the profile, and does not scroll: a bar
+    /// between the rail and the page reads as a border on a window that already has one.
+    /// What keeps every button reachable is [`WINDOW_MIN`], which is measured in
+    /// `the_rail_fits_in_the_smallest_window` rather than guessed at.
+    fn rail(&mut self, ui: &mut egui::Ui) {
+        let palette = theme::palette(ui.ctx());
+        let mut open_profile = false;
+        // A navigation list is not a page of prose: the rows are 32 high on their own, and
+        // the 8-point gap the rest of the window uses between widgets turns ten rows into
+        // a list that needs the whole height of a laptop.
+        ui.spacing_mut().item_spacing.y = 2.0;
+
+        // The foot is a panel of its own with a height of its own, so the lines are
+        // always at the bottom of the rail and their height does not depend on how the
+        // text happens to wrap this frame.
+        egui::Panel::bottom("rail_foot")
+            .exact_size(RAIL_FOOT)
+            .frame(
+                egui::Frame::new()
+                    .fill(palette.surface)
+                    .inner_margin(egui::Margin::symmetric(18, 12)),
+            )
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    icons::inline(ui, Icon::Lock, 13.0, palette.ok);
                     ui.label(
-                        egui::RichText::new(format!("IVA {regime}"))
-                            .size(theme::CAPTION)
-                            .color(palette.text_2),
-                    );
-                    ui.label(
-                        egui::RichText::new(format!(
-                            "IRS {}",
-                            match profile.irs.regime {
-                                vnf_core::types::IrsRegime::Simplificado => "simplificado",
-                                vnf_core::types::IrsRegime::Organizada => "organizada",
-                            }
-                        ))
-                        .size(theme::CAPTION)
-                        .color(palette.text_2),
-                    );
-                    ui.separator();
-                    let masked = if self.reveal_nif {
-                        profile.nif.clone()
-                    } else {
-                        vnf_core::nif::mask_nif(&profile.nif)
-                    };
-                    ui.label(
-                        egui::RichText::new(format!("NIF {masked}"))
-                            .size(theme::CAPTION)
-                            .monospace()
-                            .color(palette.text_2),
-                    );
-                    if widgets::chip(
-                        ui,
-                        self.reveal_nif,
-                        if self.reveal_nif { "ocultar" } else { "revelar" },
-                    )
-                    .clicked()
-                    {
-                        self.reveal_nif = !self.reveal_nif;
-                    }
-                } else {
-                    ui.label(
-                        egui::RichText::new("Ainda não há perfil neste cofre")
+                        egui::RichText::new("Dados só neste computador")
                             .size(theme::CAPTION)
                             .color(palette.text_3),
                     );
-                }
-                ui.separator();
+                });
+                ui.add_space(2.0);
                 ui.label(
-                    egui::RichText::new(format!(
-                        "Regras pt/{} · {} verificadas · {} por verificar",
-                        model.pack.summary.pack_version,
-                        model.pack.summary.verified,
-                        model.pack.summary.unverified + model.pack.summary.partial
-                    ))
-                    .size(theme::CAPTION)
-                    .color(palette.text_3),
-                );
-                ui.label(
-                    egui::RichText::new(format!("hoje {}", self.today))
+                    egui::RichText::new("Sem telemetria · sem servidores")
                         .size(theme::CAPTION)
                         .color(palette.text_4),
                 );
-            }
-        });
-        ui.add_space(10.0);
-        let (rect, _) =
-            ui.allocate_exact_size(egui::Vec2::new(ui.available_width(), 1.0), egui::Sense::hover());
-        ui.painter().hline(
-            rect.x_range(),
-            rect.center().y,
-            egui::Stroke::new(1.0, palette.border),
-        );
-        if open_profile {
-            self.open_profile();
-        }
-    }
-
-    /// The rail: the brand, the pages, and what the pack says about itself.
-    fn rail(&mut self, ui: &mut egui::Ui) {
-        let palette = theme::palette(ui.ctx());
-        ui.add_space(14.0);
-        ui.horizontal(|ui| {
-            let (rect, _) = ui.allocate_exact_size(egui::Vec2::splat(21.0), egui::Sense::hover());
-            icons::draw(ui.painter(), rect, palette.accent, Icon::Dashboard);
-            ui.vertical(|ui| {
-                ui.label(
-                    egui::RichText::new("vn-finance")
-                        .size(15.0)
-                        .strong()
-                        .color(palette.text),
-                );
-                widgets::micro_label(ui, "contabilidade local", palette.text_4);
             });
-        });
-        ui.add_space(10.0);
-        let (rect, _) =
-            ui.allocate_exact_size(egui::Vec2::new(ui.available_width(), 1.0), egui::Sense::hover());
-        ui.painter().hline(
-            rect.x_range(),
-            rect.center().y,
-            egui::Stroke::new(1.0, palette.border),
-        );
-        ui.add_space(6.0);
 
         let counters = self.counters();
         let mut previous_group = "";
@@ -517,53 +480,30 @@ impl App {
                 previous_group = page.group();
             }
             let selected = page == self.page;
-            let response = nav_item(ui, page, selected, counters.count_for(page));
-            if response.clicked() {
+            if nav_item(ui, page, selected, counters.count_for(page)).clicked() {
                 self.page = page;
             }
         }
 
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            ui.add_space(12.0);
-            ui.horizontal(|ui| {
-                ui.add_space(18.0);
-                icons::inline(ui, Icon::Lock, 13.0, palette.ok);
-                ui.label(
-                    egui::RichText::new("Dados só neste computador")
-                        .size(theme::CAPTION)
-                        .color(palette.text_3),
-                );
-            });
-            if let Some(model) = &self.model {
-                ui.horizontal(|ui| {
-                    ui.add_space(18.0);
-                    ui.label(
-                        egui::RichText::new(format!(
-                            "Pacote pt/{} · {} fontes",
-                            model.pack.summary.pack_version, model.pack.summary.sources
-                        ))
-                        .size(theme::CAPTION)
-                        .color(palette.text_4),
-                    );
-                });
-            }
-            ui.horizontal(|ui| {
-                ui.add_space(18.0);
-                ui.label(
-                    egui::RichText::new("Sem telemetria · sem servidores")
-                        .size(theme::CAPTION)
-                        .color(palette.text_4),
-                );
-            });
-            ui.add_space(6.0);
-            let (rect, _) =
-                ui.allocate_exact_size(egui::Vec2::new(ui.available_width(), 1.0), egui::Sense::hover());
-            ui.painter().hline(
-                rect.x_range(),
-                rect.center().y,
-                egui::Stroke::new(1.0, palette.border),
-            );
-        });
+        // The profile closes the list. It is a place you go, like a page, so it belongs
+        // where the eye finishes the navigation — not in the top bar beside the title,
+        // where it was the only thing that moved.
+        ui.add_space(14.0);
+        let (rect, _) =
+            ui.allocate_exact_size(egui::Vec2::new(ui.available_width(), 1.0), egui::Sense::hover());
+        ui.painter().hline(
+            rect.x_range(),
+            rect.center().y,
+            egui::Stroke::new(1.0, palette.border),
+        );
+        ui.add_space(6.0);
+        if rail_button(ui, "Perfil").clicked() {
+            open_profile = true;
+        }
+
+        if open_profile {
+            self.open_profile();
+        }
     }
 
     /// What each rail item counts, from the one model.
@@ -661,8 +601,6 @@ impl App {
         };
         let filter = self.filter;
         let quarter = self.quarter;
-        let mut path = std::mem::take(&mut self.archive_path);
-        let kind = self.archive_kind.clone();
         // The pages borrow the model immutably and return what they want done; the
         // window performs it and rebuilds. Nothing below writes to the vault.
         let action = match page {
@@ -672,12 +610,11 @@ impl App {
             Page::SegurancaSocial => pages::seguranca_social::show(ui, model, &today, quarter),
             Page::Iva => pages::iva::show(ui, model, &today),
             Page::Irs => pages::irs::show(ui, model),
-            Page::Cofre => pages::cofre::show(ui, model, &mut path, &kind),
+            Page::Cofre => pages::cofre::show(ui, model),
             Page::Regras => pages::regras::show(ui, model),
             Page::Diagnostico => pages::diagnostico::show(ui, model),
             Page::Sobre => pages::sobre::show(ui, model),
         };
-        self.archive_path = path;
         if let Some(action) = action {
             self.perform(action);
         }
@@ -722,30 +659,6 @@ impl App {
                     Ok(()) => {
                         self.reload();
                         self.status = Some(format!("Registado como tratado: {id}"));
-                    }
-                    Err(error) => self.status = Some(error.to_string()),
-                }
-            }
-            pages::Action::Archive { path, kind } => {
-                let now = vnf_store::clock::now_iso8601();
-                let meta = vnf_store::documents::DocumentMeta {
-                    kind: if kind.trim().is_empty() {
-                        None
-                    } else {
-                        Some(kind.as_str())
-                    },
-                    obligation_id: None,
-                    invoice_id: None,
-                };
-                match self
-                    .session
-                    .vault()
-                    .add_document(std::path::Path::new(&path), meta, &now)
-                {
-                    Ok(document) => {
-                        self.archive_path.clear();
-                        self.reload();
-                        self.status = Some(format!("Arquivado: {}", document.file));
                     }
                     Err(error) => self.status = Some(error.to_string()),
                 }
@@ -807,9 +720,9 @@ impl App {
     /// honestly assert about a layout.
     pub fn draw(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
-        if self.theme_applied != Some(self.dark) {
-            theme::apply(&ctx, self.dark);
-            self.theme_applied = Some(self.dark);
+        if !self.theme_applied {
+            theme::apply(&ctx, false);
+            self.theme_applied = true;
         }
         let palette = theme::palette(&ctx);
 
@@ -817,7 +730,7 @@ impl App {
             .frame(
                 egui::Frame::new()
                     .fill(palette.surface)
-                    .inner_margin(egui::Margin::symmetric(22, 12)),
+                    .inner_margin(egui::Margin::symmetric(22, 8)),
             )
             .show(ui, |ui| self.header(ui));
 
@@ -858,13 +771,23 @@ impl App {
             .frame(
                 egui::Frame::new()
                     .fill(palette.bg)
-                    .inner_margin(egui::Margin::symmetric(28, 22)),
+                    .inner_margin(egui::Margin::symmetric(theme::CONTENT_MARGIN as i8, 16)),
             )
             .show(ui, |ui| {
+                // Vertical only. A page may be taller than the window — most of them are
+                // — but never wider: the tables scale their columns to the room they have
+                // (see `widgets::table`), the section hints truncate, and the prose wraps.
+                // A horizontal bar was the old way of hiding that a filter row or a set of
+                // columns was a few points too wide; `no_page_paints_past_the_right_edge`
+                // now fails the build instead.
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        ui.set_max_width(theme::CONTENT_MAX_WIDTH);
+                        // The cap is a maximum, so it has to be applied as one: a bare
+                        // `set_max_width(CONTENT_MAX_WIDTH)` *widens* the page to 1440 on
+                        // a laptop, and then every card is wider than the window it sits
+                        // in. On anything narrower than the cap, the viewport wins.
+                        ui.set_max_width(ui.available_width().min(theme::CONTENT_MAX_WIDTH));
                         self.content(ui);
                     });
             });
@@ -907,7 +830,7 @@ fn key_for(number: usize) -> egui::Key {
 /// One row of the rail.
 fn nav_item(ui: &mut egui::Ui, page: Page, selected: bool, count: Option<(usize, bool)>) -> egui::Response {
     let palette = theme::palette(ui.ctx());
-    let height = 32.0;
+    let height = RAIL_ROW;
     let (rect, response) = ui.allocate_exact_size(
         egui::Vec2::new(ui.available_width(), height),
         egui::Sense::click(),
@@ -971,6 +894,33 @@ fn nav_item(ui: &mut egui::Ui, page: Page, selected: bool, count: Option<(usize,
     response
 }
 
+/// A button in the rail, the width of the rail, aligned with the page rows.
+fn rail_button(ui: &mut egui::Ui, label: &str) -> egui::Response {
+    let palette = theme::palette(ui.ctx());
+    let height = 30.0;
+    let (rect, response) = ui.allocate_exact_size(
+        egui::Vec2::new(ui.available_width(), height),
+        egui::Sense::click(),
+    );
+    if response.hovered() {
+        ui.painter()
+            .rect_filled(rect, egui::CornerRadius::ZERO, palette.surface_2);
+    }
+    let icon_rect = egui::Rect::from_min_size(
+        egui::pos2(rect.left() + 18.0, rect.center().y - 7.0),
+        egui::Vec2::splat(14.0),
+    );
+    icons::draw(ui.painter(), icon_rect, palette.text_4, Icon::Person);
+    ui.painter().text(
+        egui::pos2(rect.left() + 43.0, rect.center().y),
+        egui::Align2::LEFT_CENTER,
+        label,
+        egui::FontId::proportional(theme::BODY),
+        palette.text_2,
+    );
+    response
+}
+
 /// What the rail shows beside each page.
 #[derive(Debug, Clone, Copy, Default)]
 struct Counters {
@@ -1001,17 +951,19 @@ impl Counters {
 pub struct Failure {
     message: String,
     today: String,
+    /// See [`App::theme_applied`]: the refusal window is white too.
+    theme_applied: bool,
 }
 
 impl Failure {
     /// Build the window around a message.
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>, message: String, today: &str) -> Self {
-        let dark = theme::is_dark(&cc.egui_ctx);
-        theme::apply(&cc.egui_ctx, dark);
+        theme::apply(&cc.egui_ctx, false);
         Self {
             message,
             today: today.to_owned(),
+            theme_applied: true,
         }
     }
 
@@ -1021,12 +973,17 @@ impl Failure {
         Self {
             message,
             today: today.to_owned(),
+            theme_applied: false,
         }
     }
 
     /// Draw the window.
     pub fn draw(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
+        if !self.theme_applied {
+            theme::apply(&ctx, false);
+            self.theme_applied = true;
+        }
         let palette = theme::palette(&ctx);
         egui::CentralPanel::default()
             .frame(

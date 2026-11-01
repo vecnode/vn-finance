@@ -14,6 +14,9 @@ use crate::pages::painel::current_quarter;
 use crate::theme;
 use crate::widgets::{self, Def, Tone};
 
+/// The height of a quarter chip, which is the line the badge beside it has to sit on.
+const CHIP_HEIGHT: f32 = 24.0;
+
 /// Draw the page, for the quarter chosen.
 pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> Option<Action> {
     let mut action = None;
@@ -38,7 +41,14 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
             }
         }
         if quarter == current {
-            widgets::badge(ui, "em curso", Tone::Accent);
+            // A badge is shorter than a chip, and the wrap layout puts it on the row's
+            // bottom line rather than its middle: give it a cell the height of a chip and
+            // centre it there, so the row has one baseline.
+            ui.allocate_ui_with_layout(
+                egui::Vec2::new(90.0, CHIP_HEIGHT),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| widgets::badge(ui, "em curso", Tone::Accent),
+            );
         }
     });
     ui.add_space(12.0);
@@ -59,38 +69,56 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
     }
 
     let contribution = &report.social_security;
-    widgets::card(ui, |ui| {
-        widgets::micro_label(ui, "a conta do trimestre", theme::palette(ui.ctx()).text_3);
-        ui.add_space(8.0);
-        widgets::defs(
-            ui,
-            &[
-                Def {
-                    label: "Rendimento de serviços",
-                    value: &format_eur(contribution.service_income_cents),
-                    small: Some(&format!(
-                        "{} documentos entre {} e {}",
-                        report.totals.invoice_count, report.start, report.end
-                    )),
-                },
-                Def {
-                    label: "Quota relevante",
-                    value: &format_bp_as_percent(contribution.relevant_income_share_bp),
-                    small: Some("a parte do rendimento de serviços sujeita a contribuição"),
-                },
-                Def {
-                    label: "Rendimento relevante",
-                    value: &format_eur(contribution.relevant_income_cents),
-                    small: Some("rendimento de serviços × quota relevante"),
-                },
-                Def {
-                    label: "Taxa contributiva",
-                    value: &format_bp_as_percent(contribution.contribution_rate_bp),
-                    small: Some("taxa do regime dos trabalhadores independentes"),
-                },
-            ],
-        );
-    });
+    // The account, as a table: the step, its figure, and the sentence that says how the
+    // figure was obtained. It was a definition list before, which put the figure and the
+    // sentence in one column and left the labels floating against a rule that stopped
+    // short of them.
+    let documents = format!(
+        "{} documentos entre {} e {}",
+        report.totals.invoice_count, report.start, report.end
+    );
+    let service_income = format_eur(contribution.service_income_cents);
+    let share = format_bp_as_percent(contribution.relevant_income_share_bp);
+    let relevant = format_eur(contribution.relevant_income_cents);
+    let rate = format_bp_as_percent(contribution.contribution_rate_bp);
+    let steps = [
+        Def {
+            label: "Rendimento de serviços",
+            value: &service_income,
+            small: Some(&documents),
+        },
+        Def {
+            label: "Quota relevante",
+            value: &share,
+            small: Some("a parte do rendimento de serviços sujeita a contribuição"),
+        },
+        Def {
+            label: "Rendimento relevante",
+            value: &relevant,
+            small: Some("rendimento de serviços × quota relevante"),
+        },
+        Def {
+            label: "Taxa contributiva",
+            value: &rate,
+            small: Some("taxa do regime dos trabalhadores independentes"),
+        },
+    ];
+    let columns = [
+        widgets::Column::new("Passo"),
+        widgets::Column::at("Valor", 150.0).right(),
+        widgets::Column::new("Como se obtém"),
+    ];
+    widgets::table(
+        ui,
+        &columns,
+        &steps,
+        |_| false,
+        |cells, step| {
+            cells.strong(step.label);
+            cells.figure(step.value);
+            cells.muted(step.small.unwrap_or("—"));
+        },
+    );
 
     ui.add_space(14.0);
     let palette = theme::palette(ui.ctx());
@@ -150,11 +178,9 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
                 );
             });
             cells.mono(&report.totals.invoice_count.to_string());
-            cells.custom(|ui| money_right(ui, report.social_security.service_income_cents));
-            cells.custom(|ui| {
-                money_right(ui, report.social_security.relevant_income_cents);
-            });
-            cells.custom(|ui| money_right(ui, report.social_security.contribution_cents));
+            cells.figure(&format_eur(report.social_security.service_income_cents));
+            cells.figure(&format_eur(report.social_security.relevant_income_cents));
+            cells.figure(&format_eur(report.social_security.contribution_cents));
         },
     );
 
@@ -176,16 +202,4 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
 #[must_use]
 pub fn contribution_of(report: &QuarterReport) -> &SsContributionEstimate {
     &report.social_security
-}
-
-/// A figure, right-aligned the way a column of money reads.
-fn money_right(ui: &mut Ui, cents: i64) {
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-        ui.label(
-            egui::RichText::new(format_eur(cents))
-                .size(theme::BODY_SMALL)
-                .monospace()
-                .color(theme::palette(ui.ctx()).text),
-        );
-    });
 }

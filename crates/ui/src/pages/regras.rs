@@ -1,4 +1,4 @@
-//! The law: every source the pack cites, and every obligation it declares.
+﻿//! The law: every source the pack cites, and every obligation it declares.
 //!
 //! This page exists so that no figure elsewhere in the application is unfalsifiable.
 //! A number on the IVA page traces back to a constant, the constant to a source, and
@@ -34,7 +34,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     let sources = summary.sources.to_string();
     let obligations = summary.obligations.to_string();
     let verified = format!("{} de {}", summary.verified, summary.obligations);
-    widgets::kpi_row(
+    widgets::kpi_rows(
         ui,
         &[
             Kpi {

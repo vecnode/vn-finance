@@ -2,7 +2,9 @@
 //!
 //! This page is where the privacy claim becomes checkable rather than asserted: the
 //! folder, how it was chosen, whether it sits somewhere dangerous, and every archived
-//! file with its content hash.
+//! file with its content hash. It does not archive anything: documents enter the vault
+//! through the PDF import on the invoices page, which is the only door the application
+//! needs.
 
 use egui::Ui;
 use vnf_store::model::DashboardModel;
@@ -24,12 +26,7 @@ fn columns() -> [Column; 5] {
 }
 
 /// Draw the page.
-pub fn show(
-    ui: &mut Ui,
-    model: &DashboardModel,
-    archive_path: &mut String,
-    archive_kind: &str,
-) -> Option<Action> {
+pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     let mut action = None;
     widgets::section(
         ui,
@@ -130,56 +127,16 @@ pub fn show(
         );
     }
 
-    ui.add_space(16.0);
-    widgets::section(
-        ui,
-        "Arquivar um documento",
-        Some("por caminho no computador"),
-        Some(
-            "Indica o caminho de um ficheiro que já tens. A aplicação copia-o para o cofre, com um \
-             nome que inclui o hash do conteúdo, e regista-o no índice. O original fica onde está.",
-        ),
-    );
-    widgets::card(ui, |ui| {
-        ui.horizontal(|ui| {
-            ui.add(
-                egui::TextEdit::singleline(archive_path)
-                    .hint_text("C:\\caminho\\para\\comprovativo.pdf")
-                    .desired_width(f32::INFINITY)
-                    .font(egui::TextStyle::Body),
-            );
-        });
-        ui.add_space(6.0);
-        ui.horizontal_wrapped(|ui| {
-            widgets::micro_label(ui, "tipo", theme::palette(ui.ctx()).text_3);
-            for kind in ["comprovativo", "declaracao", "fatura", "recibo"] {
-                widgets::badge(
-                    ui,
-                    kind,
-                    if kind == archive_kind {
-                        Tone::Accent
-                    } else {
-                        Tone::Slate
-                    },
-                );
-            }
-        });
-        ui.add_space(8.0);
-        ui.horizontal(|ui| {
-            let ready = !archive_path.trim().is_empty();
-            if widgets::primary_button(ui, "Arquivar").clicked() && ready {
-                action = Some(Action::Archive {
-                    path: archive_path.trim().to_owned(),
-                    kind: archive_kind.to_owned(),
-                });
-            }
-            if !ready {
-                widgets::caption(ui, "indica primeiro o caminho do ficheiro");
-            }
-            if widgets::button(ui, "Recarregar").clicked() {
-                action = Some(Action::Reload);
-            }
-        });
+    ui.add_space(14.0);
+    // No "archive by path" form here: the only thing that puts a document in this vault is
+    // the PDF import on Faturas emitidas, which archives the file and links it to the
+    // invoice in the same action. A second door that copied arbitrary files would be a
+    // capability nothing in the application uses.
+    ui.horizontal(|ui| {
+        if widgets::button(ui, "Recarregar").clicked() {
+            action = Some(Action::Reload);
+        }
+        widgets::caption(ui, "volta a ler o índice do cofre");
     });
 
     ui.add_space(12.0);

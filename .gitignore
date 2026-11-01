@@ -36,3 +36,6 @@ Thumbs.db
 *.log
 .env
 .env.*
+
+# Screenshots taken by hand while working on the window, not part of the product.
+screenshots/

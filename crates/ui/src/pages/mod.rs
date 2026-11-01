@@ -50,13 +50,6 @@ pub enum Action {
     SetFilter(agenda::Filter),
     /// Which quarter the Segurança Social page shows.
     SetQuarter(i64),
-    /// Archive a file the person names by path.
-    Archive {
-        /// Where the file is now.
-        path: String,
-        /// What kind of document it is.
-        kind: String,
-    },
     /// Open the profile form.
     OpenProfile,
     /// Save what the form holds.

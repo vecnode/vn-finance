@@ -178,7 +178,7 @@ pub fn show(ctx: &egui::Context, form: &mut Form) -> Option<Action> {
         widgets::section(
             ui,
             "Registar fatura a partir do PDF",
-            Some("lê o documento, não o adivinha"),
+            None,
             Some(
                 "A aplicação lê o texto do PDF e mostra o que conseguiu ler. Os campos vazios são \
                  campos que o documento não disse: preenche-os a partir do documento. Nada é \

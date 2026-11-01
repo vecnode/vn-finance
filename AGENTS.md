@@ -79,7 +79,7 @@ dashboard.
 | `rules/pt/2026.json` | The versioned rule pack: constants, obligations, sources, verification status |
 | `design/` | The reviewed mockup the window's structure and colour were ported from |
 | `scripts/` | Launchers: `scripts/run.bat` builds the release and opens the window |
-| `docs/` | Domain reference, privacy model, the port plan |
+| `docs/` | Domain reference, privacy model, the port plan, and `UI.md` — the window's own rules: palette, type scale, tables, figures, and the constraints a page has to keep |
 
 ## Branches
 

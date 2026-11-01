@@ -98,7 +98,9 @@ pub fn section(ui: &mut Ui, title: &str, hint: Option<&str>, lead: Option<&str>)
         );
         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
             if let Some(hint) = hint {
-                ui.label(RichText::new(hint).size(theme::CAPTION).color(palette.text_3));
+                // Truncated rather than left to run: a hint long enough to be interesting
+                // is also long enough to push a narrow window sideways.
+                ui.add(Label::new(RichText::new(hint).size(theme::CAPTION).color(palette.text_3)).truncate());
             }
         });
     });
@@ -108,12 +110,41 @@ pub fn section(ui: &mut Ui, title: &str, hint: Option<&str>, lead: Option<&str>)
         .hline(rect.x_range(), rect.center().y, Stroke::new(1.0, palette.border));
     if let Some(lead) = lead {
         ui.add_space(8.0);
-        ui.scope(|ui| {
-            ui.set_max_width(760.0);
+        capped(ui, 760.0, |ui| {
             ui.label(RichText::new(lead).size(theme::BODY).color(palette.text_2));
         });
     }
     ui.add_space(12.0);
+}
+
+/// Draw something in a column of at most `wanted` points — and never wider than what is
+/// left of the page.
+///
+/// `Ui::set_max_width` *sets* the width rather than clamping it, so a paragraph capped
+/// at 760 in a 616-point page is laid out 760 wide and runs off the right edge: text
+/// nobody can reach, on a window that does not scroll sideways. Reserving a child of the
+/// smaller of the two keeps the reading measure on a wide screen and keeps the paragraph
+/// inside the page on a narrow one.
+pub fn capped<R>(ui: &mut Ui, wanted: f32, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let width = ui.available_width().min(wanted);
+    ui.allocate_ui_with_layout(Vec2::new(width, 0.0), Layout::top_down(Align::LEFT), |ui| {
+        ui.set_min_width(width);
+        ui.set_max_width(width);
+        add(ui)
+    })
+    .inner
+}
+
+/// The sentence that explains a page, when the window's own header already carries its
+/// title.
+///
+/// One page does this — IVA, where a heading repeated a title two centimetres above it —
+/// and the paragraph is the same paragraph a [`section`] draws, so the two cannot drift.
+pub fn lead(ui: &mut Ui, text: &str) {
+    let palette = palette(ui.ctx());
+    capped(ui, 760.0, |ui| {
+        ui.label(RichText::new(text).size(theme::BODY).color(palette.text_2));
+    });
 }
 
 /// An uppercase micro-label with the letter-spacing the stylesheet uses.
@@ -144,8 +175,7 @@ pub fn caption(ui: &mut Ui, text: &str) {
 /// A footnote: where a number came from, or what it does not include.
 pub fn footnote(ui: &mut Ui, text: &str) {
     let palette = palette(ui.ctx());
-    ui.scope(|ui| {
-        ui.set_max_width(880.0);
+    capped(ui, 880.0, |ui| {
         ui.label(RichText::new(text).size(theme::BODY_SMALL).color(palette.text_4));
     });
 }
@@ -215,19 +245,63 @@ pub fn severity(ui: &mut Ui, text: &str, tone: Tone) {
         .corner_radius(theme::radius_small())
         .inner_margin(egui::Margin::symmetric(8, 2))
         .show(ui, |ui| {
-            let font = FontId::proportional(theme::MICRO);
-            let mut job = LayoutJob::single_section(
-                text.to_uppercase(),
-                TextFormat {
-                    font_id: font,
-                    color: foreground,
-                    extra_letter_spacing: 0.55,
-                    ..Default::default()
-                },
-            );
-            job.wrap.max_width = f32::INFINITY;
-            ui.label(job);
+            ui.horizontal(|ui| {
+                marker(ui, tone, foreground);
+                ui.add_space(2.0);
+                let font = FontId::proportional(theme::MICRO);
+                let mut job = LayoutJob::single_section(
+                    text.to_uppercase(),
+                    TextFormat {
+                        font_id: font,
+                        color: foreground,
+                        extra_letter_spacing: 0.55,
+                        ..Default::default()
+                    },
+                );
+                job.wrap.max_width = f32::INFINITY;
+                ui.label(job);
+            });
         });
+}
+
+/// The square that used to be a character.
+///
+/// The header drew "▲ ATENÇÃO" and the triangle arrived as a box on a machine whose
+/// fonts had no U+25B2. egui ships no symbol font, and a fallback that silently draws
+/// tofu is worse than no marker at all, so the marker is a shape: a diamond for
+/// something going wrong, a triangle for something to look at, a filled dot for
+/// everything being fine, and an empty dot where the tone says nothing.
+fn marker(ui: &mut Ui, tone: Tone, colour: Color32) {
+    let (rect, _) = ui.allocate_exact_size(Vec2::splat(7.0), Sense::hover());
+    let centre = rect.center();
+    match tone {
+        Tone::Danger | Tone::Warn => {
+            // The apex is a little above centre so the triangle reads as sitting on the
+            // baseline of the text rather than floating beside it.
+            let points = if tone == Tone::Danger {
+                vec![
+                    egui::pos2(centre.x, centre.y - 3.3),
+                    egui::pos2(centre.x + 3.3, centre.y),
+                    egui::pos2(centre.x, centre.y + 3.3),
+                    egui::pos2(centre.x - 3.3, centre.y),
+                ]
+            } else {
+                vec![
+                    egui::pos2(centre.x, centre.y - 3.3),
+                    egui::pos2(centre.x + 3.4, centre.y + 2.6),
+                    egui::pos2(centre.x - 3.4, centre.y + 2.6),
+                ]
+            };
+            ui.painter()
+                .add(egui::Shape::convex_polygon(points, colour, Stroke::NONE));
+        }
+        Tone::Ok => {
+            ui.painter().circle_filled(centre, 2.7, colour);
+        }
+        _ => {
+            ui.painter().circle_stroke(centre, 2.4, Stroke::new(1.1, colour));
+        }
+    }
 }
 
 /// A counter in the rail: a small rounded number, coloured by how urgent it is.
@@ -255,68 +329,76 @@ pub struct Kpi<'a> {
     pub foot: Option<&'a str>,
 }
 
-/// The strip of figures, divided by hairlines rather than separated by gaps.
-pub fn kpi_row(ui: &mut Ui, items: &[Kpi<'_>]) {
+/// The figures at the top of a page, one row each.
+///
+/// They were five cards side by side, which reads as five competing headlines: the eye
+/// crosses four vertical rules to find the figure it wants, the answers get shorter than
+/// the questions, and in a narrow window the columns squeeze until the labels wrap into
+/// each other. A row per figure — name and its sentence on the left, the number and where
+/// it came from on the right — reads down the numbers instead, the way a statement does.
+pub fn kpi_rows(ui: &mut Ui, items: &[Kpi<'_>]) {
     let palette = palette(ui.ctx());
     if items.is_empty() {
         return;
     }
-    let count = items.len();
-    let margin = 16.0_f32;
-    let response = egui::Frame::new()
+    egui::Frame::new()
         .fill(palette.surface)
         .stroke(Stroke::new(1.0, palette.border))
         .corner_radius(theme::radius())
-        .inner_margin(egui::Margin::symmetric(margin as i8, 14))
+        .inner_margin(egui::Margin::symmetric(16, 4))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            let width = (ui.available_width() - margin * 2.0) / count as f32;
-            ui.horizontal_top(|ui| {
-                for (index, item) in items.iter().enumerate() {
-                    if index > 0 {
-                        ui.add_space(margin);
-                    }
+            for (index, item) in items.iter().enumerate() {
+                if index > 0 {
+                    let (rule, _) =
+                        ui.allocate_exact_size(Vec2::new(ui.available_width(), 1.0), Sense::hover());
+                    ui.painter()
+                        .hline(rule.x_range(), rule.center().y, Stroke::new(1.0, palette.border));
+                }
+                ui.add_space(9.0);
+                ui.horizontal_top(|ui| {
+                    // The figure's column keeps its width on every row, so the numbers
+                    // line up with each other and not merely with their own label.
+                    let value_width = (ui.available_width() * 0.30).clamp(130.0, 220.0);
+                    let left = (ui.available_width() - value_width - 16.0).max(120.0);
+                    ui.allocate_ui_with_layout(Vec2::new(left, 0.0), Layout::top_down(Align::LEFT), |ui| {
+                        ui.set_min_width(left);
+                        ui.set_max_width(left);
+                        micro_label(ui, item.label, palette.text_3);
+                        if let Some(support) = item.support {
+                            ui.add_space(2.0);
+                            ui.label(
+                                RichText::new(support)
+                                    .size(theme::BODY_SMALL)
+                                    .color(palette.text_3),
+                            );
+                        }
+                        // Where the figure came from, under the sentence it belongs to:
+                        // on the right it had to wrap beside the number, and a provenance
+                        // cut in half is not a provenance.
+                        if let Some(foot) = item.foot {
+                            ui.add_space(1.0);
+                            ui.label(RichText::new(foot).size(theme::CAPTION).color(palette.text_4));
+                        }
+                    });
                     ui.allocate_ui_with_layout(
-                        Vec2::new(width - margin, 0.0),
-                        Layout::top_down(Align::LEFT),
+                        Vec2::new(value_width, 0.0),
+                        Layout::top_down(Align::RIGHT),
                         |ui| {
-                            micro_label(ui, item.label, palette.text_3);
-                            ui.add_space(6.0);
-                            ui.label(RichText::new(item.value).size(theme::FIGURE).color(palette.text));
-                            if let Some(support) = item.support {
-                                ui.add_space(2.0);
-                                ui.label(
-                                    RichText::new(support)
-                                        .size(theme::BODY_SMALL)
-                                        .color(palette.text_3),
-                                );
-                            }
-                            if let Some(foot) = item.foot {
-                                ui.add_space(8.0);
-                                let (rule, _) = ui.allocate_exact_size(
-                                    Vec2::new(ui.available_width(), 1.0),
-                                    Sense::hover(),
-                                );
-                                dotted(ui, rule, palette.border_2);
-                                ui.add_space(4.0);
-                                ui.label(RichText::new(foot).size(theme::MICRO).color(palette.text_4));
-                            }
+                            ui.set_min_width(value_width);
+                            ui.set_max_width(value_width);
+                            ui.label(
+                                RichText::new(item.value)
+                                    .size(theme::FIGURE_ROW)
+                                    .strong()
+                                    .color(palette.text),
+                            );
                         },
                     );
-                }
-            });
+                });
+                ui.add_space(9.0);
+            }
         });
-    // The dividers, painted after the fact because the frame is as tall as its
-    // tallest column and only the frame knows that height.
-    let rect = response.response.rect;
-    let top = rect.top() + 1.0;
-    let bottom = rect.bottom() - 1.0;
-    for index in 1..count {
-        let x = rect.left() + margin + index as f32 * ((rect.width() - margin * 2.0) / count as f32)
-            - margin / 2.0;
-        ui.painter()
-            .vline(x, top..=bottom, Stroke::new(1.0, palette.border));
-    }
 }
 
 /// A dotted rule, which the design uses under a definition and inside a KPI's foot.
@@ -378,6 +460,10 @@ pub fn defs(ui: &mut Ui, rows: &[Def<'_>]) {
     for row in rows {
         ui.horizontal_top(|ui| {
             ui.allocate_ui_with_layout(Vec2::new(172.0, 0.0), Layout::top_down(Align::LEFT), |ui| {
+                // A definition list is a table with two columns: without the minimum the
+                // label column shrank to the longest label and the values started at a
+                // different x on every row.
+                ui.set_min_width(172.0);
                 ui.label(
                     RichText::new(row.label)
                         .size(theme::BODY_SMALL)
@@ -584,6 +670,9 @@ pub struct Column {
     pub width: f32,
     /// Where the content sits inside its column.
     pub align: Align,
+    /// Whether the table may leave this column out when the window is too narrow for the
+    /// whole set.
+    pub optional: bool,
 }
 
 impl Column {
@@ -594,6 +683,7 @@ impl Column {
             label,
             width: 0.0,
             align: Align::LEFT,
+            optional: false,
         }
     }
 
@@ -604,6 +694,7 @@ impl Column {
             label,
             width,
             align: Align::LEFT,
+            optional: false,
         }
     }
 
@@ -613,24 +704,89 @@ impl Column {
         self.align = Align::RIGHT;
         self
     }
+
+    /// Mark it as one the table can do without.
+    ///
+    /// For a figure that is already stated in the row above, or on another page: nine
+    /// columns squeezed into a small window gives nine columns of two letters, and six
+    /// proper ones is a table. Optional columns are dropped together, and only when
+    /// keeping them would shrink every column past three quarters of its authored width.
+    #[must_use]
+    pub fn optional(mut self) -> Self {
+        self.optional = true;
+        self
+    }
+
+    /// What the column would like, for deciding whether the set fits.
+    fn wanted(&self) -> f32 {
+        if self.width > 0.0 { self.width } else { 160.0 }
+    }
 }
 
-/// Work out each column's width: the fixed ones keep theirs, the rest share.
+/// Which columns fit. See [`Column::optional`].
+fn visible_columns(columns: &[Column], available: f32) -> Vec<bool> {
+    let wanted: f32 = columns.iter().map(Column::wanted).sum();
+    let squeeze = available / wanted.max(1.0);
+    // Three quarters is about the point where a column's heading stops fitting and every
+    // cell starts wrapping mid-word.
+    let keep_optional = squeeze >= 0.75;
+    columns
+        .iter()
+        .map(|column| !column.optional || keep_optional)
+        .collect()
+}
+
+/// The columns that survived, in order.
+fn kept(columns: &[Column], visible: &[bool]) -> Vec<Column> {
+    columns
+        .iter()
+        .zip(visible)
+        .filter(|(_, shown)| **shown)
+        .map(|(column, _)| *column)
+        .collect()
+}
+
+/// Work out each column's width: the fixed ones keep theirs, the rest share, and when
+/// there is not enough room for that, every column gives up the same proportion.
+///
+/// The last clause is what keeps a page inside the window. A table whose columns are
+/// authored for a 1180-point window and then drawn in a 920-point one used to grow a
+/// horizontal scroll bar — the page read as broken, and the bar was the only way to see
+/// the last column. Scaling the whole vector down instead means the table is narrower
+/// and its cells wrap; nothing is ever hidden behind an edge.
 fn widths_for(available: f32, columns: &[Column]) -> Vec<f32> {
+    let available = available.max(160.0);
     let fixed: f32 = columns
         .iter()
         .filter(|column| column.width > 0.0)
         .map(|column| column.width)
         .sum();
     let flexible = columns.iter().filter(|column| column.width <= 0.0).count().max(1) as f32;
-    // A floor, so a narrow window scrolls the table rather than collapsing a column
-    // to nothing and clipping a figure mid-digit.
-    let share = ((available - fixed) / flexible).max(64.0);
+
+    // What a flexible column would like: the rest of the room, but never so little that
+    // a word cannot be set in it.
+    let wanted = ((available - fixed) / flexible).max(72.0);
+    let total = fixed + wanted * flexible;
+    let scale = if total > available { available / total } else { 1.0 };
+
     columns
         .iter()
-        .map(|column| if column.width > 0.0 { column.width } else { share })
+        .map(|column| {
+            if column.width > 0.0 {
+                column.width * scale
+            } else {
+                wanted * scale
+            }
+        })
         .collect()
 }
+
+/// The air between two columns.
+///
+/// Not `item_spacing` by accident: the widths are computed from the space left after
+/// these gutters, so a row's columns and its heading line up to the point and the last
+/// column ends exactly at the table's edge.
+const COLUMN_GUTTER: f32 = 12.0;
 
 /// A table: a heading row and one row per item, with hairlines between.
 ///
@@ -638,6 +794,14 @@ fn widths_for(available: f32, columns: &[Column]) -> Vec<f32> {
 /// way, fixed widths first and the rest sharing what is left. Cells are filled by
 /// calling the accessors on [`Cells`] in column order, which is what keeps a row from
 /// drifting out of step with its heading.
+///
+/// Three details make it a table rather than a row of boxes. Each cell is given its
+/// width as a *minimum* — `allocate_ui_with_layout` otherwise shrinks a cell to its
+/// content and the columns become ragged, which is what a table is not. The gutter
+/// between columns is subtracted before the widths are worked out, so a money column and
+/// the one after it never touch. And every cell starts at the top of its row
+/// (`horizontal_top`), so a row whose client name carries a second line of caption does
+/// not push its money to the middle of the row while the row above sits at the top.
 pub fn table<T>(
     ui: &mut Ui,
     columns: &[Column],
@@ -646,17 +810,29 @@ pub fn table<T>(
     mut row: impl FnMut(&mut Cells<'_, '_>, &T),
 ) {
     let palette = palette(ui.ctx());
-    let widths = widths_for((ui.available_width() - 20.0).max(320.0), columns);
+    let room = (ui.available_width() - 20.0).max(160.0);
+    let visible = visible_columns(columns, room);
+    let widths = {
+        let shown = kept(columns, &visible);
+        let gutters = COLUMN_GUTTER * shown.len().saturating_sub(1) as f32;
+        widths_for((room - gutters).max(160.0), &shown)
+    };
 
     egui::Frame::new()
         .fill(palette.surface_2)
         .inner_margin(egui::Margin::symmetric(10, 6))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = COLUMN_GUTTER;
+            ui.horizontal_top(|ui| {
+                let mut width = widths.iter();
                 for (index, column) in columns.iter().enumerate() {
-                    let width = widths.get(index).copied().unwrap_or(80.0);
+                    if !visible.get(index).copied().unwrap_or(true) {
+                        continue;
+                    }
+                    let width = width.next().copied().unwrap_or(80.0);
                     ui.allocate_ui_with_layout(Vec2::new(width, 0.0), Layout::top_down(column.align), |ui| {
+                        ui.set_min_width(width);
                         micro_label(ui, column.label, palette.text_3);
                     });
                 }
@@ -674,8 +850,9 @@ pub fn table<T>(
             .inner_margin(egui::Margin::symmetric(10, 7))
             .show(ui, |ui| {
                 ui.set_width(ui.available_width());
-                ui.horizontal(|ui| {
-                    let mut cells = Cells::new(ui, &widths, columns);
+                ui.spacing_mut().item_spacing.x = COLUMN_GUTTER;
+                ui.horizontal_top(|ui| {
+                    let mut cells = Cells::new(ui, &widths, columns, &visible);
                     row(&mut cells, item);
                 });
             });
@@ -690,29 +867,43 @@ pub struct Cells<'u, 'c> {
     ui: &'u mut Ui,
     widths: &'c [f32],
     columns: &'c [Column],
+    visible: &'c [bool],
     index: usize,
+    /// How many of the columns so far were kept, which is where the widths are.
+    drawn: usize,
 }
 
 impl<'u, 'c> Cells<'u, 'c> {
-    fn new(ui: &'u mut Ui, widths: &'c [f32], columns: &'c [Column]) -> Self {
+    fn new(ui: &'u mut Ui, widths: &'c [f32], columns: &'c [Column], visible: &'c [bool]) -> Self {
         Self {
             ui,
             widths,
             columns,
+            visible,
             index: 0,
+            drawn: 0,
         }
     }
 
-    /// Move to the next column and draw in it.
+    /// Move to the next column and draw in it — or, for a column the table dropped, do
+    /// nothing at all, which is why a page writes every cell whether or not it is shown.
     fn advance(&mut self, add: impl FnOnce(&mut Ui)) {
         let Some(column) = self.columns.get(self.index) else {
             return;
         };
-        let width = self.widths.get(self.index).copied().unwrap_or(80.0);
-        let align = column.align;
+        let shown = self.visible.get(self.index).copied().unwrap_or(true);
         self.index += 1;
+        if !shown {
+            return;
+        }
+        let width = self.widths.get(self.drawn).copied().unwrap_or(80.0);
+        let align = column.align;
+        self.drawn += 1;
         self.ui
             .allocate_ui_with_layout(Vec2::new(width, 0.0), Layout::top_down(align), |ui| {
+                // The width is a minimum as well as a maximum: a cell that shrank to its
+                // text would put every column after it in a different place on each row.
+                ui.set_min_width(width);
                 ui.set_max_width(width);
                 add(ui);
             });
@@ -756,6 +947,23 @@ impl<'u, 'c> Cells<'u, 'c> {
                     .size(theme::MONO)
                     .monospace()
                     .color(palette.text_2),
+            );
+        });
+    }
+
+    /// A figure, in the monospace face, sitting where its column's alignment puts it.
+    ///
+    /// Money and percentages go here rather than through a hand-rolled right-to-left
+    /// layout in every page: the column already knows it is right-aligned, and a cell
+    /// that laid itself out would be a second opinion on the same question.
+    pub fn figure(&mut self, value: &str) {
+        let palette = palette(self.ui.ctx());
+        self.advance(|ui| {
+            ui.label(
+                RichText::new(value)
+                    .size(theme::BODY_SMALL)
+                    .monospace()
+                    .color(palette.text),
             );
         });
     }

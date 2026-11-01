@@ -14,9 +14,12 @@
 //! - no text is below 11 px. The stylesheet's own header says nothing below 12 px is
 //!   text for reading, and then used 9.5 px in six places.
 //!
-//! The browser had one dark mode, driven by `prefers-color-scheme`, and no switch.
-//! This one follows the system too and also offers a switch, because a desktop
-//! application that cannot be changed is a regression against the tab it replaces.
+//! The browser had one dark mode, driven by `prefers-color-scheme`. This window is
+//! white, and only white: it applies the light palette once and pins the theme
+//! preference to `Light`, so the desktop's own dark mode cannot take the colours back
+//! on the next frame. The dark palette stays in the file because the contrast tests
+//! measure it — a theme nobody renders is still a table of colours, and a table nobody
+//! checks rots.
 
 use egui::{Color32, Context, CornerRadius, FontFamily, FontId, Margin, Stroke, TextStyle, Visuals};
 
@@ -77,6 +80,10 @@ pub struct Palette {
     pub slate_bg: Color32,
     /// Neutral, bordered.
     pub slate_border: Color32,
+    /// The scroll bar's handle: light chrome, never the dark text colour.
+    pub scroll: Color32,
+    /// The scroll bar's handle under the pointer, or while it is being dragged.
+    pub scroll_hover: Color32,
 }
 
 impl Palette {
@@ -114,6 +121,10 @@ impl Palette {
             slate: Color32::from_rgb(0x47, 0x55, 0x69),
             slate_bg: Color32::from_rgb(0xF1, 0xF5, 0xF9),
             slate_border: Color32::from_rgb(0xE2, 0xE8, 0xF0),
+            // Chrome, not ink: the bar is a light grey you can find on a white page,
+            // and it darkens one step when the pointer is on it.
+            scroll: Color32::from_rgb(0xCB, 0xD5, 0xE1),
+            scroll_hover: Color32::from_rgb(0x9F, 0xB0, 0xC4),
         }
     }
 
@@ -149,6 +160,9 @@ impl Palette {
             slate: Color32::from_rgb(0xA9, 0xB7, 0xC9),
             slate_bg: Color32::from_rgb(0x16, 0x22, 0x3A),
             slate_border: Color32::from_rgb(0x24, 0x31, 0x49),
+            // The same idea in the dark: a step above the surface, never a bright line.
+            scroll: Color32::from_rgb(0x33, 0x41, 0x55),
+            scroll_hover: Color32::from_rgb(0x47, 0x55, 0x69),
         }
     }
 
@@ -168,6 +182,10 @@ pub const RADIUS_SMALL: u8 = 4;
 /// The sidebar's width. Fixed, like the design.
 pub const SIDEBAR_WIDTH: f32 = 264.0;
 
+/// The page's margin: from the rail to the first column, and from the last column to
+/// the edge of the window.
+pub const CONTENT_MARGIN: f32 = 20.0;
+
 /// The widest the page content is allowed to get.
 pub const CONTENT_MAX_WIDTH: f32 = 1440.0;
 
@@ -177,11 +195,18 @@ pub const SECTION_TITLE: f32 = 17.0;
 /// The application's name in the header.
 pub const PAGE_TITLE: f32 = 16.0;
 
-/// A figure: a KPI's value.
+/// A figure: the one number a page is about.
 pub const FIGURE: f32 = 24.0;
 
 /// A figure a step down, inside a card.
 pub const FIGURE_SMALL: f32 = 18.0;
+
+/// A figure in a list of figures: one of several numbers a page states in a column.
+///
+/// The version of a rule pack, a count of sources, a period — they are figures, and they
+/// are not headlines. At 18 points five of them shouted at each other; at 16 the number
+/// still leads its row and the row still reads as a table of facts.
+pub const FIGURE_ROW: f32 = 16.0;
 
 /// Body text.
 pub const BODY: f32 = 13.5;
@@ -220,9 +245,18 @@ pub fn text_styles(heading: f32) -> std::collections::BTreeMap<TextStyle, FontId
 /// The heading size a dialog uses, so a dialog does not read as a page in a box.
 pub const DIALOG_TITLE: f32 = 14.0;
 
-/// Apply a palette to the whole context.
+/// Apply a palette to the whole context, and pin the preference that selects it.
+///
+/// Setting the visuals alone is not enough: egui re-derives the active style from the
+/// system theme while the preference is `System`, so a window that painted itself white
+/// on its first frame would paint itself black the moment the desktop switched at dusk.
 pub fn apply(ctx: &Context, dark: bool) {
     let palette = Palette::for_mode(dark);
+    ctx.set_theme(if dark {
+        egui::Theme::Dark
+    } else {
+        egui::Theme::Light
+    });
     let mut visuals = if dark { Visuals::dark() } else { Visuals::light() };
     visuals.panel_fill = palette.bg;
     visuals.window_fill = palette.surface;
@@ -237,13 +271,13 @@ pub fn apply(ctx: &Context, dark: bool) {
     visuals.widgets.noninteractive.bg_fill = palette.surface;
     visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0, palette.border);
     visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, palette.text_2);
-    visuals.widgets.inactive.bg_fill = palette.surface_2;
+    visuals.widgets.inactive.bg_fill = palette.scroll;
     visuals.widgets.inactive.bg_stroke = Stroke::new(1.0, palette.border_2);
     visuals.widgets.inactive.fg_stroke = Stroke::new(1.0, palette.text_2);
-    visuals.widgets.hovered.bg_fill = palette.surface_3;
+    visuals.widgets.hovered.bg_fill = palette.scroll_hover;
     visuals.widgets.hovered.bg_stroke = Stroke::new(1.0, palette.accent_border);
     visuals.widgets.hovered.fg_stroke = Stroke::new(1.0, palette.text);
-    visuals.widgets.active.bg_fill = palette.accent_bg;
+    visuals.widgets.active.bg_fill = palette.scroll_hover;
     visuals.widgets.active.bg_stroke = Stroke::new(1.0, palette.accent);
     visuals.widgets.active.fg_stroke = Stroke::new(1.0, palette.accent);
     visuals.striped = false;
@@ -256,10 +290,18 @@ pub fn apply(ctx: &Context, dark: bool) {
         style.spacing.window_margin = Margin::symmetric(20, 18);
         style.spacing.scroll = egui::style::ScrollStyle {
             floating: false,
+            // `bg_fill`, not `fg_stroke`: the handle is chrome (a light grey, from the
+            // palette's `scroll` token) rather than ink. Nothing else in this window
+            // draws with `bg_fill` — buttons use `weak_bg_fill`, text fields use
+            // `extreme_bg_color` — so the bars can be tinted without repainting a
+            // single control.
             foreground_color: false,
-            bar_width: 6.0,
+            bar_width: 8.0,
+            handle_min_length: 28.0,
             bar_inner_margin: 4.0,
-            bar_outer_margin: 0.0,
+            // A bar flush with a panel's edge is a border; four pixels of air make it a
+            // scroll bar.
+            bar_outer_margin: 4.0,
             ..Default::default()
         };
         style.text_styles = text_styles(SECTION_TITLE);
@@ -385,6 +427,7 @@ mod tests {
             PAGE_TITLE,
             FIGURE,
             FIGURE_SMALL,
+            FIGURE_ROW,
             BODY,
             BODY_SMALL,
             CAPTION,

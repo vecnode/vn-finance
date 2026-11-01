@@ -1,4 +1,4 @@
-//! The dashboard: what is due, what it adds up to, and the fiscal situation.
+﻿//! The dashboard: what is due, what it adds up to, and the fiscal situation.
 //!
 //! Three questions, in the order a person has them when they open the application:
 //! is anything wrong or late; how much have I made and what is my share; and is the
@@ -62,12 +62,8 @@ fn alert_strip(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     if summary.total == 0 {
         widgets::accented_card(ui, Tone::Ok, |ui| {
             ui.horizontal(|ui| {
-                widgets::severity(ui, "· sem alertas", Tone::Ok);
-                ui.label(
-                    egui::RichText::new("Nada a assinalar")
-                        .size(theme::FIGURE_SMALL)
-                        .strong(),
-                );
+                widgets::severity(ui, "sem alertas", Tone::Ok);
+                ui.label(egui::RichText::new("Nada a assinalar").size(theme::BODY).strong());
             });
             widgets::caption(
                 ui,
@@ -90,24 +86,27 @@ fn alert_strip(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     let mut requested = None;
     widgets::accented_card(ui, tone, |ui| {
         ui.horizontal_wrapped(|ui| {
+            // The marker is painted, not typed: see `widgets::severity`. The word and
+            // the colour say which severity it is, and nothing here can be drawn as a
+            // box because a font was missing a character.
             widgets::severity(
                 ui,
                 if summary.urgent > 0 {
-                    "▲ atenção"
+                    "atenção"
                 } else {
-                    "● a rever"
+                    "a rever"
                 },
                 tone,
             );
             ui.vertical(|ui| {
+                let urgent = counted(summary.urgent, "urgente", "urgentes");
+                let attention = format!("{} de atenção", summary.attention);
+                let info = counted(summary.info, "informativo", "informativos");
                 ui.label(
-                    egui::RichText::new(format!(
-                        "{} urgentes · {} de atenção · {} informativos",
-                        summary.urgent, summary.attention, summary.info
-                    ))
-                    .size(theme::FIGURE_SMALL)
-                    .strong()
-                    .color(palette.text),
+                    egui::RichText::new(format!("{urgent} · {attention} · {info}"))
+                        .size(theme::BODY)
+                        .strong()
+                        .color(palette.text),
                 );
                 widgets::caption(
                     ui,
@@ -125,6 +124,15 @@ fn alert_strip(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
         }
     });
     requested
+}
+
+/// "1 urgente", "2 urgentes": the count and the word that agrees with it.
+fn counted(count: usize, one: &str, many: &str) -> String {
+    if count == 1 {
+        format!("{count} {one}")
+    } else {
+        format!("{count} {many}")
+    }
 }
 
 /// The five figures.
@@ -224,7 +232,7 @@ fn figures(ui: &mut Ui, model: &DashboardModel, year: i64) {
              que registaste e das constantes do pacote de regras, e cada um diz em que se baseia.",
         ),
     );
-    widgets::kpi_row(ui, &items);
+    widgets::kpi_rows(ui, &items);
     if model.invoices.is_empty() {
         ui.add_space(8.0);
         widgets::footnote(
@@ -303,8 +311,7 @@ fn flag_row(ui: &mut Ui, flag: &Flag) {
                         .strong()
                         .color(palette.text),
                 );
-                ui.scope(|ui| {
-                    ui.set_max_width(820.0);
+                widgets::capped(ui, 820.0, |ui| {
                     ui.label(
                         egui::RichText::new(&flag.detail)
                             .size(theme::BODY_SMALL)
@@ -469,8 +476,7 @@ fn onboarding(ui: &mut Ui, model: &DashboardModel, action: &mut Option<Action>) 
                 .color(palette.text),
         );
         ui.add_space(4.0);
-        ui.scope(|ui| {
-            ui.set_max_width(720.0);
+        widgets::capped(ui, 720.0, |ui| {
             ui.label(
                 egui::RichText::new(
                     "Este cofre ainda não tem perfil. Com o perfil preenchido, a aplicação passa a \

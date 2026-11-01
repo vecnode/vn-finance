@@ -15,14 +15,8 @@
 
 mod clock;
 
-use vnf_ui::app::Failure;
+use vnf_ui::app::{Failure, WINDOW_MIN, WINDOW_START};
 use vnf_ui::{App, Session};
-
-/// The window's starting size.
-const STARTING_SIZE: [f32; 2] = [1180.0, 780.0];
-
-/// The smallest the window may be made before the layout stops reflowing.
-const MINIMUM_SIZE: [f32; 2] = [920.0, 600.0];
 
 fn main() -> eframe::Result<()> {
     let today = clock::today_in_lisbon();
@@ -33,8 +27,11 @@ fn main() -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_title(format!("vn-finance {version}"))
             .with_app_id("vn-finance")
-            .with_inner_size(STARTING_SIZE)
-            .with_min_inner_size(MINIMUM_SIZE),
+            .with_inner_size(WINDOW_START)
+            // Both sizes live in the interface crate: the smallest allowed height is
+            // what keeps the rail's ten pages and the profile on screen, so the number
+            // belongs beside the rail rather than beside the window's title bar.
+            .with_min_inner_size(WINDOW_MIN),
         ..Default::default()
     };
 

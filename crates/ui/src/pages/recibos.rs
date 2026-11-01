@@ -1,4 +1,4 @@
-//! The invoices issued this year.
+﻿//! The invoices issued this year.
 //!
 //! A receipt is the document the client withholds tax from, so the table shows the
 //! four numbers that matter on one: what was invoiced, the IVA charged, the IRS the
@@ -7,23 +7,36 @@
 use egui::Ui;
 use vnf_core::estimate::{Invoice, InvoiceStatus, VatTreatment, invoice_totals};
 use vnf_core::money::format_eur;
-use vnf_store::model::DashboardModel;
+use vnf_store::model::{DashboardModel, VaultEntry};
 
 use crate::pages::Action;
 use crate::theme;
 use crate::widgets::{self, Column, Kpi, Tone};
 
+/// One row: the invoice, and the document the vault holds for it.
+struct Row<'a> {
+    invoice: &'a Invoice,
+    document: Option<&'a VaultEntry>,
+}
+
 /// The table's columns.
-fn columns() -> [Column; 8] {
+///
+/// Nine of them in the width of one page, so every fixed width is the width its content
+/// actually needs — a money column is `3500,00 €` wide, not a round hundred — and the
+/// client takes what is left. IVA and Retenção are optional: both are already stated in
+/// the five figures above, and dropping them is what lets the table stay a table in a
+/// small window instead of nine columns of two letters.
+fn columns() -> [Column; 9] {
     [
-        Column::at("N.º", 110.0),
-        Column::at("Data", 92.0),
+        Column::at("N.º", 92.0),
+        Column::at("Data", 82.0),
         Column::new("Cliente"),
-        Column::at("Base", 104.0).right(),
-        Column::at("IVA", 96.0).right(),
-        Column::at("Retenção", 96.0).right(),
-        Column::at("Líquido", 104.0).right(),
-        Column::at("Estado", 92.0),
+        Column::at("Base", 82.0).right(),
+        Column::at("IVA", 72.0).right().optional(),
+        Column::at("Retenção", 82.0).right().optional(),
+        Column::at("Líquido", 82.0).right(),
+        Column::at("PDF", 46.0),
+        Column::at("Estado", 80.0),
     ]
 }
 
@@ -66,7 +79,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
              a retenção na fonte que ele entrega ao Estado por ti.",
         ),
     );
-    widgets::kpi_row(
+    widgets::kpi_rows(
         ui,
         &[
             Kpi {
@@ -102,7 +115,9 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
         ],
     );
     ui.add_space(12.0);
-    ui.horizontal(|ui| {
+    // Wrapped, not a plain row: the sentence beside the button is longer than the space
+    // left over on a narrow window, and a label in a horizontal layout does not wrap.
+    ui.horizontal_wrapped(|ui| {
         if widgets::primary_button(ui, "Registar fatura a partir do PDF").clicked() {
             action = Some(Action::OpenReceipt);
         }
@@ -123,18 +138,34 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
         return action;
     }
 
+    // The document the vault holds for each invoice, by the id the index records. One
+    // pass, not one lookup per row: the table is drawn from what the model returned.
+    let rows: Vec<Row<'_>> = invoices
+        .iter()
+        .map(|invoice| Row {
+            invoice,
+            document: model
+                .vault
+                .entries
+                .iter()
+                .find(|entry| entry.invoice_id.as_deref() == Some(invoice.id.as_str())),
+        })
+        .collect();
+
+    let palette = theme::palette(ui.ctx());
     widgets::table(
         ui,
         &columns(),
-        &invoices,
+        &rows,
         |_| false,
-        |cells, invoice| {
+        |cells, row| {
+            let invoice = row.invoice;
             cells.custom(|ui| {
                 ui.label(
                     egui::RichText::new(&invoice.number)
                         .size(theme::BODY)
                         .strong()
-                        .color(theme::palette(ui.ctx()).text),
+                        .color(palette.text),
                 );
                 if let Some(atcud) = &invoice.atcud {
                     widgets::caption(ui, atcud);
@@ -145,7 +176,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
                 ui.label(
                     egui::RichText::new(&invoice.client_name)
                         .size(theme::BODY)
-                        .color(theme::palette(ui.ctx()).text),
+                        .color(palette.text),
                 );
                 widgets::caption(
                     ui,
@@ -156,14 +187,45 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
                 );
             });
             let totals = invoice_totals(invoice);
-            cells.custom(|ui| money_right(ui, totals.base_cents));
+            cells.figure(&format_eur(totals.base_cents));
             cells.custom(|ui| {
-                money_right(ui, totals.iva_cents);
+                ui.label(
+                    egui::RichText::new(format_eur(totals.iva_cents))
+                        .size(theme::BODY_SMALL)
+                        .monospace()
+                        .color(palette.text),
+                );
                 widgets::caption(ui, &vat_label(invoice.vat_treatment, invoice.iva_rate_bp));
             });
-            cells.custom(|ui| money_right(ui, totals.retention_cents));
-            cells.custom(|ui| {
-                money_right(ui, totals.net_receivable_cents);
+            cells.figure(&format_eur(totals.retention_cents));
+            cells.figure(&format_eur(totals.net_receivable_cents));
+            cells.custom(|ui| match row.document {
+                Some(entry) => {
+                    ui.label(
+                        egui::RichText::new("PDF")
+                            .size(theme::BODY_SMALL)
+                            .strong()
+                            .color(palette.ok),
+                    )
+                    .on_hover_text(&entry.file);
+                    widgets::caption(ui, &short_hash(&entry.sha256));
+                }
+                None if invoice.payment_proof_in_vault => {
+                    ui.label(
+                        egui::RichText::new("PDF")
+                            .size(theme::BODY_SMALL)
+                            .strong()
+                            .color(palette.ok),
+                    );
+                    widgets::caption(ui, "no cofre");
+                }
+                None => {
+                    ui.label(
+                        egui::RichText::new("—")
+                            .size(theme::BODY_SMALL)
+                            .color(palette.text_4),
+                    );
+                }
             });
             cells.custom(|ui| status_pill(ui, invoice.status));
         },
@@ -181,15 +243,8 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, year: i64) -> Option<Action> {
 }
 
 /// A figure, right-aligned the way a column of money reads.
-fn money_right(ui: &mut Ui, cents: i64) {
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-        ui.label(
-            egui::RichText::new(format_eur(cents))
-                .size(theme::BODY_SMALL)
-                .monospace()
-                .color(theme::palette(ui.ctx()).text),
-        );
-    });
+fn short_hash(sha256: &str) -> String {
+    format!("sha256 {}", &sha256[..12.min(sha256.len())])
 }
 
 /// The status pill for an invoice.

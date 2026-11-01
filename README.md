@@ -1,5 +1,10 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo/vn-finance-white-512.png">
+  <img src="assets/logo/vn-finance-512.png" alt="vn-finance" width="112">
+</picture>
+
 # vn-finance
 
 **Um assistente fiscal local para quem trabalha por conta própria.**
@@ -33,10 +38,20 @@ cargo xtask lint                 # clippy sobre todo o espaço de trabalho, avis
 cargo xtask test                 # a bateria de testes
 ```
 
+A aplicação é o membro por omissão do espaço de trabalho: os dois primeiros comandos
+constroem `apps/vnfin` e não o `xtask`, que é a ferramenta do portão e só corre quando é
+chamado por nome. Também podes construir a partir da pasta da própria aplicação — o
+`target/` fica sempre na raiz do repositório, e não uma pasta de compilação por crate:
+
+```bash
+cd apps/vnfin
+cargo build --release            #  ->  ../../target/release/vnfin.exe
+```
+
 Para testar a versão de distribuição no Windows, sem instalador nenhum:
 
 ```powershell
-cargo build --release -p vnfin
+cargo build --release
 .\target\release\vnfin.exe
 ```
 

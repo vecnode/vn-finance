@@ -117,7 +117,9 @@ fn painted_text(app: &mut App) -> Vec<String> {
 /// A session over a temporary folder.
 fn session(dir: &std::path::Path) -> Result<Session, Problem> {
     let env = Env::for_test(&[("HOME", &dir.display().to_string())], false);
-    Ok(Session::open_in(dir, &env, "0.2.0")?)
+    // The version the window is told it is, taken from the crate rather than typed
+    // again: a test that pins a version is a test that fails on the release bump.
+    Ok(Session::open_in(dir, &env, env!("CARGO_PKG_VERSION"))?)
 }
 
 /// A vault with a profile and two invoices, so the pages have something to draw.

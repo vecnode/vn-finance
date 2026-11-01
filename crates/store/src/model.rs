@@ -466,7 +466,7 @@ mod tests {
         ModelConfig {
             year: 2026,
             today: TODAY.to_owned(),
-            version: "0.2.0".to_owned(),
+            version: env!("CARGO_PKG_VERSION").to_owned(),
             runtime: "teste".to_owned(),
             pack,
             data_dir_source: VaultLocationSource::Default,

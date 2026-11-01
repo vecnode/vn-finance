@@ -125,7 +125,7 @@ fn the_reference_vault_builds_a_model() -> Result<(), Problem> {
         &ModelConfig {
             year: 2026,
             today: "2026-09-20".to_owned(),
-            version: "0.2.0".to_owned(),
+            version: env!("CARGO_PKG_VERSION").to_owned(),
             runtime: "teste".to_owned(),
             pack: &pack,
             data_dir_source: VaultLocationSource::Pointer,

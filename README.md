@@ -24,6 +24,25 @@ faturavas, lê as faturas em PDF, e diz-te quanto deves ter de lado para o IRS.
 
 Não substitui um contabilista certificado e nunca entrega nada por ti.
 
+## Instalação
+
+Descarrega o ficheiro do teu sistema na página de
+[releases](https://github.com/vecnode/vn-finance/releases), confirma o SHA-256 contra o
+`SHA256SUMS.txt` que vem com ele, e executa-o. Não há instalador nem configuração:
+
+| Sistema | Ficheiro |
+| --- | --- |
+| Windows 10/11, 64 bits | `vn-finance-<versão>-windows-x86_64.zip` |
+| macOS 11+, Apple silicon | `vn-finance-<versão>-macos-aarch64.tar.gz` |
+| Linux, 64 bits (glibc 2.35+) | `vn-finance-<versão>-linux-x86_64.tar.gz` |
+
+O cofre fica em `~/.vn-finance` (`%USERPROFILE%\.vn-finance` no Windows) e é criado no
+primeiro arranque. O binário de Linux precisa das bibliotecas de janelas do sistema (X11
+ou Wayland, e OpenGL), que qualquer distribuição de ambiente de trabalho já tem.
+
+Não há binário para Mac com processador Intel: compila a partir do código, na secção
+seguinte, que dá exatamente o mesmo programa.
+
 ## Construir
 
 O espaço de trabalho usa um único conjunto de comandos:

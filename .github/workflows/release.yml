@@ -1,14 +1,17 @@
 name: Release
 
-# A tag is what publishes a release, and the build is what attaches the binaries to it:
-# a release cannot exist half-finished, because it is created as a draft and only
-# published once every archive and `SHA256SUMS.txt` are on it.
+# A tag is what publishes a release, and the build is what attaches the binary to it: a
+# release cannot exist half-finished, because it is created as a draft and only published
+# once the archive and `SHA256SUMS.txt` are on it.
 #
-# Three platforms, one archive each, from the commit that passed the gate. Nothing else
-# lives here — no schedule, no nightly, no signing key, no second artefact shape. The
-# Linux build is the oldest Ubuntu LTS, so the glibc it needs is one a supported
-# distribution has, and the Windows build links the C runtime statically so the binary
-# runs on a machine with no redistributable installed.
+# One platform: Windows x86_64, as a folder zipped whole. The code is not Windows-only —
+# the gate still runs on Linux and macOS, which is where a `#[cfg]` mistake or a lint that
+# only exists on one platform gets caught — but the release is the build the person
+# actually runs, and the one they run is the Windows one. An archive nobody executes is an
+# artifact that only pretends to have been tested.
+#
+# The Windows build links the C runtime statically, so the binary runs on a machine with
+# no redistributable installed.
 
 on:
   push:
@@ -62,20 +65,18 @@ jobs:
           Um assistente fiscal local para quem trabalha por conta própria. Uma janela, uma
           pasta de dados, sem rede.
 
-          Descarrega o ficheiro do teu sistema, confirma-o contra o \`SHA256SUMS.txt\`, e
-          executa-o. Não há nada a instalar: a aplicação abre o cofre em \`~/.vn-finance\`
+          Descarrega o ficheiro, confirma-o contra o \`SHA256SUMS.txt\`, e executa-o. Não há
+          nada a instalar: a aplicação abre o cofre em \`~/.vn-finance\`
           (\`%USERPROFILE%\\.vn-finance\` no Windows) e cria-o no primeiro arranque.
 
           | Sistema | Ficheiro |
           | --- | --- |
           | Windows 10/11, 64 bits | \`${STEM}-${VERSION}-windows-x86_64.zip\` |
-          | macOS 11+, Apple silicon | \`${STEM}-${VERSION}-macos-aarch64.tar.gz\` |
-          | Linux, 64 bits (glibc 2.35+) | \`${STEM}-${VERSION}-linux-x86_64.tar.gz\` |
 
-          O binário de Linux precisa das bibliotecas de janelas do sistema (X11 ou Wayland,
-          e OpenGL), que qualquer distribuição de ambiente de trabalho já tem.
+          O binário linka a runtime C estaticamente, por isso corre numa máquina sem
+          redistribuível instalado.
 
-          O código-fonte de todos estes ficheiros é a etiqueta \`${TAG}\`, sob a GNU AGPL v3.
+          O código-fonte deste ficheiro é a etiqueta \`${TAG}\`, sob a GNU AGPL v3.
           EOF
           gh release create "$TAG" --draft --title "${STEM} ${VERSION}" --notes-file notes.md
 
@@ -94,18 +95,6 @@ jobs:
             arch: x86_64
             ext: zip
             rustflags: '-C target-feature=+crt-static'
-          - os: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            system: linux
-            arch: x86_64
-            ext: tar.gz
-            rustflags: ''
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            system: macos
-            arch: aarch64
-            ext: tar.gz
-            rustflags: ''
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,17 +108,6 @@ jobs:
         with:
           key: release-${{ matrix.target }}
           cache-on-failure: true
-
-      # The window needs the platform's own windowing and graphics libraries on Linux.
-      # They are C, and no pure-Rust replacement exists; this is the same list the CI
-      # gate installs, and it is the only place the build needs one.
-      - name: Linux GUI dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libxkbcommon-dev libwayland-dev libx11-dev libxi-dev \
-            libxcursor-dev libxrandr-dev libgl1-mesa-dev
 
       - name: Build
         env:
@@ -146,15 +124,11 @@ jobs:
           ROOT="${STEM}-${VERSION}"
           mkdir -p "dist/${ROOT}"
           cp README.md LICENSE THIRD-PARTY-NOTICES.md "dist/${ROOT}/"
-          if [ "${{ matrix.system }}" = "windows" ]; then
-            cp "target/${{ matrix.target }}/release/vnfin.exe" "dist/${ROOT}/"
-            # bsdtar writes forward-slash entries; the GNU tar in Git Bash does not make
-            # a zip at all, so the Windows bsdtar is called explicitly.
-            "/c/Windows/System32/tar.exe" -a -c -f "dist/${NAME}.zip" -C dist "${ROOT}"
-          else
-            cp "target/${{ matrix.target }}/release/vnfin" "dist/${ROOT}/"
-            (cd dist && tar -czf "${NAME}.tar.gz" "${ROOT}")
-          fi
+          cp "target/${{ matrix.target }}/release/vnfin.exe" "dist/${ROOT}/"
+          # bsdtar writes forward-slash entries; the GNU tar in Git Bash does not make a
+          # zip at all, so the Windows bsdtar is called explicitly. The folder is what is
+          # zipped, so unpacking it gives one directory with everything in it.
+          "/c/Windows/System32/tar.exe" -a -c -f "dist/${NAME}.zip" -C dist "${ROOT}"
           cp "dist/${NAME}.${{ matrix.ext }}" .
           echo "ASSET=${NAME}.${{ matrix.ext }}" >> "$GITHUB_ENV"
 

@@ -85,7 +85,8 @@ dashboard.
 ## Branches
 
 - **`main`** is what ships. A push to it runs CI; a tag `v*` on it runs the release
-  workflow and publishes the three artefacts.
+  workflow, which gates on CI and then publishes one Windows archive — the build the
+  project actually runs. The gate still runs on Linux and macOS; the *release* does not.
 - **`dev`** is where work happens. **A push to `dev` runs no CI** — the `on.push`
   trigger names `main` only — so a work-in-progress commit costs nothing. Opening a
   pull request from `dev` to `main` runs the full three-platform matrix, which is

@@ -84,6 +84,11 @@ appears in a list with others it is `FIGURE_ROW`; if it is the page's answer it 
 - Headings are `MICRO`, uppercase and tracked. Money is right-aligned and monospace.
   Legal citations are clipped to one line with the rest on hover — a decree that amended
   another decree three times is nine lines in a column with room for two.
+- **Rows are drawn in the order the model presents them**, never in the order the ledger
+  recorded them. An append-only ledger's order is the order things were typed in, which
+  stops being an order the first time a document is registered late: the invoices table
+  therefore reads newest first, and the page does not sort. A page that reordered rows
+  would disagree with every other page over the same list.
 
 ## Figures are rows, not cards
 

@@ -512,6 +512,57 @@ fn golden_pdf(case: usize) -> Result<Vec<u8>, Problem> {
 }
 
 #[test]
+fn an_invoice_outside_the_scope_of_the_tax_draws_with_its_own_label() -> Result<(), Problem> {
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    {
+        let session = session(dir.path())?;
+        let now = vnf_store::clock::now_iso8601();
+        // A document with no VAT whose stated ground is "não sujeito" — which is not the
+        // art. 53.º exemption and must not be shown as one. Every value here is invented
+        // for the fixture.
+        let invoice = vnf_core::estimate::Invoice {
+            id: "inv_sem_iva".to_owned(),
+            number: "FR TESTE/2026/8".to_owned(),
+            date: "2026-03-10".to_owned(),
+            client_name: "Empresa Exemplo, Lda.".to_owned(),
+            client_nif: Some("501234560".to_owned()),
+            client_country: "PT".to_owned(),
+            description: "Formação de exemplo".to_owned(),
+            base_cents: 10_000,
+            iva_rate_bp: 0,
+            vat_treatment: vnf_core::estimate::VatTreatment::NaoSujeito,
+            retention_bp: 0,
+            atcud: Some("ABCD1234-2".to_owned()),
+            status: vnf_core::estimate::InvoiceStatus::Paid,
+            payment_proof_in_vault: true,
+        };
+        session.vault().append_invoice(&invoice, &now)?;
+    }
+
+    let mut app = app_for(dir.path())?;
+    app.go(Page::Recibos);
+    assert!(
+        draw(&mut app) > 50,
+        "the invoice list has to draw an invoice it does not have a rate for"
+    );
+    let invoices = app
+        .model()
+        .map(|model| model.invoices.clone())
+        .unwrap_or_default();
+    let added = invoices
+        .iter()
+        .find(|invoice| invoice.number == "FR TESTE/2026/8")
+        .ok_or("the invoice must be in the list")?;
+    assert_eq!(
+        added.vat_treatment,
+        vnf_core::estimate::VatTreatment::NaoSujeito,
+        "the ledger keeps the ground the document stated"
+    );
+    Ok(())
+}
+
+#[test]
 fn a_pdf_imported_through_the_window_lands_in_the_ledger() -> Result<(), Problem> {
     use vnf_ui::pages::Action;
 
@@ -555,10 +606,24 @@ fn a_pdf_imported_through_the_window_lands_in_the_ledger() -> Result<(), Problem
         "the confirmed document must be one more ledger line"
     );
 
-    let added = app
+    // The list reads newest first, so a document recorded later but dated earlier takes
+    // its place in time rather than sitting at the top.
+    let invoices = app
         .model()
-        .and_then(|model| model.invoices.last().cloned())
-        .ok_or("the ledger has a last line")?;
+        .map(|model| model.invoices.clone())
+        .unwrap_or_default();
+    assert_eq!(
+        invoices
+            .iter()
+            .map(|invoice| invoice.date.as_str())
+            .collect::<Vec<&str>>(),
+        vec!["2026-05-04", "2026-03-15", "2026-02-10"],
+        "the table is ordered by date, newest first"
+    );
+    let added = invoices
+        .iter()
+        .find(|invoice| invoice.date == "2026-03-15")
+        .ok_or("the imported invoice must be in the list")?;
     assert_eq!(added.base_cents, 100_000);
     assert_eq!(added.iva_rate_bp, 2300);
     assert_eq!(added.retention_bp, 0, "the document says Sem retenção");

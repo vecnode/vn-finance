@@ -323,6 +323,15 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
     let stats = vault.describe()?;
     let entries: Vec<VaultEntry> = vault.document_index()?.into_iter().map(vault_entry).collect();
 
+    // The ledger is append-only, so its own order is the order things were recorded —
+    // which stops being an order the first time a document is registered late. The model
+    // presents the invoices newest first, by date, so the table reads chronologically and
+    // the one added today is the one at the top. The sort is stable over a reversed list,
+    // which is what puts the later-recorded of two same-day invoices above the earlier.
+    let mut invoices = invoices;
+    invoices.reverse();
+    invoices.sort_by(|left, right| right.date.cmp(&left.date));
+
     let meta = DashboardMeta {
         version: config.version.clone(),
         today: config.today.clone(),
@@ -528,6 +537,30 @@ mod tests {
         assert!(!model.meta.vault_in_use, "an empty folder is not in use");
         // And the only complaint is the pack's own health, not the person's.
         assert_eq!(model.flag_summary.total, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn the_invoices_are_presented_newest_first() -> Result<(), Problem> {
+        let dir = tempfile::tempdir()?;
+        let vault = Vault::new(dir.path());
+        vault.save_profile(&profile()?)?;
+        // Recorded out of order, which is what a ledger does: the September one was
+        // entered first, the March one second.
+        vault.append_invoice(&invoice("FR 1", "2026-09-20"), TODAY)?;
+        vault.append_invoice(&invoice("FR 2", "2026-03-10"), TODAY)?;
+        vault.append_invoice(&invoice("FR 3", "2026-11-03"), TODAY)?;
+        // Two on the same day: the one recorded later is the newer news.
+        vault.append_invoice(&invoice("FR 4", "2026-11-03"), TODAY)?;
+        let pack = load_embedded()?;
+        let model = build_model(&vault, &config(&pack))?;
+
+        let numbers: Vec<&str> = model
+            .invoices
+            .iter()
+            .map(|invoice| invoice.number.as_str())
+            .collect();
+        assert_eq!(numbers, vec!["FR 4", "FR 3", "FR 1", "FR 2"]);
         Ok(())
     }
 

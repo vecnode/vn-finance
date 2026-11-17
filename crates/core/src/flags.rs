@@ -24,8 +24,9 @@ use serde_json::Value;
 use crate::countries::{TurnoverScope, scope_of};
 use crate::dates;
 use crate::estimate::{Invoice, rate_percent_rounded};
-use crate::money::{Cents, format_eur};
-use crate::rules::{FreshnessStatus, constant, constant_cents, freshness};
+use crate::money::{Cents, apply_bp, format_eur};
+use crate::nif::{TaxNumberKind, classify_pt_tax_number, mask_nif};
+use crate::rules::{FreshnessStatus, constant, constant_bp, constant_cents, freshness};
 use crate::types::{IsoDate, ObligationInstance, RulePack, TaxProfile};
 
 /// How loudly a flag speaks.
@@ -66,8 +67,10 @@ pub enum FlagCode {
     ForeignClientsNotDeclared,
     /// Portuguese VAT charged to a foreign client.
     PtIvaChargedOnForeignInvoice,
-    /// A resident client withheld nothing.
+    /// A resident client withheld nothing, and nothing dispensed it.
     RetentionMissingOnResident,
+    /// A resident client withheld nothing because the law dispenses it.
+    RetentionDispensedArt101B,
     /// A non-resident client withheld Portuguese IRS.
     RetentionChargedOnNonResident,
     /// An invoice older than 60 days with no receipt in the vault.
@@ -123,6 +126,13 @@ pub struct TurnoverByScope {
 /// Turnover split by where the client is, which is what the art. 53.º ceiling
 /// actually measures: national territory, not total invoicing.
 ///
+/// The national figure leaves out the invoices whose treatment puts the operation
+/// outside the scope of the tax. An operation that is not subject to IVA is not
+/// turnover of the small-business regime, and counting it would let activity the CIVA
+/// never taxes push a person past a ceiling the regime sets for activity it does tax.
+/// The EU and non-EU figures keep every invoice: those flags are about the client's
+/// country, not about the tax treatment.
+///
 /// # Errors
 ///
 /// [`dates::DateError`] when an invoice date is not an ISO date.
@@ -133,7 +143,11 @@ pub fn turnover_by_scope(invoices: &[Invoice], year: i64) -> Result<TurnoverBySc
             continue;
         }
         match scope_of(&invoice.client_country) {
-            TurnoverScope::National => totals.national += invoice.base_cents,
+            TurnoverScope::National => {
+                if invoice.vat_treatment.counts_towards_art53_ceiling() {
+                    totals.national += invoice.base_cents;
+                }
+            }
             TurnoverScope::Eu => totals.eu += invoice.base_cents,
             TurnoverScope::NonEu => totals.non_eu += invoice.base_cents,
         }
@@ -177,6 +191,85 @@ fn art53_source_ids(pack: &RulePack) -> Vec<String> {
             .collect(),
         _ => Vec::new(),
     }
+}
+
+/// The source ids the pack attaches to the art. 101.º-B block.
+fn art101b_source_ids(pack: &RulePack) -> Vec<String> {
+    match constant(pack, &["irs", "withholding", "art101b", "sourceIds"]) {
+        Some(Value::Array(items)) => items
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// Why the law dispenses a resident client from withholding.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum RetentionDispensation {
+    /// The client is a natural person. Art. 101.º n.º 1 obliges *entities that have or
+    /// must have organised accounting* to withhold, and a person paying for a service
+    /// is not one of them.
+    NaturalPersonClient { nif: String },
+    /// The retention would be below the pack's minimum, which art. 101.º-B n.º 1 al.
+    /// d) dispenses.
+    BelowMinimum {
+        /// What the retention would have come to.
+        would_be_cents: Cents,
+        /// The minimum the pack fixes.
+        minimum_cents: Cents,
+    },
+}
+
+impl RetentionDispensation {
+    /// One line naming the ground, for a flag that has to be checkable.
+    fn explain(&self) -> String {
+        match self {
+            Self::NaturalPersonClient { nif } => format!(
+                "cliente pessoa singular (NIF {}), a quem o art. 101.º n.º 1 não impõe retenção",
+                mask_nif(nif)
+            ),
+            Self::BelowMinimum {
+                would_be_cents,
+                minimum_cents,
+            } => format!(
+                "a retenção de {} fica abaixo do mínimo de {}",
+                format_eur(*would_be_cents),
+                format_eur(*minimum_cents)
+            ),
+        }
+    }
+}
+
+/// Whether the law dispenses a resident client from withholding on this invoice.
+///
+/// Both grounds are established from the invoice and the rule pack alone: the kind of
+/// entity the client's tax number belongs to, and the arithmetic the minimum is
+/// applied to. Neither is a guess about what the client did — the first is what the
+/// number says and the second is what the pack's own rate produces.
+///
+/// Nothing here reads the sentence the receipt prints about the retention. The
+/// invoicing software prints the same boilerplate on every invoice it issues,
+/// "Sem retenção - Art.101º, n.º1 do CIRS", whether or not a retention was due, so
+/// treating that sentence as a ground would bless a missing retention instead of
+/// finding it.
+fn retention_dispensation(pack: &RulePack, invoice: &Invoice) -> Option<RetentionDispensation> {
+    if let Some(nif) = &invoice.client_nif
+        && classify_pt_tax_number(nif) == Some(TaxNumberKind::Nif)
+    {
+        return Some(RetentionDispensation::NaturalPersonClient { nif: nif.clone() });
+    }
+
+    // A pack that does not state the minimum cannot dispense anything: the flag stays
+    // an attention flag rather than being cleared by a value nobody supplied.
+    let minimum_cents = constant_cents(pack, &["irs", "withholding", "art101b", "minimumRetentionCents"])?;
+    let rate_bp = constant_bp(pack, &["irs", "withholding", "professionalServicesResident"])?;
+    let would_be_cents = apply_bp(invoice.base_cents, rate_bp);
+    (would_be_cents < minimum_cents).then_some(RetentionDispensation::BelowMinimum {
+        would_be_cents,
+        minimum_cents,
+    })
 }
 
 /// Compute every flag the person's affairs raise.
@@ -473,12 +566,47 @@ pub fn compute_flags(input: FlagInput<'_>) -> Result<Vec<Flag>, dates::DateError
     // -----------------------------------------------------------------------
 
     let (retention_basis, retention_sources) = cite(pack, "irs.retencoesPagamento");
-    let missing_retention: Vec<&Invoice> = invoices
-        .iter()
-        .filter(|invoice| {
-            scope_of(&invoice.client_country) == TurnoverScope::National && invoice.retention_bp == 0
-        })
-        .collect();
+    let mut missing_retention: Vec<&Invoice> = Vec::new();
+    let mut dispensed_retention: Vec<(&Invoice, RetentionDispensation)> = Vec::new();
+    for invoice in invoices {
+        if scope_of(&invoice.client_country) != TurnoverScope::National || invoice.retention_bp != 0 {
+            continue;
+        }
+        match retention_dispensation(pack, invoice) {
+            Some(ground) => dispensed_retention.push((invoice, ground)),
+            None => missing_retention.push(invoice),
+        }
+    }
+    if !dispensed_retention.is_empty() {
+        push(Flag {
+            code: FlagCode::RetentionDispensedArt101B,
+            severity: FlagSeverity::Info,
+            title: "Faturas sem retenção por dispensa legal".to_owned(),
+            detail: format!(
+                "{} fatura(s) a clientes residentes não têm retenção e o art. 101.º-B do CIRS dispensa-a \
+                 neste caso ({}). Nada há a regularizar: a retenção só é devida quando o adquirente é uma \
+                 entidade com contabilidade organizada (art. 101.º n.º 1) e quando o valor a reter chega ao \
+                 mínimo que o pacote de regras fixa (n.º 1 al. d) do art. 101.º-B). Se o cliente for um \
+                 empresário individual com contabilidade organizada, a dispensa não se aplica.",
+                dispensed_retention.len(),
+                dispensed_retention
+                    .iter()
+                    .map(|(invoice, ground)| format!("{}: {}", invoice.number, ground.explain()))
+                    .collect::<Vec<String>>()
+                    .join("; ")
+            ),
+            legal_basis: vec![
+                "CIRS art. 101.º n.º 1 (entidades com contabilidade organizada)".to_owned(),
+                "CIRS art. 101.º-B (dispensa de retenção na fonte)".to_owned(),
+            ],
+            source_ids: art101b_source_ids(pack),
+            rule_ids: Vec::new(),
+            invoice_numbers: dispensed_retention
+                .iter()
+                .map(|(invoice, _)| invoice.number.clone())
+                .collect(),
+        });
+    }
     if !missing_retention.is_empty() {
         push(Flag {
             code: FlagCode::RetentionMissingOnResident,
@@ -1074,5 +1202,160 @@ mod tests {
             (summary.urgent, summary.attention, summary.info, summary.total),
             (1, 0, 1, 2)
         );
+    }
+
+    /// An invoice to a resident client who withheld nothing.
+    fn resident(number: &str, nif: &str, base: Cents) -> Invoice {
+        Invoice {
+            client_nif: Some(nif.to_owned()),
+            retention_bp: 0,
+            ..invoice(number, "2026-09-20", "PT", base, 0, 0)
+        }
+    }
+
+    // Invented for the fixtures, with valid check digits: none of these is a real
+    // taxpayer. The first digit is what decides which kind of person it belongs to.
+    /// A natural person's number, which starts 1–3.
+    const A_PERSON: &str = "245678999";
+    /// A company's number, which starts 5–9.
+    const A_COMPANY: &str = "501234560";
+    /// Two more companies, so a test with three clients is not one client three times.
+    const ANOTHER_COMPANY: &str = "501234578";
+    const A_THIRD_COMPANY: &str = "509999999";
+
+    fn flags_for(invoices: &[Invoice]) -> Result<(Vec<Flag>, FlagSummary), Box<dyn std::error::Error>> {
+        let pack = load_embedded()?;
+        let profile = profile().ok_or("profile")?;
+        let flags = compute_flags(FlagInput {
+            pack: &pack.pack,
+            profile: &profile,
+            invoices,
+            instances: &[],
+            today: "2026-09-20".to_owned(),
+            documented_obligation_ids: Vec::new(),
+            due_soon_days: None,
+        })?;
+        let summary = summarise_flags(&flags);
+        Ok((flags, summary))
+    }
+
+    fn find(flags: &[Flag], code: FlagCode) -> Option<&Flag> {
+        flags.iter().find(|flag| flag.code == code)
+    }
+
+    #[test]
+    fn a_retention_under_the_pack_minimum_is_dispensed_rather_than_missing()
+    -> Result<(), Box<dyn std::error::Error>> {
+        // 23 % of 100,00 EUR is 23,00 EUR, under the 25,00 EUR the pack fixes as the
+        // dispensation minimum (art. 101.º-B n.º 1 al. d)).
+        let (flags, _) = flags_for(&[resident("FR 1", A_COMPANY, 10_000)])?;
+        assert!(
+            find(&flags, FlagCode::RetentionMissingOnResident).is_none(),
+            "23,00 EUR of retention is dispensed, not missing"
+        );
+        let dispensed = find(&flags, FlagCode::RetentionDispensedArt101B).ok_or("dispensation")?;
+        assert_eq!(dispensed.severity, FlagSeverity::Info);
+        assert_eq!(dispensed.invoice_numbers, vec!["FR 1".to_owned()]);
+        assert!(
+            dispensed.detail.contains("23,00") && dispensed.detail.contains("25,00"),
+            "the flag must name the arithmetic: {}",
+            dispensed.detail
+        );
+        assert!(
+            dispensed
+                .legal_basis
+                .iter()
+                .any(|article| article.contains("101.º-B")),
+            "the dispensation must cite the article that grants it"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn a_natural_person_client_is_not_asked_to_withhold() -> Result<(), Box<dyn std::error::Error>> {
+        // 23 % of 813,01 EUR is 186,99 EUR — well over the minimum. What dispenses it is
+        // the client: a natural person is not an entity with organised accounting, so
+        // art. 101.º n.º 1 never obliged them to withhold.
+        let (flags, _) = flags_for(&[resident("FR 1", A_PERSON, 81_301)])?;
+        assert!(find(&flags, FlagCode::RetentionMissingOnResident).is_none());
+        let dispensed = find(&flags, FlagCode::RetentionDispensedArt101B).ok_or("dispensation")?;
+        assert!(
+            dispensed.detail.contains("pessoa singular"),
+            "{}",
+            dispensed.detail
+        );
+        assert!(
+            !dispensed.detail.contains(A_PERSON),
+            "the flag names the client, so the number must be masked: {}",
+            dispensed.detail
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn a_company_client_above_the_minimum_keeps_the_alert() -> Result<(), Box<dyn std::error::Error>> {
+        // A limited company with organised accounting owes 23 % of 250,00 EUR = 57,50 EUR,
+        // which is over the minimum. Nothing dispenses it, and this is the invoice the
+        // whole exercise is for: one true positive among the noise.
+        let (flags, _) = flags_for(&[resident("FR 1", A_COMPANY, 25_000)])?;
+        let missing = find(&flags, FlagCode::RetentionMissingOnResident).ok_or("the alert")?;
+        assert_eq!(missing.severity, FlagSeverity::Attention);
+        assert_eq!(missing.invoice_numbers, vec!["FR 1".to_owned()]);
+        assert!(find(&flags, FlagCode::RetentionDispensedArt101B).is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn four_invoices_with_no_retention_are_not_four_alerts() -> Result<(), Box<dyn std::error::Error>> {
+        // The shape of a real ledger: a natural person, two invoices under the minimum,
+        // and a company over it. Four invoices, one thing actually wrong.
+        let (flags, _) = flags_for(&[
+            resident("FR 1", A_PERSON, 81_301),
+            resident("FR 2", ANOTHER_COMPANY, 10_000),
+            resident("FR 3", A_THIRD_COMPANY, 6_000),
+            resident("FR 4", A_COMPANY, 25_000),
+        ])?;
+        let missing = find(&flags, FlagCode::RetentionMissingOnResident).ok_or("the alert")?;
+        assert_eq!(
+            missing.invoice_numbers,
+            vec!["FR 4".to_owned()],
+            "the flag must name the one invoice that is actually missing a retention"
+        );
+        let dispensed = find(&flags, FlagCode::RetentionDispensedArt101B).ok_or("dispensation")?;
+        assert_eq!(
+            dispensed.invoice_numbers,
+            vec!["FR 1".to_owned(), "FR 2".to_owned(), "FR 3".to_owned()]
+        );
+        assert_eq!(
+            flags
+                .iter()
+                .filter(|flag| flag.code == FlagCode::RetentionMissingOnResident)
+                .count(),
+            1,
+            "four invoices without retention are one flag, not four"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn an_operation_outside_the_scope_of_the_tax_is_not_turnover_for_the_ceiling()
+    -> Result<(), Box<dyn std::error::Error>> {
+        // The art. 53.º ceiling measures turnover of the small-business regime. An
+        // operation the tax does not reach is not part of it, and counting it would let
+        // untaxed activity push a person out of the regime.
+        let mut exempt = invoice("FR 1", "2026-05-01", "PT", 100_000, 2300, 0);
+        exempt.vat_treatment = VatTreatment::IsentoArt53;
+        let mut outside = invoice("FR 2", "2026-05-02", "PT", 900_000, 0, 0);
+        outside.vat_treatment = VatTreatment::NaoSujeito;
+        let mut abroad = invoice("FR 3", "2026-05-03", "DE", 50_000, 0, 0);
+        abroad.vat_treatment = VatTreatment::AutoliquidacaoUe;
+
+        let scopes = turnover_by_scope(&[exempt, outside, abroad], 2026)?;
+        assert_eq!(scopes.national, 100_000, "only the exempt operation counts");
+        assert_eq!(
+            scopes.eu, 50_000,
+            "the EU figure still names the client's country"
+        );
+        Ok(())
     }
 }

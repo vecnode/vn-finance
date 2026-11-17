@@ -91,8 +91,19 @@ and the pack says so.
 - Source: Portal das Finanças FAQ *IVA > Enquadramento Legal > Reg. Especial
   Isenção Art 53º* and Ofício Circulado n.º 25062 (DSIVA, 2025-03-26).
 
-The practical consequence: **the €15 000 ceiling is a number to watch all year**,
-not a checkbox. The panel shows the distance to it and warns early, because
+**"Not subject" is not "exempt".** An invoice with no VAT can say one of two
+things, and the difference is load-bearing: *não sujeito ou não tributado* means
+the operation is outside the scope of the tax (CIVA art. 4.º and art. 6.º), while
+*isento* means the tax applies and an article exempts it. The receipt states
+which, and the parser keeps that sentence (`ivaReason`). Recording an out-of-scope
+operation as the art. 53.º exemption states a legal ground the document never
+gave **and** counts it against a ceiling it has nothing to do with, so the two are
+separate treatments (`nao_sujeito`, `isento_art53`) and only the second counts
+towards the €15 000. When a Portuguese invoice charges no VAT and names no ground,
+the application records the art. 53.º exemption and says that it had to assume it;
+it does not read the assumption as the document's own words.
+
+The practical consequence: **the €15 000 ceiling is a number to watch all year**,not a checkbox. The panel shows the distance to it and warns early, because
 crossing it changes the invoicing model, not just the amount.
 
 **Periodic regimes:** quarterly below the ceiling set by CIVA art. 41.º —
@@ -126,6 +137,24 @@ application models this per invoice (`retentionBp`, defaulted from the client's
 country and editable) and reconciles the total withheld against the year, because
 a mismatch between withheld and declared is one of the most common causes of an
 IRS surprise.
+
+**Dispensation (CIRS art. 101.º-B).** Not every resident invoice without a
+retention is a lapse, and the two grounds that decide it are checkable from the
+invoice itself:
+
+- art. 101.º n.º 1 obliges *entities that have or must have organised accounting*
+  to withhold. A natural person paying for a service is not one of them, which is
+  why the client's tax number (NIF vs NIPC) is what settles it;
+- art. 101.º-B n.º 1 al. d) dispenses a retention **under €25**, so an invoice
+  whose 23 % comes to less than that is correctly withheld at zero. The minimum is
+  a pack constant (`irs.withholding.art101b.minimumRetentionCents`), not a number
+  in the code.
+
+The sentence the invoicing software prints, `Sem retenção - Art.101º, n.º1 do
+CIRS`, is **not** a ground: it appears on every invoice it issues, including the
+ones where a retention was due. The engine therefore computes the dispensation
+and never reads it off that sentence. A resident invoice with no retention and no
+dispensation stays an attention flag.
 
 The **deadline** for delivering the withheld amounts (day 20 of the following
 month) comes from the AT's published payment calendar (PARTIAL: the article that
@@ -327,6 +356,7 @@ scope for this profile.
 | Modelo 3 deadline | ✔ (30 June) | | |
 | e-fatura communication dates | ✔ | | |
 | Withholding rates | ✔ (23 / 11,5 / 25%) | | 16,5% IP and 20% EBF not coded |
+| Withholding dispensation (art. 101.º-B) | ✔ (€25 minimum; natural-person client) | | al. a) small-turnover waiver, al. b) reimbursements |
 | Simplified-regime coefficients | ✔ (0,75 / 0,35) | | |
 | art. 31.º n.º 13 add-back mechanism | ✔ (no cap) | | |
 | Organised-accounting ceiling | | ✔ (€200 000) | |

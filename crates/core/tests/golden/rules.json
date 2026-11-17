@@ -1,7 +1,7 @@
 {
-  "checksum": "bd5b94e955a06f66523d8d71ace208d356ca2d97f3f30161fd2eb46654b9973d",
+  "checksum": "72ef782604989dbf0b1de9e779eacc5629d0ca6fba6db53b1c74bbc7c3be8c53",
   "year": 2026,
-  "pack_version": "2026.1.1",
+  "pack_version": "2026.1.2",
   "obligation_ids": [
     "irs.modelo3",
     "irs.pagamentosPorConta",
@@ -25,11 +25,11 @@
     "guardar.documentos"
   ],
   "summary": {
-    "pack_version": "2026.1.1",
+    "pack_version": "2026.1.2",
     "year": 2026,
-    "checksum": "bd5b94e955a06f66523d8d71ace208d356ca2d97f3f30161fd2eb46654b9973d",
-    "sources": 21,
-    "official_sources": 18,
+    "checksum": "72ef782604989dbf0b1de9e779eacc5629d0ca6fba6db53b1c74bbc7c3be8c53",
+    "sources": 22,
+    "official_sources": 19,
     "obligations": 20,
     "verified": 6,
     "partial": 14,

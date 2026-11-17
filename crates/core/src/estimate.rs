@@ -31,6 +31,13 @@ pub enum InvoiceStatus {
 }
 
 /// How VAT was treated on an invoice.
+///
+/// "Not subject to VAT" and "exempt from VAT" are different things and the
+/// distinction is not pedantic: an operation outside the scope of the tax (art. 4.º
+/// and art. 6.º of the CIVA) is not turnover of the small-business regime, while an
+/// operation the regime exempts is. Recording the first as the second inflates the
+/// figure the art. 53.º ceiling is measured on, and states a legal ground the
+/// document itself does not.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VatTreatment {
@@ -40,6 +47,8 @@ pub enum VatTreatment {
     AutoliquidacaoUe,
     /// Exempt under art. 53.º of the CIVA.
     IsentoArt53,
+    /// Outside the scope of the tax: "não sujeito ou não tributado" on the document.
+    NaoSujeito,
     /// An export outside the European Union.
     Exportacao,
 }
@@ -52,8 +61,26 @@ impl VatTreatment {
             Self::IvaPt => "IVA português",
             Self::AutoliquidacaoUe => "autoliquidação pelo cliente (UE)",
             Self::IsentoArt53 => "isento pelo art. 53.º",
+            Self::NaoSujeito => "não sujeito ou não tributado",
             Self::Exportacao => "exportação",
         }
+    }
+
+    /// Whether an invoice with this treatment counts towards the art. 53.º CIVA
+    /// ceiling.
+    ///
+    /// The ceiling in art. 53.º n.º 1 measures the **volume de negócios** of the
+    /// small-business regime, so the operations that regime exempts count and the
+    /// ones the tax never reaches do not. An operation that is not subject to IVA
+    /// is outside the scope of the tax altogether, and counting it would let
+    /// activity the CIVA never taxes push a person out of the regime.
+    ///
+    /// The three cross-border treatments are left in the count on purpose: the
+    /// caller already separates them by where the client is, so they never reach a
+    /// national total.
+    #[must_use]
+    pub fn counts_towards_art53_ceiling(self) -> bool {
+        !matches!(self, Self::NaoSujeito)
     }
 }
 

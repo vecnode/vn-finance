@@ -1,4 +1,4 @@
-﻿//! The invoices issued this year.
+//! The invoices issued this year.
 //!
 //! A receipt is the document the client withholds tax from, so the table shows the
 //! four numbers that matter on one: what was invoiced, the IVA charged, the IRS the
@@ -263,6 +263,7 @@ fn vat_label(treatment: VatTreatment, rate_bp: i64) -> String {
         VatTreatment::IvaPt => format!("{} IVA", vnf_core::money::format_bp_as_percent(rate_bp)),
         VatTreatment::AutoliquidacaoUe => "autoliquidação".to_owned(),
         VatTreatment::IsentoArt53 => "isento art. 53.º".to_owned(),
+        VatTreatment::NaoSujeito => "não sujeito".to_owned(),
         VatTreatment::Exportacao => "exportação".to_owned(),
     }
 }
@@ -275,6 +276,7 @@ mod tests {
     fn an_eu_invoice_is_named_as_a_reverse_charge() {
         assert_eq!(vat_label(VatTreatment::AutoliquidacaoUe, 0), "autoliquidação");
         assert_eq!(vat_label(VatTreatment::IsentoArt53, 0), "isento art. 53.º");
+        assert_eq!(vat_label(VatTreatment::NaoSujeito, 0), "não sujeito");
     }
 
     #[test]

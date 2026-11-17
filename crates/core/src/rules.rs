@@ -1095,9 +1095,9 @@ mod tests {
         let pack = loaded()?;
         assert_eq!(pack.pack.jurisdiction, "PT");
         assert_eq!(pack.pack.year, 2026);
-        assert_eq!(pack.pack.pack_version, "2026.1.1");
+        assert_eq!(pack.pack.pack_version, "2026.1.2");
         assert_eq!(pack.pack.obligations.len(), 20);
-        assert_eq!(pack.pack.sources.len(), 21);
+        assert_eq!(pack.pack.sources.len(), 22);
         assert_eq!(pack.pack.todo.len(), 21);
         assert_eq!(pack.checksum.len(), 64);
         assert!(
@@ -1172,13 +1172,37 @@ mod tests {
     }
 
     #[test]
+    fn the_pack_states_the_art101b_minimum_a_retention_is_measured_against() -> Result<(), PackError> {
+        // CIRS art. 101.º-B n.º 1 al. d): a retention under 25 EUR is not withheld. The
+        // figure is law, so it lives in the pack rather than in the flag engine, and a
+        // pack that left it out would make the engine refuse to dispense anything.
+        let pack = loaded()?;
+        assert_eq!(
+            constant_cents(
+                &pack.pack,
+                &["irs", "withholding", "art101b", "minimumRetentionCents"]
+            ),
+            Some(2500)
+        );
+        let sources = constant(&pack.pack, &["irs", "withholding", "art101b", "sourceIds"]);
+        let Some(Value::Array(ids)) = sources else {
+            return Err(PackError::NotAnObject);
+        };
+        assert!(
+            ids.iter().any(|id| id.as_str() == Some("at-cirs-art101b")),
+            "the dispensation must cite the article it comes from"
+        );
+        Ok(())
+    }
+
+    #[test]
     fn the_summary_counts_what_the_interface_shows() -> Result<(), PackError> {
         let summary = summarise_pack(&loaded()?);
         assert_eq!(summary.obligations, 20);
-        assert_eq!(summary.sources, 21);
+        assert_eq!(summary.sources, 22);
         assert_eq!(
             summary.official_sources + (summary.sources - summary.official_sources),
-            21
+            22
         );
         assert_eq!(
             summary.verified + summary.partial + summary.unverified + summary.stale,

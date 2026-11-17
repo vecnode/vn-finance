@@ -229,6 +229,26 @@ pub fn show(ctx: &egui::Context, form: &mut Form) -> Option<Action> {
                 if let Some(file) = &form.document_file {
                     widgets::caption(ui, &format!("arquivado no cofre como {file}"));
                 }
+                // What the document said about IVA, and the ground it gave. A person
+                // who cannot see "não sujeito" here cannot tell it from "isento pelo
+                // art. 53.º", and the two are different enquadramentos.
+                let treatment = treatment_hint(
+                    &form.client_country,
+                    percent_bp(&form.iva_rate),
+                    draft.iva_reason.as_deref(),
+                );
+                widgets::caption(
+                    ui,
+                    &match treatment {
+                        Some(treatment) => {
+                            format!("tratamento de IVA: {}", treatment.label())
+                        }
+                        None => "tratamento de IVA por decidir: o documento não diz o motivo".to_owned(),
+                    },
+                );
+                if let Some(reason) = &draft.iva_reason {
+                    widgets::caption(ui, &format!("o documento diz: {reason}"));
+                }
             });
             if !draft.problems.is_empty() {
                 ui.add_space(8.0);
@@ -334,20 +354,14 @@ pub fn status_for(draft: &ReceiptDraft) -> InvoiceStatus {
     }
 }
 
-/// The VAT treatment a country and a rate imply, for the form's preview line.
+/// The VAT treatment the document implies, for the form's preview line.
+///
+/// The rule itself lives in the core, because it is a statement about the document and
+/// about the tax, not about layout. `None` means the document charges no VAT and does
+/// not say why — the one case where the window has to ask.
 #[must_use]
-pub fn treatment_hint(country: &str, rate_bp: Option<i64>) -> VatTreatment {
-    match vnf_core::countries::scope_of(country) {
-        vnf_core::countries::TurnoverScope::National => {
-            if rate_bp.is_some_and(|rate| rate > 0) {
-                VatTreatment::IvaPt
-            } else {
-                VatTreatment::IsentoArt53
-            }
-        }
-        vnf_core::countries::TurnoverScope::Eu => VatTreatment::AutoliquidacaoUe,
-        vnf_core::countries::TurnoverScope::NonEu => VatTreatment::Exportacao,
-    }
+pub fn treatment_hint(country: &str, rate_bp: Option<i64>, reason: Option<&str>) -> Option<VatTreatment> {
+    vnf_core::receipt::stated_vat_treatment(country, rate_bp, reason)
 }
 
 #[cfg(test)]
@@ -372,10 +386,22 @@ mod tests {
 
     #[test]
     fn a_country_and_a_rate_imply_a_treatment() {
-        assert_eq!(treatment_hint("PT", Some(2300)), VatTreatment::IvaPt);
-        assert_eq!(treatment_hint("PT", Some(0)), VatTreatment::IsentoArt53);
-        assert_eq!(treatment_hint("PT", None), VatTreatment::IsentoArt53);
-        assert_eq!(treatment_hint("FI", None), VatTreatment::AutoliquidacaoUe);
-        assert_eq!(treatment_hint("US", None), VatTreatment::Exportacao);
+        assert_eq!(treatment_hint("PT", Some(2300), None), Some(VatTreatment::IvaPt));
+        assert_eq!(
+            treatment_hint("FI", None, None),
+            Some(VatTreatment::AutoliquidacaoUe)
+        );
+        assert_eq!(treatment_hint("US", None, None), Some(VatTreatment::Exportacao));
+        // "Não sujeito" is not the art. 53.º exemption and the two must not collapse.
+        assert_eq!(
+            treatment_hint("PT", Some(0), Some("a) Não sujeito ou não tributado")),
+            Some(VatTreatment::NaoSujeito)
+        );
+        assert_eq!(
+            treatment_hint("PT", Some(0), Some("Isento - art. 53.º")),
+            Some(VatTreatment::IsentoArt53)
+        );
+        // A zero rate with no stated ground is a question, not an answer.
+        assert_eq!(treatment_hint("PT", Some(0), None), None);
     }
 }

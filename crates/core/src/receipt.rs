@@ -113,6 +113,15 @@ pub struct ReceiptDraft {
     pub net_cents: Option<i64>,
     /// Why nothing was withheld, when the document says.
     pub retention_reason: Option<String>,
+    /// Why the operation carried no VAT, when the document says.
+    ///
+    /// "Não sujeito ou não tributado" and "isento pelo art. 53.º" are different legal
+    /// grounds and the document is the only witness to which one it used. The
+    /// reference implementation had no field for this and therefore could not tell
+    /// them apart; the field is optional and omitted when absent so that the parity
+    /// fixtures, none of which carries an exemption, still compare whole.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iva_reason: Option<String>,
     /// "Documento emitido a título de: …".
     pub purpose: Option<String>,
     /// The document itself says it was paid.
@@ -618,6 +627,80 @@ fn percentage_at(text: &str) -> Option<usize> {
     None
 }
 
+/// The words a Portuguese receipt uses to say why an operation carried no VAT.
+///
+/// A rate of 23 % is not one of them: "Taxa Normal - Continente" is a taxable
+/// operation, and reading it as a ground would put a legal basis on every invoice.
+const EXEMPTION_MARKERS: [&str; 6] = [
+    "isenc",
+    "isento",
+    "nao sujeit",
+    "nao tributad",
+    "art. 53",
+    "artigo 53",
+];
+
+/// The ground a receipt states for not charging VAT, as the document prints it.
+///
+/// The IVA summary table puts it in the row under its heading —
+/// `0,00% - a) Não sujeito ou não tributado   100,00 €   0,00 €` — so the row has to
+/// start with the rate and then name one of the grounds. Anything else, including
+/// "Taxa Normal - Continente", is not a ground and yields nothing.
+fn iva_reason_row(rows: &[String]) -> Option<String> {
+    for row in rows {
+        let trimmed = row.trim_start();
+        let Some(sign) = trimmed.find('%') else {
+            continue;
+        };
+        // The rate must be the row's own first column, written as a plain number.
+        if !trimmed[..sign]
+            .chars()
+            .all(|ch| ch.is_ascii_digit() || ch == ',' || ch == '.' || ch == ' ')
+        {
+            continue;
+        }
+        let folded = normalise_with_map(trimmed).value;
+        if !EXEMPTION_MARKERS.iter().any(|marker| folded.contains(marker)) {
+            continue;
+        }
+        // Everything after the percent sign, minus the table's own money columns. They
+        // are taken off from the end, and only when they end in a euro sign: a ground may
+        // itself end in a number — "art. 9.º n.º 10" — and cutting at the first amount
+        // would read "10  100,00 euro" as one figure and shorten the article out of the
+        // quote. An amount of four figures keeps its leading group ("1 000,00 euro" loses
+        // only "000,00"), which is why the space is not part of a figure here.
+        let mut reason = &trimmed[sign + 1..];
+        for _ in 0..2 {
+            let without_euro = reason.trim_end_matches(['€', ' ']);
+            if without_euro.len() == reason.len() {
+                break;
+            }
+            let Some(start) = without_euro
+                .char_indices()
+                .rev()
+                .take_while(|(_, ch)| ch.is_ascii_digit() || *ch == '.' || *ch == ',')
+                .last()
+                .map(|(index, _)| index)
+            else {
+                break;
+            };
+            // Only a figure with cents is a table column; "art. 53" is not one.
+            if !without_euro[start..].contains(',') {
+                break;
+            }
+            reason = &without_euro[..start];
+        }
+        let reason = reason
+            .trim_start_matches([' ', '-', '–', '—', '·', '|', ':'])
+            .trim_end_matches([' ', '-', '–', '—', '·', '|'])
+            .trim();
+        if !reason.is_empty() {
+            return Some(reason.to_owned());
+        }
+    }
+    None
+}
+
 /// The description of what was supplied.
 fn description_from(body_rows: &[String]) -> Option<String> {
     for row in body_rows {
@@ -926,12 +1009,20 @@ pub fn parse_receipt(pdf: &PdfText) -> ReceiptDraft {
     // --- document identity ---------------------------------------------------
     let mut kind: Option<String> = None;
     let mut number: Option<String> = None;
-    for row in &rows {
+    for (index, row) in rows.iter().enumerate() {
         let Some(found) = document_kind(row) else {
             continue;
         };
         kind = Some(found.to_owned());
-        number = bracketed_number(row).or_else(|| labelled_number(row));
+        // An "ato isolado" receipt prints the type and the number on two rows:
+        // `Fatura-Recibo de ato isolado`, then `<FR TESTE/2026/8>`. Without the
+        // look-ahead the number is lost and the record falls back to a made-up one.
+        number = bracketed_number(row)
+            .or_else(|| labelled_number(row))
+            .or_else(|| {
+                rows.get(index + 1)
+                    .and_then(|following| bracketed_number(following))
+            });
         break;
     }
 
@@ -1047,6 +1138,13 @@ pub fn parse_receipt(pdf: &PdfText) -> ReceiptDraft {
     .map(|row| without_figures(row))
     .map(|text| truncate_chars(&text, 200))
     .filter(|text| !text.is_empty());
+
+    // The IVA summary table prints the ground in the row under its heading:
+    // "0,00% - a) Não sujeito ou não tributado   100,00 €   0,00 €". The parenthetical
+    // code ("a)") is part of what the issuer printed, so it is kept.
+    let iva_reason = iva_reason_row(&rows)
+        .map(|row| truncate_chars(&row, 200))
+        .filter(|text| !text.is_empty());
 
     let purpose = row_matching(&rows, |value| value.contains("documento emitido a titulo de"))
         .and_then(|row| tail_after(row, |value| word_prefix(value, "documento emitido a titulo de")));
@@ -1216,6 +1314,7 @@ pub fn parse_receipt(pdf: &PdfText) -> ReceiptDraft {
         total_cents,
         net_cents,
         retention_reason,
+        iva_reason,
         purpose,
         declares_paid,
         customer_country_hint,
@@ -1349,6 +1448,44 @@ fn first_date_in(row: &str) -> Option<String> {
         let _ = month_start;
         return Some(chars[index..year_start + 4].iter().collect());
     }
+    None
+}
+
+/// The VAT treatment the document itself states, when it states one clearly.
+///
+/// This is the one place the ground is decided, so the form and the ledger agree. A
+/// Portuguese invoice with no VAT is not one thing: the operation may be outside the
+/// scope of the tax, exempt under art. 53.º, or exempt under another article, and the
+/// receipt says which. `None` means the document charges no VAT and does not say why —
+/// which is a question for the person, not something to fill in with the most common
+/// answer.
+#[must_use]
+pub fn stated_vat_treatment(
+    country: &str,
+    iva_rate_bp: Option<i64>,
+    iva_reason: Option<&str>,
+) -> Option<VatTreatment> {
+    match scope_of(country) {
+        TurnoverScope::Eu => return Some(VatTreatment::AutoliquidacaoUe),
+        TurnoverScope::NonEu => return Some(VatTreatment::Exportacao),
+        TurnoverScope::National => {}
+    }
+    if iva_rate_bp.is_some_and(|rate| rate > 0) {
+        return Some(VatTreatment::IvaPt);
+    }
+    let folded = normalise_with_map(iva_reason?).value;
+    // "Não sujeito ou não tributado" is the option the invoicing software offers for
+    // an operation the tax does not reach. It is NOT the art. 53.º exemption, and
+    // reading it as one would count it against a ceiling it has nothing to do with.
+    if folded.contains("nao sujeit") || folded.contains("nao tributad") {
+        return Some(VatTreatment::NaoSujeito);
+    }
+    if folded.contains("art. 53") || folded.contains("artigo 53") {
+        return Some(VatTreatment::IsentoArt53);
+    }
+    // An exemption the application cannot name — "isento", or an article it has no
+    // treatment for. The caller decides whether to ask; guessing here would put a
+    // legal ground on the record that the document never stated.
     None
 }
 
@@ -1516,19 +1653,28 @@ pub fn invoice_from_receipt(input: &ReceiptInvoiceInput<'_>) -> ReceiptInvoiceRe
     if treatment.is_none()
         && let Some(country) = &country
     {
-        let scope = scope_of(country);
-        treatment = Some(if scope == TurnoverScope::National {
-            let rate = confirmed.iva_rate_bp.or(draft.iva_rate_bp);
-            if rate.is_some_and(|rate| rate > 0) {
-                VatTreatment::IvaPt
-            } else {
-                VatTreatment::IsentoArt53
-            }
-        } else if scope == TurnoverScope::Eu {
-            VatTreatment::AutoliquidacaoUe
-        } else {
-            VatTreatment::Exportacao
-        });
+        let rate = confirmed.iva_rate_bp.or(draft.iva_rate_bp);
+        treatment = stated_vat_treatment(country, rate, draft.iva_reason.as_deref());
+        if treatment.is_none() {
+            // A Portuguese invoice that charges no VAT, for a reason the document either
+            // does not give or gives in terms this build has no treatment for. Something
+            // has to be recorded, so it is the small-business exemption — and the person
+            // is told which assumption was made, in the document's own words when it said
+            // anything at all.
+            treatment = Some(VatTreatment::IsentoArt53);
+            let stated = match draft.iva_reason.as_deref() {
+                Some(reason) => format!(
+                    "O documento diz \"{reason}\", que a aplicação não reconhece como motivo de \
+                     isenção que saiba registar."
+                ),
+                None => "O documento não liquida IVA e não identifica o motivo.".to_owned(),
+            };
+            warnings.push(format!(
+                "{stated} Ficou registado como isenção do art. 53.º do CIVA; se a isenção for de \
+                 outro artigo (o art. 9.º, por exemplo), o enquadramento é outro e o limite do art. \
+                 53.º não se aplica da mesma maneira. Confirma o motivo no documento."
+            ));
+        }
     }
 
     let mut iva_rate_bp = confirmed.iva_rate_bp.or(draft.iva_rate_bp);
@@ -1735,6 +1881,7 @@ fn vat_wire_name(treatment: VatTreatment) -> &'static str {
         VatTreatment::IvaPt => "iva_pt",
         VatTreatment::AutoliquidacaoUe => "autoliquidacao_ue",
         VatTreatment::IsentoArt53 => "isento_art53",
+        VatTreatment::NaoSujeito => "nao_sujeito",
         VatTreatment::Exportacao => "exportacao",
     }
 }
@@ -1742,6 +1889,8 @@ fn vat_wire_name(treatment: VatTreatment) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::profile::{ProfileInput, create_default_profile};
+    use crate::rules::load_embedded;
 
     #[test]
     fn folding_a_row_removes_accents_and_remembers_where_it_came_from() {
@@ -1809,5 +1958,201 @@ mod tests {
         // percentage the document never stated.
         assert_eq!(retention_bp_for(30_000, 1), None);
         assert_eq!(retention_bp_for(0, 500), None);
+    }
+
+    /// A document made of rows, which is what the parser reads.
+    fn document(rows: &[&str]) -> PdfText {
+        PdfText {
+            page_count: 1,
+            pages: Vec::new(),
+            rows: rows.iter().map(|row| (*row).to_owned()).collect(),
+            text: rows.join("\n"),
+            problems: Vec::new(),
+        }
+    }
+
+    /// The rows an "ato isolado" receipt prints, with the number on its own row.
+    ///
+    /// Every name, tax number and document number here is invented for the fixture; none
+    /// of it comes from a real receipt.
+    fn ato_isolado() -> Vec<&'static str> {
+        vec![
+            "Fatura-Recibo de ato isolado",
+            "<FR TESTE/2026/8>",
+            "emitida em 10/03/2026",
+            "DADOS DO TRANSMITENTE DE BENS OU DO PRESTADOR DE SERVIÇOS",
+            "NOME MARIA EXEMPLO SILVA",
+            "NÚMERO DE IDENTIFICAÇÃO FISCAL (NIF) - 123456789",
+            "DADOS DO ADQUIRENTE DE BENS OU DE SERVIÇOS",
+            "NOME Empresa Exemplo, Lda.",
+            "NÚMERO DE IDENTIFICAÇÃO FISCAL 501234560",
+            "DADOS DA TRANSMISSÃO DE BENS OU DA PRESTAÇÃO DE SERVIÇOS",
+            "Serviço   1 Unidade    -    100,00 €",
+            "IVA",
+            "Taxa | Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+            "0,00% - a) Não sujeito ou não tributado 100,00 € 0,00 €",
+            "TOTAIS DO DOCUMENTO",
+            "Valor ilíquido 100,00 €",
+            "IVA 0,00 €",
+            "TOTAL DO DOCUMENTO 100,00 €",
+        ]
+    }
+
+    #[test]
+    fn a_receipt_that_prints_its_number_on_the_next_row_still_keeps_it() {
+        // An "ato isolado" receipt heads the page with the document type and puts the
+        // number beneath it. Reading only the type's own row loses the number, and a
+        // record with a made-up number is not a record of that document.
+        let draft = parse_receipt(&document(&ato_isolado()));
+        assert_eq!(draft.number.as_deref(), Some("FR TESTE/2026/8"));
+        assert_eq!(draft.kind.as_deref(), Some("Fatura-Recibo"));
+    }
+
+    #[test]
+    fn a_zero_rate_that_says_nao_sujeito_is_not_the_art53_exemption() {
+        let draft = parse_receipt(&document(&ato_isolado()));
+        assert_eq!(
+            draft.iva_reason.as_deref(),
+            Some("a) Não sujeito ou não tributado"),
+            "the ground is what the document printed"
+        );
+        assert_eq!(
+            stated_vat_treatment("PT", draft.iva_rate_bp, draft.iva_reason.as_deref()),
+            Some(VatTreatment::NaoSujeito)
+        );
+    }
+
+    #[test]
+    fn a_taxable_rate_is_not_read_as_an_exemption_ground() {
+        // The row states a rate and a reason, but the reason is "Taxa Normal": reading
+        // it as a ground would put a legal basis on every taxed invoice.
+        let draft = parse_receipt(&document(&[
+            "Fatura-Recibo <FR 1>",
+            "emitida em 20/09/2026",
+            "IVA",
+            "Taxa | Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+            "23,00% - Taxa Normal - Continente 813,01 € 186,99 €",
+            "Valor ilíquido 813,01 €",
+            "IVA 186,99 €",
+        ]));
+        assert_eq!(draft.iva_reason, None);
+        assert_eq!(
+            stated_vat_treatment("PT", draft.iva_rate_bp, draft.iva_reason.as_deref()),
+            Some(VatTreatment::IvaPt)
+        );
+    }
+
+    #[test]
+    fn a_zero_rate_with_no_ground_asks_instead_of_answering() {
+        // Nothing in the document names an exemption, so there is nothing to record:
+        // the caller has to say so rather than pick the most common ground.
+        assert_eq!(stated_vat_treatment("PT", Some(0), None), None);
+        assert_eq!(stated_vat_treatment("PT", None, None), None);
+        // An exemption the application can name is read from the reason.
+        assert_eq!(
+            stated_vat_treatment("PT", Some(0), Some("Isento artigo 53.º")),
+            Some(VatTreatment::IsentoArt53)
+        );
+        // A cross-border invoice does not depend on the reason at all.
+        assert_eq!(
+            stated_vat_treatment("DE", Some(0), None),
+            Some(VatTreatment::AutoliquidacaoUe)
+        );
+        assert_eq!(
+            stated_vat_treatment("US", Some(0), None),
+            Some(VatTreatment::Exportacao)
+        );
+    }
+
+    /// Run a document all the way to the record the ledger would keep.
+    fn record(rows: &[&str]) -> Result<ReceiptInvoiceResult, Box<dyn std::error::Error>> {
+        let pack = load_embedded()?;
+        let profile = create_default_profile(&ProfileInput {
+            nif: "123456789".to_owned(),
+            name: "Pessoa Exemplo".to_owned(),
+            start_date: Some("2019-04-01".to_owned()),
+            iva_regime: Some(crate::types::IvaRegime::Trimestral),
+            ..Default::default()
+        })
+        .ok()
+        .ok_or("profile")?;
+        let draft = parse_receipt(&document(rows));
+        Ok(invoice_from_receipt(&ReceiptInvoiceInput {
+            draft: &draft,
+            pack: &pack.pack,
+            profile: &profile,
+            confirmed: &ReceiptConfirmation::default(),
+            id: "inv_teste".to_owned(),
+            document_file: Some("fatura.pdf".to_owned()),
+            fallback_number: "SEM-NUMERO".to_owned(),
+        }))
+    }
+
+    #[test]
+    fn a_nao_sujeito_receipt_is_recorded_as_nao_sujeito() -> Result<(), Box<dyn std::error::Error>> {
+        // The whole point: the document says "não sujeito", so the record says it too,
+        // and nothing had to be assumed to say it.
+        let result = record(&ato_isolado())?;
+        let invoice = result.invoice.as_ref().ok_or("the receipt must be recordable")?;
+        assert_eq!(invoice.vat_treatment, VatTreatment::NaoSujeito);
+        assert_eq!(invoice.iva_rate_bp, 0);
+        assert_eq!(invoice.base_cents, 10_000);
+        assert!(
+            !result
+                .warnings
+                .iter()
+                .any(|warning| warning.contains("Ficou registado como isenção")),
+            "nothing was assumed, so nothing has to be confessed: {:?}",
+            result.warnings
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn a_ground_that_ends_in_a_number_keeps_its_number() {
+        // The table prints the ground beside its two money columns, and a ground may end
+        // in a figure: "art. 9.º n.º 10" followed by "100,00 €" must not read as
+        // "10 100,00 €" — the article number is part of what the document said.
+        let draft = parse_receipt(&document(&[
+            "Fatura-Recibo <FR 1>",
+            "Taxa | Motivo de isenção/não sujeição/não tributação Valor Tributável Valor IVA",
+            "0,00% - Isento - art. 9.º n.º 10 100,00 € 0,00 €",
+        ]));
+        assert_eq!(
+            draft.iva_reason.as_deref(),
+            Some("Isento - art. 9.º n.º 10"),
+            "only the table's own figures come off"
+        );
+    }
+
+    #[test]
+    fn an_exemption_the_application_cannot_name_is_recorded_with_the_assumption_stated()
+    -> Result<(), Box<dyn std::error::Error>> {
+        // "Isento" with no article the build knows is not the art. 53.º exemption, but it
+        // is what the document says. The record has to hold something, so it holds that —
+        // and the warning quotes the document rather than paraphrasing it.
+        let rows = ato_isolado()
+            .into_iter()
+            .map(|row| {
+                if row.starts_with("0,00%") {
+                    "0,00% - Isento - art. 9.º n.º 10 100,00 € 0,00 €"
+                } else {
+                    row
+                }
+            })
+            .collect::<Vec<&str>>();
+        let result = record(&rows)?;
+        let invoice = result.invoice.as_ref().ok_or("the receipt must be recordable")?;
+        assert_eq!(invoice.vat_treatment, VatTreatment::IsentoArt53);
+        assert!(
+            result
+                .warnings
+                .iter()
+                .any(|warning| warning.contains("art. 9.º n.º 10")
+                    && warning.contains("Ficou registado como isenção do art. 53.º")),
+            "the warning must quote what the document said: {:?}",
+            result.warnings
+        );
+        Ok(())
     }
 }

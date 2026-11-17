@@ -1,7 +1,7 @@
 {
   "jurisdiction": "PT",
   "year": 2026,
-  "packVersion": "2026.1.1",
+  "packVersion": "2026.1.2",
   "generatedAt": "2026-09-20",
   "units": {
     "money": "EUR_cents",
@@ -88,6 +88,14 @@
       "title": "CIRS, artigo 101.º - Retenção sobre rendimentos de outras categorias",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101.aspx",
       "retrievedAt": "2026-09-20"
+    },
+    {
+      "id": "at-cirs-art101b",
+      "tier": "official",
+      "authority": "Autoridade Tributária e Aduaneira (AT)",
+      "title": "CIRS, artigo 101.º-B - Dispensa de retenção na fonte",
+      "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101b.aspx",
+      "retrievedAt": "2026-11-17"
     },
     {
       "id": "at-cirs-art102",
@@ -222,9 +230,16 @@
         "professionalServicesResident": 2300,
         "otherCategoryBResident": 1150,
         "nonResident": 2500,
+        "art101b": {
+          "minimumRetentionCents": 2500,
+          "sourceIds": [
+            "at-cirs-art101b"
+          ]
+        },
         "sourceIds": [
           "at-cirs-art101",
           "at-cirs-art71",
+          "at-cirs-art101b",
           "at-folheto-inicio-atividade"
         ]
       }

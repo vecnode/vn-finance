@@ -15,7 +15,7 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use vnf_core::calendar::{build_agenda, upcoming};
@@ -42,6 +42,44 @@ use vnf_core::types::{
 };
 
 type Problem = Box<dyn std::error::Error>;
+
+/// Whether this run rewrites the two pack-derived fixtures instead of asserting on them.
+///
+/// `rules.json` and `calendar.json` are a record of the pack that shipped when they were
+/// made: the pack's checksum and version, its summary and its whole `todo`, and a digest
+/// over every field of every agenda instance. Any change to `rules/pt/*.json` moves them
+/// — a quoted passage, a corrected date, next year's rollover — and the generator that
+/// first produced them (`tools/golden/emit.ts`, against the TypeScript core) is gone with
+/// that code. The re-baseline therefore lives here, beside the assertions it rewrites:
+///
+/// ```text
+/// UPDATE_GOLDEN=1 cargo test -p vnf-core --test golden
+/// ```
+///
+/// It recomputes only what the engine computes, keeps the inputs a fixture carries
+/// (`today`, the profile, the obligation ids asked about) and touches nothing else: the
+/// behavioural fixtures — money, dates, conditions, countries, NIF, profile, flags,
+/// estimate, pdf — hold no pack and are never rewritten. Read the diff before committing
+/// it; a digest that moved is a page a person reads differently.
+fn updating() -> bool {
+    std::env::var_os("UPDATE_GOLDEN").is_some()
+}
+
+/// Write one fixture over itself.
+fn write_fixture(name: &str, json: String) -> Result<(), Problem> {
+    let path = fixture_path(name);
+    std::fs::write(&path, json)?;
+    println!("re-baselined {}", path.display());
+    Ok(())
+}
+
+/// One fixture's path on disk, where this test binary can find the repository.
+fn fixture_path(name: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("golden")
+        .join(name)
+}
 
 // ---------------------------------------------------------------------------
 // money
@@ -596,7 +634,7 @@ fn client_countries_match_the_reference() -> Result<(), Problem> {
 // rules
 // ---------------------------------------------------------------------------
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct RulesFixture {
     checksum: String,
     year: i64,
@@ -609,7 +647,7 @@ struct RulesFixture {
     constant_reads: Vec<ConstantRead>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct SummaryCase {
     pack_version: String,
     year: i64,
@@ -626,27 +664,27 @@ struct SummaryCase {
     null_constants: Vec<String>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct ProblemCase {
     level: String,
     path: String,
     message: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct FreshnessCase {
     today: String,
     status: String,
     message: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct DeclareCase {
     id: String,
     declared: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct ConstantRead {
     path: String,
     value: Value,
@@ -672,23 +710,14 @@ fn the_pack_matches_the_reference() -> Result<(), Problem> {
     let fixture: RulesFixture = serde_json::from_str(include_str!("golden/rules.json"))?;
     let loaded = load_embedded()?;
 
-    assert_eq!(loaded.pack.year, fixture.year);
-    assert_eq!(loaded.pack.pack_version, fixture.pack_version);
-    assert_eq!(
-        loaded.checksum, fixture.checksum,
-        "the checksum must be byte-identical, or every stored figure loses its provenance"
-    );
-
     let ids: Vec<String> = loaded
         .pack
         .obligations
         .iter()
         .map(|rule| rule.id.clone())
         .collect();
-    assert_eq!(ids, fixture.obligation_ids, "the obligation ids and their order");
-
     let summary = vnf_core::rules::summarise_pack(&loaded);
-    let ours = SummaryCase {
+    let summary = SummaryCase {
         pack_version: summary.pack_version,
         year: summary.year,
         checksum: summary.checksum,
@@ -703,8 +732,6 @@ fn the_pack_matches_the_reference() -> Result<(), Problem> {
         todo: summary.todo,
         null_constants: summary.null_constants,
     };
-    assert_eq!(ours, fixture.summary, "the pack summary");
-
     let problems: Vec<ProblemCase> = loaded
         .problems
         .iter()
@@ -714,33 +741,81 @@ fn the_pack_matches_the_reference() -> Result<(), Problem> {
             message: problem.message.clone(),
         })
         .collect();
-    assert_eq!(problems, fixture.problems, "every validator problem, in order");
+    // The three lists below are *inputs* — which days to age the pack to, which ids to
+    // ask about, which constants to read — so a re-baseline carries them through and
+    // recomputes only the answers beside them.
+    let freshness_cases: Vec<FreshnessCase> = fixture
+        .freshness
+        .iter()
+        .map(|case| -> Result<FreshnessCase, Problem> {
+            let state = freshness(&loaded.pack, &case.today)?;
+            Ok(FreshnessCase {
+                today: case.today.clone(),
+                status: freshness_text(state.status).to_owned(),
+                message: state.message,
+            })
+        })
+        .collect::<Result<_, _>>()?;
+    let declare_cases: Vec<DeclareCase> = fixture
+        .declares
+        .iter()
+        .map(|case| DeclareCase {
+            id: case.id.clone(),
+            declared: declares_obligation(&loaded.pack, &case.id),
+        })
+        .collect();
+    let constant_reads: Vec<ConstantRead> = fixture
+        .constant_reads
+        .iter()
+        .map(|case| {
+            let path: Vec<&str> = case.path.split('.').collect();
+            ConstantRead {
+                path: case.path.clone(),
+                value: constant(&loaded.pack, &path).cloned().unwrap_or(Value::Null),
+            }
+        })
+        .collect();
 
-    for case in &fixture.freshness {
-        let state = freshness(&loaded.pack, &case.today)?;
-        assert_eq!(
-            freshness_text(state.status),
-            case.status,
-            "freshness of {}",
-            case.today
+    let ours = RulesFixture {
+        checksum: loaded.checksum.clone(),
+        year: loaded.pack.year,
+        pack_version: loaded.pack.pack_version.clone(),
+        obligation_ids: ids,
+        summary,
+        problems,
+        freshness: freshness_cases,
+        declares: declare_cases,
+        constant_reads,
+    };
+
+    if updating() {
+        return write_fixture(
+            "rules.json",
+            format!("{}\n", serde_json::to_string_pretty(&ours)?),
         );
-        assert_eq!(state.message, case.message, "message for {}", case.today);
     }
 
-    for case in &fixture.declares {
-        assert_eq!(
-            declares_obligation(&loaded.pack, &case.id),
-            case.declared,
-            "declares {}",
-            case.id
-        );
-    }
-
-    for case in &fixture.constant_reads {
-        let path: Vec<&str> = case.path.split('.').collect();
-        let ours = constant(&loaded.pack, &path).cloned().unwrap_or(Value::Null);
-        assert_eq!(ours, case.value, "constant {}", case.path);
-    }
+    assert_eq!(ours.year, fixture.year);
+    assert_eq!(ours.pack_version, fixture.pack_version);
+    assert_eq!(
+        ours.checksum, fixture.checksum,
+        "the checksum must be byte-identical, or every stored figure loses its provenance"
+    );
+    assert_eq!(
+        ours.obligation_ids, fixture.obligation_ids,
+        "the obligation ids and their order"
+    );
+    assert_eq!(ours.summary, fixture.summary, "the pack summary");
+    assert_eq!(
+        ours.problems, fixture.problems,
+        "every validator problem, in order"
+    );
+    assert_eq!(ours.freshness, fixture.freshness, "the freshness of each day");
+    assert_eq!(ours.declares, fixture.declares, "which obligations apply");
+    assert_eq!(
+        ours.constant_reads, fixture.constant_reads,
+        "the constants a reader asked about"
+    );
     Ok(())
 }
 
@@ -769,7 +844,7 @@ struct CalendarCase {
     window: WindowCase,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct Counts {
     total: usize,
     not_applicable: usize,
@@ -783,7 +858,7 @@ struct Counts {
     provisional: usize,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Debug)]
 struct WindowCase {
     horizon_days: i64,
     actionable: Vec<String>,
@@ -855,66 +930,116 @@ fn the_calendar_matches_the_reference() -> Result<(), Problem> {
     let pack = load_embedded()?;
     assert!(fixture.cases.len() >= 16, "the corpus must stay wide");
 
+    if updating() {
+        // The four fields the engine computes are replaced in place, one case at a time:
+        // the inputs a case carries (its profile, its day, its holidays) are left as the
+        // file writes them, so a re-baseline's diff is the pages that changed and not a
+        // reformat of the whole fixture.
+        let path = fixture_path("calendar.json");
+        let mut document: Value = serde_json::from_str(&std::fs::read_to_string(&path)?)?;
+        let cases = document
+            .get_mut("cases")
+            .and_then(Value::as_array_mut)
+            .ok_or("calendar.json holds a `cases` array")?;
+        if cases.len() != fixture.cases.len() {
+            return Err("calendar.json changed while it was being read".into());
+        }
+        for (case, slot) in fixture.cases.iter().zip(cases.iter_mut()) {
+            let ours = observe_calendar_case(&pack.pack, case)?;
+            slot["counts"] = serde_json::to_value(ours.counts)?;
+            slot["ids"] = serde_json::to_value(ours.ids)?;
+            slot["digest"] = serde_json::to_value(ours.digest)?;
+            slot["window"] = serde_json::to_value(ours.window)?;
+        }
+        std::fs::write(&path, format!("{}\n", serde_json::to_string_pretty(&document)?))?;
+        println!("re-baselined {}", path.display());
+        return Ok(());
+    }
+
     for case in &fixture.cases {
-        let options = AgendaOptions {
-            year: case.year,
-            today: case.today.clone(),
-            due_soon_days: Some(case.due_soon_days),
-            completed_ids: case.completed_ids.clone(),
-            track_from: case.track_from.clone(),
-            holidays: case.holidays.clone(),
-        };
-        let instances = build_agenda(&pack.pack, &case.profile, &options)
-            .map_err(|error| format!("{}: {error}", case.name))?;
-
-        let ids: Vec<String> = instances.iter().map(|instance| instance.id.clone()).collect();
-        assert_eq!(ids, case.ids, "the ids of every instance — {}", case.name);
-
-        let counts = Counts {
-            total: instances.len(),
-            not_applicable: count_of(&instances, InstanceStatus::NotApplicable),
-            overdue: count_of(&instances, InstanceStatus::Overdue),
-            due_soon: count_of(&instances, InstanceStatus::DueSoon),
-            future: count_of(&instances, InstanceStatus::Future),
-            done: count_of(&instances, InstanceStatus::Done),
-            untracked: count_of(&instances, InstanceStatus::Untracked),
-            official: instances
-                .iter()
-                .filter(|instance| instance.due_date_source == DueDateSource::Official)
-                .count(),
-            derived: instances
-                .iter()
-                .filter(|instance| instance.due_date_source == DueDateSource::Derived)
-                .count(),
-            provisional: instances.iter().filter(|instance| instance.provisional).count(),
-        };
-        assert_eq!(counts, case.counts, "the counts — {}", case.name);
-
-        let lines: Vec<String> = instances.iter().map(instance_line).collect();
-        let expected = sha256_hex(&format!("{}\n", lines.join("\n")));
+        let ours = observe_calendar_case(&pack.pack, case)?;
+        assert_eq!(ours.ids, case.ids, "the ids of every instance — {}", case.name);
+        assert_eq!(ours.counts, case.counts, "the counts — {}", case.name);
         assert_eq!(
-            expected, case.digest,
+            ours.digest, case.digest,
             "every field of every instance — {}",
             case.name
         );
-
-        let window = upcoming(&instances, &case.today, case.window.horizon_days)?;
-        let ours = WindowCase {
-            horizon_days: window.horizon_days,
-            actionable: window
-                .actionable
-                .iter()
-                .map(|instance| instance.id.clone())
-                .collect(),
-            overdue: window
-                .overdue
-                .iter()
-                .map(|instance| instance.id.clone())
-                .collect(),
-        };
-        assert_eq!(ours, case.window, "the dashboard window — {}", case.name);
+        assert_eq!(ours.window, case.window, "the dashboard window — {}", case.name);
     }
     Ok(())
+}
+
+/// What the engine says about one calendar case: the same measurement the fixture holds.
+///
+/// One function for both paths, so a re-baseline cannot measure a different thing from
+/// the check it replaces.
+fn observe_calendar_case(
+    pack: &vnf_core::types::RulePack,
+    case: &CalendarCase,
+) -> Result<CalendarCase, Problem> {
+    let options = AgendaOptions {
+        year: case.year,
+        today: case.today.clone(),
+        due_soon_days: Some(case.due_soon_days),
+        completed_ids: case.completed_ids.clone(),
+        track_from: case.track_from.clone(),
+        holidays: case.holidays.clone(),
+    };
+    let instances =
+        build_agenda(pack, &case.profile, &options).map_err(|error| format!("{}: {error}", case.name))?;
+
+    let ids: Vec<String> = instances.iter().map(|instance| instance.id.clone()).collect();
+    let counts = Counts {
+        total: instances.len(),
+        not_applicable: count_of(&instances, InstanceStatus::NotApplicable),
+        overdue: count_of(&instances, InstanceStatus::Overdue),
+        due_soon: count_of(&instances, InstanceStatus::DueSoon),
+        future: count_of(&instances, InstanceStatus::Future),
+        done: count_of(&instances, InstanceStatus::Done),
+        untracked: count_of(&instances, InstanceStatus::Untracked),
+        official: instances
+            .iter()
+            .filter(|instance| instance.due_date_source == DueDateSource::Official)
+            .count(),
+        derived: instances
+            .iter()
+            .filter(|instance| instance.due_date_source == DueDateSource::Derived)
+            .count(),
+        provisional: instances.iter().filter(|instance| instance.provisional).count(),
+    };
+    let lines: Vec<String> = instances.iter().map(instance_line).collect();
+    let digest = sha256_hex(&format!("{}\n", lines.join("\n")));
+
+    let window = upcoming(&instances, &case.today, case.window.horizon_days)?;
+    let window = WindowCase {
+        horizon_days: window.horizon_days,
+        actionable: window
+            .actionable
+            .iter()
+            .map(|instance| instance.id.clone())
+            .collect(),
+        overdue: window
+            .overdue
+            .iter()
+            .map(|instance| instance.id.clone())
+            .collect(),
+    };
+
+    Ok(CalendarCase {
+        name: case.name.clone(),
+        profile: case.profile.clone(),
+        year: case.year,
+        today: case.today.clone(),
+        due_soon_days: case.due_soon_days,
+        completed_ids: case.completed_ids.clone(),
+        track_from: case.track_from.clone(),
+        holidays: case.holidays.clone(),
+        counts,
+        ids,
+        digest,
+        window,
+    })
 }
 
 // ---------------------------------------------------------------------------

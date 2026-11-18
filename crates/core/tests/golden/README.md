@@ -41,6 +41,32 @@ The fixtures must then all still pass. If one changes, the port has drifted from
 reference — which is exactly the fact the file exists to make visible, and the
 question to answer is "which of the two is wrong", not "update the fixture".
 
+## The two that follow the pack, and how to re-baseline them
+
+`rules.json` and `calendar.json` are not only a record of the port: they are a record of
+the **pack that shipped beside it**. `rules.json` pins the pack's checksum, its version,
+its summary and its whole `todo`; `calendar.json` pins a digest over every field of every
+agenda instance. Any edit to `rules/pt/*.json` moves them — a quoted passage, a corrected
+date, the yearly rollover — and the generator above no longer exists.
+
+For those two there is a second, narrower tool, next to the assertions it rewrites:
+
+```bash
+UPDATE_GOLDEN=1 cargo test -p vnf-core --test golden
+```
+
+It recomputes what the engine computes and writes it back: for `rules.json` the pack's
+checksum, version, summary, problems and the answers to the freshness/declare/constant
+questions the fixture asks; for `calendar.json` four fields per case (`counts`, `ids`,
+`digest`, `window`), leaving each case's inputs — its profile, its day, its holidays —
+exactly as the file writes them. It touches no other fixture: money, dates, conditions,
+countries, NIF, profile, flags, estimate and pdf hold no pack.
+
+It is a **re-baseline, not a fix**. Run it on an unchanged pack and every file must come
+back byte-identical; if it does not, the tool is wrong, not the answer. When it does move
+a line, the line is the finding: a digest that changed is a page a person reads
+differently, and the commit that carries it says why the pack changed.
+
 ## Why they are hex and not a corpus of PDFs
 
 `pdf.json` carries each document's bytes as a hex string rather than ten committed

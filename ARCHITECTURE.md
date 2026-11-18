@@ -49,8 +49,12 @@ into three layers, and keeping them apart is what decides where a change goes.
 | Layer | The question it answers | Where it lives | How it arrives |
 | --- | --- | --- | --- |
 | **Computable law** | which rate, which ceiling, on which day | `rules/pt/<year>.json` | read from `rules/` beside the binary, with the newest year compiled in as the fallback |
-| **Evidence** | where is that written, in which article, and has the page moved since | `rules/pt/sources/` — *planned* | a folder beside the binary, content-addressed by SHA-256 |
+| **Evidence** | where is that written, in which article, and has the page moved since | `rules/pt/sources/` | a folder beside the binary, content-addressed by SHA-256 |
 | **Update** | what changed between two years, and who confirmed it | `cargo xtask rules` — *planned* | a reviewed diff, never a runtime fetch |
+
+The corpus exists (`rules/pt/sources/`, with `fetch.json` recording each retrieval,
+its hash and whether the body is stored); binding it to the pack is the next step, and
+nothing reads it yet.
 
 Three rules follow, and they are not negotiable:
 
@@ -236,8 +240,8 @@ parameters, which is what makes it testable without a temporary directory — an
   fails if the file and its registered year disagree.
 - **A source document**: a file under `rules/pt/sources/` with its SHA-256 in the
   pack's `sources[]` entry, so the reader can prove the citation is in the copy it
-  was reviewed against. *Not built yet* — the pack cites URLs and retrieval dates,
-  and that is the gap F1 closes.
+  was reviewed against. The folder and its manifest exist; the pack does not cite it
+  yet, so this is *half built* — see `rules/pt/sources/README.md` for what F1 does.
 - **A new estimate**: a function in `crates/core/src/estimate.rs`, a field on the
   view model, and a widget. Not a calculation in a page.
 - **Storage that is not JSON**: do not. The vault is readable with a text editor,

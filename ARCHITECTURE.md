@@ -50,7 +50,7 @@ into three layers, and keeping them apart is what decides where a change goes.
 | --- | --- | --- | --- |
 | **Computable law** | which rate, which ceiling, on which day | `rules/pt/<year>.json` | read from `rules/` beside the binary, with the newest year compiled in as the fallback |
 | **Evidence** | where is that written, in which article, and has the page moved since | `rules/pt/sources/` | a folder beside the binary, content-addressed by SHA-256 |
-| **Update** | what changed between two years, and who confirmed it | `cargo xtask rules` — *planned* | a reviewed diff, never a runtime fetch |
+| **Update** | what changed between two years, and who confirmed it | `cargo xtask rules` | a reviewed diff, never a runtime fetch |
 
 The evidence layer is built. At startup the store reads the `sources/` folder beside
 the pack and `core::sources` compares it with what the pack claims, twice over: the
@@ -75,6 +75,19 @@ One gap is worth naming: `citations` exists on obligations, not on constants. A
 constant is bound to a document and to its hash, but not to the sentence it comes
 from. Closing that is a schema change to the `constants` tree, and until it happens a
 human is still the link between the €25 threshold and the article that states it.
+
+The update layer is built too, as two pure functions in `core::rollover` with one
+caller each on either side of the window: `cargo xtask rules scaffold` writes next
+year's pack from this one — every published date stripped, every rule marked `stale`,
+citations and source bindings carried — and `cargo xtask rules diff` prints what moved
+between two packs. The Regras page shows the same diff whenever the loaded pack is not
+the one compiled in, which is the review of a rule change in the place a person
+actually looks. `docs/ROLLOVER.md` is the checklist for the week the calendar lands.
+
+A scaffolded pack is deliberately **not** committed until its calendar is transcribed:
+it would say `2027` while every rule is unconfirmed, losing the verification the 2026
+pack had without adding any of 2027's. The command produces it in a second; the
+repository does not need to carry the promise.
 
 Three rules follow, and they are not negotiable:
 

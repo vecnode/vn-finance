@@ -83,7 +83,7 @@ dashboard.
 | `rules/pt/sources/` | The documents the pack cites, with `fetch.json` recording each retrieval and hash. Evidence, not input: read only to check a citation, and never a source of a rate. |
 | `design/` | The reviewed mockup the window's structure and colour were ported from |
 | `scripts/` | Launchers: `scripts/run.bat` builds the release and opens the window |
-| `docs/` | Domain reference, privacy model, the port plan, and `UI.md` — the window's own rules: palette, type scale, tables, figures, and the constraints a page has to keep |
+| `docs/` | Domain reference, privacy model, the port plan, `UI.md` — the window's own rules: palette, type scale, tables, figures, and the constraints a page has to keep — and `ROLLOVER.md`, the yearly checklist |
 
 ## Branches
 
@@ -103,10 +103,14 @@ cargo xtask ci        # the gate: fmt, clippy -D warnings, all tests, three audi
 cargo run --release   # build and open the window
 cargo build --release # build it without running  ->  target/release/vnfin
 cargo test --workspace                                    # the tests alone
+cargo xtask rules scaffold --from 2026 --to 2027          # start next year's pack
+cargo xtask rules diff 2026 2027                          # what changed between two
 cargo run --release --package xtask -- notices            # regenerate THIRD-PARTY-NOTICES.md
 ```
 
-`cargo xtask ci` is the gate and it is green before anything is committed.
+`cargo xtask ci` is the gate and it is green before anything is committed. The yearly
+rollover is `docs/ROLLOVER.md`: scaffold, transcribe the calendar, re-check the
+constants, collect the documents, read the diff.
 
 Notes:
 

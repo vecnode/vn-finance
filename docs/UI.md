@@ -59,7 +59,21 @@ appears in a list with others it is `FIGURE_ROW`; if it is the page's answer it 
 - **A page is never wider than its column.** The window scrolls down and never sideways.
   Tables scale their columns, long headings truncate, and prose wraps; a horizontal
   scrollbar is not a way of hiding a layout that does not fit. `no_page_paints_past_the_
-  right_edge` measures every page at the smallest window and at a maximised one.
+  right_edge` measures every page's words at the smallest window and at a maximised one,
+  and `no_painted_box_reaches_past_the_right_edge` measures the boxes, the panel and the
+  scroll bar: the words can be clipped to a page that has grown underneath them.
+- **Prose never sits directly in a horizontal row.** egui sets a horizontal layout's text
+  wrap mode to `Extend`, so a label there is one line however narrow its `max_width` is
+  made — `set_max_width` does not make it wrap. In a row, prose goes into a vertical child
+  of a fixed width: `widgets::capped` (a paragraph beside a mark or a tag) or
+  `widgets::notes` (a list of sentences). One page's twenty-one open questions became
+  twenty-one lines of four to six thousand points this way, and the scroll area followed
+  them out of the window.
+- **The scroll bar is solid, 8 points wide, four points inside the page's right margin**,
+  and its handle clears 3:1 against the page and against a card
+  (`the_scroll_bar_can_be_found`). It is the only sign that a page continues below the
+  window, so it is chrome that has to be found rather than a faint grey that has to be
+  looked for — the first version was 1.4:1 and read as absent.
 - **The window's minimum is 920 × 700.** The height is measured from the rail's own list
   (`the_rail_fits_in_the_smallest_window`), not guessed: add a page and that test fails
   before the eleventh button hides under the foot of the rail.

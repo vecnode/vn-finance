@@ -477,6 +477,10 @@ fn no_page_paints_past_the_right_edge() -> Result<(), Problem> {
     // column is a page with something cut off and no way to reach it. This is the check
     // that the tables scale, the hints truncate and the prose wraps — at the smallest
     // window the application allows and at a maximised one.
+    //
+    // It measures the words, and a word can be painted *inside* a box that has grown past
+    // the window while the text itself is clipped to it. `no_painted_box_reaches_past_the
+    // _right_edge` is the other half: the box, the panel and the scroll bar.
     let dir = tempfile::tempdir()?;
     seeded(dir.path())?;
     let mut app = app_for(dir.path())?;
@@ -502,6 +506,130 @@ fn no_page_paints_past_the_right_edge() -> Result<(), Problem> {
             );
         }
     }
+    Ok(())
+}
+
+/// Every rectangle the window painted, with its fill, in painting order.
+///
+/// The bar and the page's own edges are rectangles, not text: a check on the words alone
+/// cannot see that a card, a panel or a scroll area has grown past the window.
+fn painted_rects_at(app: &mut App, ctx: &egui::Context, size: egui::Vec2) -> Vec<(Rect, egui::Color32)> {
+    fn collect(shape: &egui::Shape, out: &mut Vec<(Rect, egui::Color32)>) {
+        match shape {
+            egui::Shape::Rect(rect) => out.push((rect.rect, rect.fill)),
+            egui::Shape::Vec(shapes) => {
+                for shape in shapes {
+                    collect(shape, out);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    vnf_ui::theme::apply(ctx, false);
+    let mut rects = Vec::new();
+    for _ in 0..RECTS_SETTLED {
+        let input = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
+            ..Default::default()
+        };
+        let mut output = ctx.run_ui(input, |ui| app.draw(ui));
+        rects.clear();
+        for clipped in &output.shapes {
+            collect(&clipped.shape, &mut rects);
+        }
+        output.textures_delta.clear();
+    }
+    rects
+}
+
+/// Passes enough for a scroll bar's appearance animation to finish.
+///
+/// The bar fades its width and margins in over a quarter of a second, so a window
+/// measured on the fourth frame — which is enough for the panels — shows a bar two thirds
+/// of its final width, and a check on where the bar *is* would be measuring an animation.
+const RECTS_SETTLED: usize = 40;
+
+#[test]
+fn no_painted_box_reaches_past_the_right_edge() -> Result<(), Problem> {
+    // `no_page_paints_past_the_right_edge` checks the words; this checks the boxes, and
+    // the box is where the layout went wrong: the pack's 21 open questions were laid out
+    // on one line each — a label inside a horizontal row does not wrap — which made the
+    // page 7 366 points wide. A vertical scroll area expands to fit its content along the
+    // axis it does not scroll, so the bar was painted at x ≈ 7 648: outside a 1 280-point
+    // window and clipped away. The page could not be dragged down and the overflow could
+    // never be shown. Measured at both sizes the window allows, for every page.
+    //
+    // The allowance is the scroll bar's own column, read from the style the window was
+    // built with: a scroll area reports its content *plus* that column to the panel it
+    // sits in, so the panel — a background, not content — can be that much wider than its
+    // viewport on a page whose content exactly fills it. Where the bar actually is, and
+    // whether a person can see it, is `the_rules_page_paints_a_scroll_bar_a_person_can_
+    // see`; a page that runs away is hundreds of points and still fails here.
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    let mut app = app_for(dir.path())?;
+    for size in [vec2(WINDOW_MIN[0], WINDOW_MIN[1]), vec2(1280.0, 900.0)] {
+        for page in Page::ALL {
+            app.go(page);
+            let ctx = egui::Context::default();
+            let rects = painted_rects_at(&mut app, &ctx, size);
+            let right = size.x + ctx.style_of(egui::Theme::Light).spacing.scroll.allocated_width();
+            if let Some((rect, _)) = rects
+                .iter()
+                .filter(|(rect, _)| rect.max.x > right || rect.min.x < -1.0)
+                .max_by(|a, b| a.0.max.x.total_cmp(&b.0.max.x))
+            {
+                return Err(format!(
+                    "{} paints a box out to {:.0} in a window {:.0} wide, past the {right:.0} \
+                     a page with a scroll bar has: {rect:?}",
+                    page.label(),
+                    rect.max.x,
+                    size.x
+                )
+                .into());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn the_rules_page_paints_a_scroll_bar_a_person_can_see() -> Result<(), Problem> {
+    // The page that made the bar's absence obvious: 21 open questions make it many screens
+    // tall, and a bar outside the window is a page with no way down. This finds the bar by
+    // its geometry — the theme's 8-point bar, four points inside the page's right margin —
+    // and by its colour, the palette's own `scroll` token, which the theme pins at 3:1
+    // against what it sits on.
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    let mut app = app_for(dir.path())?;
+    app.go(Page::Regras);
+    let size = vec2(1280.0, 900.0);
+    let ctx = egui::Context::default();
+    let rects = painted_rects_at(&mut app, &ctx, size);
+
+    let palette = vnf_ui::theme::Palette::light();
+    let handle = rects.iter().find(|(rect, fill)| {
+        (rect.width() - 8.0).abs() < 0.5
+            && rect.min.x > size.x - 60.0
+            && rect.height() > 20.0
+            && *fill == palette.scroll
+    });
+    let (rect, _) = handle.ok_or(
+        "no scroll bar was painted inside the window: the page is either taller than the \
+         window with no bar, or the bar was painted outside it",
+    )?;
+    assert!(
+        rect.max.x <= size.x,
+        "the scroll bar ends at {:.0}, past the window's edge at {:.0}",
+        rect.max.x,
+        size.x
+    );
+    assert!(
+        rect.height() < size.y - 100.0,
+        "the handle covers the whole window, so it says nothing about the position"
+    );
     Ok(())
 }
 

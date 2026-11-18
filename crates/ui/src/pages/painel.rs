@@ -440,11 +440,17 @@ fn framework(ui: &mut Ui, model: &DashboardModel, today: &str) {
                         },
                         tone,
                     );
-                    ui.label(
-                        egui::RichText::new(&problem.message)
-                            .size(theme::BODY_SMALL)
-                            .color(palette.text_2),
-                    );
+                    // A severity tag beside a sentence: the sentence is prose, so it gets a
+                    // vertical child of a fixed width. A bare label inside this horizontal
+                    // row would be laid out on one line (`Extend`) and push the page past
+                    // its column — see `widgets::notes` for the page that found this out.
+                    widgets::capped(ui, 760.0, |ui| {
+                        ui.label(
+                            egui::RichText::new(&problem.message)
+                                .size(theme::BODY_SMALL)
+                                .color(palette.text_2),
+                        );
+                    });
                 });
             }
         });

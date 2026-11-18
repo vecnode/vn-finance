@@ -83,7 +83,7 @@ existing early.
 `cargo xtask rules scaffold --from 2026 --to 2027` on the 2026 pack, then `rules diff`:
 
 ```
-2026 2026.1.5 → 2027 2027.1.0
+2026 2026.1.6 → 2027 2027.1.0
 verificação
   ~ irs.modelo3: verificada → desatualizada
   ~ iva.dp.mensal: verificada → desatualizada
@@ -116,3 +116,4 @@ A new figure is a new passage: quote the sentence, cite it from the rule, and le
 corpus check prove it is in the copy. If a rule's *shape* changes — a deadline that
 becomes a window, an obligation that gains a condition — the change belongs in
 `crates/core/` with a test, and the pack only carries it afterwards.
+

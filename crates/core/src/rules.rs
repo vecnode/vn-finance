@@ -1316,7 +1316,7 @@ mod tests {
         let pack = loaded()?;
         assert_eq!(pack.pack.jurisdiction, "PT");
         assert_eq!(pack.pack.year, 2026);
-        assert_eq!(pack.pack.pack_version, "2026.1.5");
+        assert_eq!(pack.pack.pack_version, "2026.1.6");
         assert_eq!(pack.pack.obligations.len(), 20);
         assert_eq!(pack.pack.sources.len(), 22);
         assert_eq!(pack.pack.todo.len(), 21);
@@ -1587,3 +1587,4 @@ mod tests {
         Ok(())
     }
 }
+

@@ -1,7 +1,7 @@
 {
   "jurisdiction": "PT",
   "year": 2026,
-  "packVersion": "2026.1.4",
+  "packVersion": "2026.1.5",
   "generatedAt": "2026-11-18",
   "units": {
     "money": "EUR_cents",
@@ -92,7 +92,14 @@
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs31.aspx",
       "retrievedAt": "2026-09-20",
       "file": "at-cirs-art31.html",
-      "sha256": "423e65d84fced0fa3a603c0a83b8f12c858bdcf32336eb975de06546d39e8426"
+      "sha256": "423e65d84fced0fa3a603c0a83b8f12c858bdcf32336eb975de06546d39e8426",
+      "passages": [
+        {
+          "id": "art31-n13",
+          "locator": "art. 31.º n.º 13",
+          "quote": "13 - A dedução ao rendimento que decorre da aplicação dos coeficientes previstos nas alíneas b) e c) do n.º 1 está parcialmente condicionada à verificação de despesas e encargos efetivamente suportados, acrescendo ao rendimento tributável apurado nos termos dos números anteriores a diferença positiva entre 15 % dos rendimentos brutos das prestações de serviços previstas naquelas alíneas e o somatório das seguintes importâncias: … f) Importações ou aquisições intracomunitárias de bens e serviços relacionados com a atividade."
+        }
+      ]
     },
     {
       "id": "at-cirs-art60",
@@ -119,7 +126,19 @@
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs71.aspx",
       "retrievedAt": "2026-09-20",
       "file": "at-cirs-art71.html",
-      "sha256": "530f811f9ef519f2024055f5e08373ccb89d2f3260f912afbe54955f5b2aedf7"
+      "sha256": "530f811f9ef519f2024055f5e08373ccb89d2f3260f912afbe54955f5b2aedf7",
+      "passages": [
+        {
+          "id": "art71-n4",
+          "locator": "art. 71.º n.º 4 alínea a)",
+          "quote": "4 - Estão sujeitos a retenção na fonte a título definitivo, à taxa liberatória de 25 %, os seguintes rendimentos obtidos em território português por não residentes: a) Os rendimentos do trabalho dependente e todos os rendimentos empresariais e profissionais, ainda que decorrentes de atos isolados;"
+        },
+        {
+          "id": "art71-n5",
+          "locator": "art. 71.º n.º 5",
+          "quote": "5 - Aos rendimentos referidos na alínea a) do número anterior mensalmente pagos ou colocados à disposição dos respetivos titulares não é aplicada qualquer retenção na fonte até ao valor da retribuição mínima mensal garantida, quando os mesmos resultem de trabalho ou serviços prestados a uma única entidade, aplicando-se a taxa aí prevista à parte que exceda esse valor."
+        }
+      ]
     },
     {
       "id": "at-cirs-art101",
@@ -129,7 +148,14 @@
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101.aspx",
       "retrievedAt": "2026-09-20",
       "file": "at-cirs-art101.html",
-      "sha256": "372a451a7e4f4f128a0509f96bb58e646bd4bca7f14a2f07611a4a2495874dc7"
+      "sha256": "372a451a7e4f4f128a0509f96bb58e646bd4bca7f14a2f07611a4a2495874dc7",
+      "passages": [
+        {
+          "id": "art101-n1",
+          "locator": "art. 101.º n.º 1 alíneas a) a c)",
+          "quote": "a) 16,5 %, tratando-se de rendimentos da categoria B referidos na alínea c) do n.º 1 do artigo 3.º … b) 23 %, tratando-se de rendimentos decorrentes das atividades profissionais especificamente previstas na tabela a que se refere o artigo 151.º … c) 11,5 %, tratando-se de rendimentos da categoria B referidos na alínea b) do n.º 1 e nas alíneas g) e i) do n.º 2 do artigo 3.º, não compreendidos na alínea anterior;"
+        }
+      ]
     },
     {
       "id": "at-cirs-art101b",
@@ -149,7 +175,14 @@
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs102.aspx",
       "retrievedAt": "2026-09-20",
       "file": "at-cirs-art102.html",
-      "sha256": "1369411225642924ad7362b77454a8f09b26d26e379bbf61546cd8037b4b3bbf"
+      "sha256": "1369411225642924ad7362b77454a8f09b26d26e379bbf61546cd8037b4b3bbf",
+      "passages": [
+        {
+          "id": "art102-n1",
+          "locator": "art. 102.º n.º 1",
+          "quote": "1 - A titularidade de rendimentos da categoria B determina, para os respetivos sujeitos passivos, a obrigatoriedade de efetuarem três pagamentos por conta do imposto devido a final, até ao dia 20 de cada um dos meses de julho, setembro e dezembro."
+        }
+      ]
     },
     {
       "id": "at-cirs-art128",
@@ -176,7 +209,14 @@
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva18.aspx",
       "retrievedAt": "2026-09-20",
       "file": "at-civa-art18.html",
-      "sha256": "f9560e37d6408c68b0513cce14967fa23ae4c519e7297b998805eb4120b78764"
+      "sha256": "f9560e37d6408c68b0513cce14967fa23ae4c519e7297b998805eb4120b78764",
+      "passages": [
+        {
+          "id": "art18-n3",
+          "locator": "art. 18.º n.º 3",
+          "quote": "3 - As Assembleias Legislativas das Regiões Autónomas dos Açores e da Madeira podem, nos termos previstos na Lei das Finanças das Regiões Autónomas, aprovada pela Lei Orgânica n.º 2/2013, de 2 de setembro, fixar taxas diminuídas do IVA aplicáveis às transmissões de bens e prestações de serviços que se considerem efetuadas nas regiões autónomas e às importações cujo desembaraço alfandegário tenha lugar nessas mesmas regiões."
+        }
+      ]
     },
     {
       "id": "at-civa-art41",
@@ -188,6 +228,11 @@
       "file": "at-civa-art41.html",
       "sha256": "f784c79c528e58cdff81e38bfec4de5d227aab96353f444fc6592c5e30d31b47",
       "passages": [
+        {
+          "id": "art41-n1",
+          "locator": "art. 41.º n.º 1",
+          "quote": "1 - Para efeitos do disposto na alínea c) do n.º 1 do artigo 29.º, a declaração periódica deve ser enviada por transmissão electrónica de dados, nos seguintes prazos:"
+        },
         {
           "id": "art41-n1-a",
           "locator": "art. 41.º n.º 1 alínea a)",
@@ -277,7 +322,10 @@
       "rates": {
         "normal": 2300,
         "intermediaire": 1300,
-        "reduzida": 600
+        "reduzida": 600,
+        "sourceIds": [
+          "at-civa-art18"
+        ]
       },
       "art53": {
         "ceiling": 1500000,
@@ -393,6 +441,12 @@
     },
     {
       "id": "irs.pagamentosPorConta",
+      "citations": [
+        {
+          "sourceId": "at-cirs-art102",
+          "passageId": "art102-n1"
+        }
+      ],
       "kind": "pay",
       "authority": "AT",
       "tax": "IRS",
@@ -444,6 +498,12 @@
     },
     {
       "id": "irs.retencoesPagamento",
+      "citations": [
+        {
+          "sourceId": "at-cirs-art101",
+          "passageId": "art101-n1"
+        }
+      ],
       "kind": "pay",
       "authority": "AT",
       "tax": "IRS-IRC",
@@ -488,7 +548,8 @@
         },
         {
           "month": 8,
-          "day": 31
+          "day": 31,
+          "note": "O calendário de 2026 indica 31 nesta coluna e não lhe dá nota; nas restantes colunas o dia é o 20 ou o dia útil seguinte. Confirmar a origem da data antes de a tratar como prazo."
         },
         {
           "month": 9,
@@ -871,7 +932,8 @@
         },
         {
           "month": 8,
-          "day": 31
+          "day": 31,
+          "note": "O calendário de 2026 indica 31 nesta coluna e não lhe dá nota; nas restantes colunas o dia é o 20 ou o dia útil seguinte. Confirmar a origem da data antes de a tratar como prazo."
         },
         {
           "month": 9,
@@ -1043,7 +1105,8 @@
         },
         {
           "month": 8,
-          "day": 31
+          "day": 31,
+          "note": "O calendário de 2026 indica 31 nesta coluna e não lhe dá nota; nas restantes colunas o dia é o 20 ou o dia útil seguinte. Confirmar a origem da data antes de a tratar como prazo."
         },
         {
           "month": 9,
@@ -1632,26 +1695,26 @@
     }
   ],
   "todo": [
-    "constants.irs.simplifiedRegime.documentedExpensesDeductionCap = null: o art. 31.º n.º 13 do CIRS, na redação em vigor, não fixa um limite monetário. O mecanismo e um acréscimo ao rendimento tributavel igual a diferença positiva entre 15 % dos rendimentos brutos das prestações de serviços e o somatório das despesas elegíveis (dedução específica, despesas com pessoal, rendas, 1,5 %/4 % do VPT dos imóveis, outras despesas comunicadas a AT, importações e aquisições intracomunitárias). O limite de 1 500 EUR habitual em resumos secundários não consta do texto atual: confirmar com um contabilista antes de o codificar.",
-    "IVA: as taxas registadas (23 %, 13 % e 6 %) são as do continente (CIVA art. 18.º n.º 1, redação da Lei n.º 55-A/2010). O art. 18.º n.º 3 permite taxas diminutas nas Regiões Autónomas dos Açores e da Madeira, que não estão refletidas neste pacote.",
-    "IVA, art. 53.º: o pacote registra o limiar de 15 000 EUR. O folheto oficial da AT acrescenta a regra de transição que não esta codificada por falta de chave na estrutura: se o volume de negócios do ano exceder 15 000 EUR mas ficar abaixo de 18 750 EUR, e entregue declaração de alterações em 15 dias úteis a contar do último dia desse ano e o regime normal aplica-se a partir de 1 de janeiro seguinte; se 18 750 EUR for excedido no decurso do ano, o IVA passa a ser liquidado a partir desse momento.",
-    "iva.pagamento.mensal e iva.pagamento.trimestral: o artigo do CIVA que fixa o prazo de pagamento (dia 25 do 2.º mês seguinte) não foi confirmado; a verificação baseia-se no folheto oficial da AT e nas datas de 2026 do calendário de pagamentos.",
-    "irs.retencoesPagamento: o artigo do CIRS que fixa o prazo de entrega das importâncias retidas (dia 20 do mês seguinte) não foi confirmado. As taxas de retenção estão confirmadas no art. 101.º.",
-    "iva.recapitulativa: a data de 31 de agosto de 2026 consta do calendário oficial mas não tem nota nem base legal identificada; confirmar se decorre de despacho ou de regra própria da declaração recapitulativa.",
-    "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF: figura como nota e) do calendário declarativo de 2026 e como nota c) do calendário de pagamentos, mas não foi possível determinar a que obrigação concreta se refere; não foi associado a nenhuma data neste pacote. O PDF não foi recolhido (apenas o link referenciado na pagina).",
+    "constants.irs.simplifiedRegime.documentedExpensesDeductionCap continua null, e é esse o valor certo: o art. 31.º n.º 13 do CIRS, citado do texto em vigor (passagem art31-n13), não fixa limite monetário — o acréscimo ao rendimento tributável é a diferença positiva entre 15 % dos rendimentos brutos das prestações de serviços e o somatório das despesas elegíveis (dedução específica, despesas com pessoal, rendas, 1,5 %/4 % do VPT dos imóveis, outras despesas comunicadas à AT, importações e aquisições intracomunitárias). O limite de 1 500 EUR que circula em resumos secundários não consta do artigo. Falta decidir se a chave deve continuar a existir no pacote, agora que se sabe que a lei não tem esse valor.",
+    "IVA: as taxas registadas (23 %, 13 % e 6 %) são as do continente (CIVA art. 18.º n.º 1, redação da Lei n.º 55-A/2010). O art. 18.º n.º 3, citado (passagem art18-n3), permite que as Assembleias Legislativas dos Açores e da Madeira fixem taxas diminuídas; o pacote não as reflete porque o perfil não declara a região da atividade — uma taxa regional exigiria esse campo antes de qualquer código.",
+    "IVA, art. 53.º: o pacote regista o limiar de 15 000 EUR. A regra de transição — entre 15 000 e 18 750 EUR, com declaração de alterações em 15 dias úteis contados do último dia do ano e regime normal a partir de 1 de janeiro; acima de 18 750 EUR, IVA a partir do momento em que o limite é excedido — está escrita na nota do prazo da declaração de alterações, mas não tem chaves próprias e o motor não a aplica. O folheto da AT que a divulga está no corpus com a camada de texto parcialmente ilegível (fonte embutida codificada) e a FAQ do art. 53.º não tem cópia local: recolher uma versão legível antes de a codificar.",
+    "iva.pagamento.mensal e iva.pagamento.trimestral: o art. 41.º do CIVA, que está no corpus e é citado, fixa a entrega da declaração periódica (dia 20 do 2.º mês seguinte) e não o pagamento. O artigo que fixa o pagamento (dia 25 do 2.º mês seguinte) não foi recolhido: o prazo apoia-se no folheto da AT e nas datas de 2026 do calendário de pagamentos. Recolher o artigo e citá-lo antes de o afirmar.",
+    "irs.retencoesPagamento: o art. 101.º do CIRS, que está no corpus e é citado, fixa as taxas de retenção, não o prazo de entrega das importâncias retidas (dia 20 do mês seguinte). Esse prazo não tem artigo no corpus: recolher o artigo que o fixa e citá-lo.",
+    "iva.recapitulativa: o calendário de 2026 põe 31 na coluna de agosto da linha da recapitulativa mensal, sem nota, quando as outras colunas são o dia 20 ou o dia útil seguinte e o RITI art. 30.º n.º 1 a) manda dia 20 do mês seguinte. A data não se explica pela regra: confirmar se vem de um despacho ou de uma errata da AT antes de a tratar como prazo. Fica registada na data de 2026 com essa nota.",
+    "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF: o PDF está no corpus e foi lido por OCR — é uma digitalização, sem camada de texto, e por isso não admite passagem verificável por máquina. Prorroga a declaração Modelo 22 do período de 2025, e o respetivo pagamento, até 19 de junho de 2026, e foi substituído pelo Despacho n.º 81/2026 - XXV, de 17/06, que a estendeu até 30 de junho — a data que o pacote regista. Falta escrever a prorrogação de maio no registo de modelo22 e citar os dois despachos junto da data.",
     "Modelo 22 e IES: apenas as datas oficiais de 2026 foram registadas (30 de junho, com prorrogação pelo Despacho n.º 81/2026, e 15 de julho). Os prazos gerais da lei não foram confirmados em fonte oficial nesta recolha e por isso não são afirmados.",
     "saft.mensal: o calendário da AT não tem linha autónoma para o SAF-T (PT) mensal; as datas foram transpostas da linha da comunicação de faturas (mesmo prazo do dia 5). Confirmar se quem comunica em tempo real por webservice esta efetivamente dispensado da remessa mensal do ficheiro e se a dispensa abrange quem usa o sistema de faturação do Portal das Finanças (esta última consta do folheto oficial).",
     "Segurança Social: não foi encontrado calendário oficial anual (a seg-social.pt devolveu 404 nos PDFs do Guia Prático e redirecionou as paginas de documentos para a área reservada). Os prazos, a taxa de 21,4 % e os coeficientes de 70 %/20 % foram confirmados no Guia Prático da OCC de agosto de 2026 e corroborados pela DECO. Confirmar igualmente o artigo exato do CRC da declaração trimestral (o Guia cita o art. 151.º-A para a declaração anual, sugerindo o art. 151.º para a trimestral, mas isso não foi confirmado).",
     "Segurança Social, inicio de atividade: os primeiros 12 meses Não são uma isenção. O Guia Prático da OCC indica que o enquadramento existe mas os seus efeitos so se produzem no 1.º dia do 12.º mês posterior ao inicio de atividade, pelo que o campo startupExemptionMonths foi fixado em 12 como periodo sem obrigação contributiva. Não foi encontrada qualquer redução faseada (por exemplo 50 % e depois 25 %) após esse periodo, pelo que startupReductions ficou vazio: o pressuposto de 'isenção de 12 meses seguida de reduções' não esta sustentado nas fontes consultadas e deve ser confirmado. Também não foram confirmadas as condições de acesso (por exemplo cessação anterior de atividade) nem a regra de suspensão da contagem do prazo em caso de cessação durante os primeiros 12 meses.",
     "constants.socialSecurity.iasMonthly = 53713 (537,13 EUR): valor corroborado pelo Guia Prático da OCC, que cita a Portaria n.º 480-A/2025/1, de 30 de dezembro, e por fontes secundárias (Garrigues, imprensa). A pagina oficial do Diário da República foi pedida mas não devolveu texto legível por máquina, pelo que o valor não foi lido diretamente no diploma.",
-    "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): codificados em centésimos do IAS, ou seja 1,5 × IAS escreve-se 150 e 12 × IAS escreve-se 1200. A base de incidência mensal é um duodécimo (ou um terço do rendimento relevante trimestral), limitada entre 1,5 x IAS e 12 x IAS; existe ainda um valor mínimo de contribuição de 20,00 EUR por referência ao Despacho n.º 599/2019, citado pelo Guia da OCC mas não lido diretamente.",
+    "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): a base de incidência mensal é um duodécimo do rendimento relevante trimestral, limitada entre 1,5 × IAS e 12 × IAS, com um valor mínimo de contribuição de 20,00 EUR (Despacho n.º 599/2019, citado pelo Guia da OCC e não lido diretamente). O pacote tem as chaves e o cálculo não as usa: a estimativa aplica 70 % × 21,4 % ao rendimento bruto e só avisa que não consegue verificar o limite. Aplicar o mínimo e o máximo, ou recusar a estimativa com esse motivo — é a diferença entre uma estimativa e um número errado para quem está num dos limiares.",
     "Segurança Social, direito de opção: o trabalhador pode fixar rendimento relevante superior ou inferior até 25 %, por escalões de 5 % (art. 164.º do CRC, citado pelo Guia da OCC). Não esta codificado por falta de chave na estrutura; a aplicação deve ter isto em conta ao estimar contribuições.",
-    "Retenção na fonte: além das três taxas codificadas, o art. 101.º do CIRS fixa 16,5 % para rendimentos de propriedade intelectual ou industrial e 20 % para rendimentos abrangidos pelo art. 58.º-A do EBF. Não foram codificadas por a estrutura pedida prever apenas três chaves; considerar a sua inclusão numa versão seguinte do pacote.",
-    "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo (CIRS art. 71.º n.º 4 a), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida). O texto do artigo foi lido, mas a aplicação a casos concretos (convenções para evitar a dupla tributação, estabelecimento estável) exige revisão humana.",
+    "Retenção na fonte: as taxas do art. 101.º n.º 1 do CIRS estão citadas (passagem art101-n1) — 16,5 % para rendimentos da categoria B da alínea c) do n.º 1 do art. 3.º (propriedade intelectual ou industrial), 23 % para as profissões da tabela do art. 151.º e 11,5 % para as restantes da categoria B. O pacote codifica a de 23 % e a de 11,5 %; a de 16,5 % e a de 20 % do art. 58.º-A do EBF exigem chaves próprias e opções no formulário de fatura, e não estão codificadas.",
+    "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo, citado do art. 71.º n.º 4 a) (passagem art71-n4), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida (passagem art71-n5). O texto está lido e citado; o que exige revisão humana é a sua aplicação a casos concretos — convenções para evitar a dupla tributação e estabelecimento estável —, que a aplicação não decide.",
     "efatura.validacaoDespesas: a base legal do prazo para as despesas pessoais (art. 78.º-B do CIRS) foi apenas referida de forma remissa pelo art. 31.º n.º 15 a); não foi lida integralmente.",
-    "Os prazos de conservação de documentos são diferentes conforme o imposto (10 anos no CIVA art. 52.º; 4 anos no CIRS art. 128.º n.º 3). A aplicação deve adotar por omissão o prazo mais longo (10 anos) para as faturas, mas a decisão deve ser validada por um contabilista certificado.",
+    "Os prazos de conservação são diferentes conforme o imposto: 10 anos no CIVA art. 52.º n.º 1 (citado, passagem art52-n1) e 4 anos no CIRS art. 128.º n.º 3 (citado, passagem art128-n3). A regra guardar.documentos lê os dois prazos, mas o motor não os usa: o Cofre não mostra até quando guardar cada documento. Decidir o prazo a apresentar (o mais longo, 10 anos, é o seguro) e aplicá-lo — a decisão final é de um contabilista certificado.",
     "ss.declaracaoTrimestral: na integração, periodicity.lagMonths foi corrigido de 0 para 1, porque as datas oficiais do próprio pacote (31/01, 30/04, 31/07, 31/10) so alinham com os trimestres com um mês de desfasamento (T1 -> abril, T2 -> julho, T3 -> outubro). O campo deadlineRule.months não e usado pelo motor.",
     "Declaração recapitulativa (iva.recapitulativa, iva.recapitulativa.trimestral, iva.recapitulativa.mensalPorVolume): a periodicidade passou a depender do regime de IVA declarado, como manda o RITI art. 30.º n.º 1 a) e b). Até à versão 2026.1.0 a regra mensal não tinha condição de regime e era agendada em paralelo com a trimestral para qualquer contribuinte com operações intracomunitárias — as duas séries apareciam ao mesmo tempo, o que a lei nunca permite. O desempate do n.º 2 (mensal quando as operações intracomunitárias passam 50 000 EUR num trimestre) depende do campo activity.intraCommunityOperationsAbove50k, que o contribuinte declara; a aplicação não o calcula a partir do livro de faturas porque não há repartição trimestral por país do adquirente. Se o campo estiver por declarar, aplica-se a regra trimestral do n.º 1 b), que é a regra base da lei: a exceção do n.º 2 só se aplica a quem a declarar.",
-    "Declaração recapitulativa e regime de isenção do art. 53.º: as três regras exigem regime de IVA mensal ou trimestral. Um perfil com iva.regime = isento_art53 e operações intracomunitárias declaradas não agenda qualquer recapitulativa, porque o art. 30.º n.º 1 do RITI se refere aos sujeitos passivos das alíneas a) e b) do n.º 1 do art. 41.º do CIVA. Não foi confirmado se, e em que termos, um sujeito passivo isento pelo art. 53.º com prestações intracomunitárias continua obrigado à recapitulativa: confirmar antes de codificar."
+    "Declaração recapitulativa e regime de isenção do art. 53.º: as três regras exigem regime de IVA mensal ou trimestral. Um perfil com iva.regime = isento_art53 e operações intracomunitárias declaradas não agenda qualquer recapitulativa, porque o RITI art. 30.º n.º 1 se refere aos sujeitos passivos das alíneas a) e b) do n.º 1 do art. 41.º do CIVA — e o art. 41.º n.º 1, citado (passagem art41-n1), liga a declaração periódica à alínea c) do n.º 1 do art. 29.º, ou seja a quem não está isento. Não foi confirmado se, e em que termos, um sujeito passivo isento pelo art. 53.º com prestações intracomunitárias continua obrigado à recapitulativa: confirmar antes de codificar."
   ]
 }

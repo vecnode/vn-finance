@@ -132,6 +132,7 @@ fn the_reference_vault_builds_a_model() -> Result<(), Problem> {
             pack_exact: true,
             pack_rejected: &[],
             corpus: vnf_store::corpus::CorpusLoad::empty(),
+            changes: None,
             data_dir_source: VaultLocationSource::Pointer,
             pointer_path: PathBuf::new(),
         },

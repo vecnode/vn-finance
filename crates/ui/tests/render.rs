@@ -275,6 +275,48 @@ fn repo_file(path: &str) -> std::path::PathBuf {
 }
 
 #[test]
+fn a_scaffolded_pack_shows_what_moved_since_the_one_compiled_in() -> Result<(), Problem> {
+    // F2, seen by a person: next year's pack arrives from a folder, and the window says
+    // what changed instead of applying it silently. The diff is the domain's own
+    // function — the one `cargo xtask rules diff` prints.
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    let rules = dir.path().join("rules").join("pt");
+    std::fs::create_dir_all(&rules)?;
+    let shipped: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(repo_file("rules/pt/2026.json"))?)?;
+    let next = vnf_core::rollover::scaffold(&shipped, 2027, "2026-12-01")?;
+    std::fs::write(rules.join("2027.json"), serde_json::to_string_pretty(&next)?)?;
+
+    let home = dir.path().display().to_string();
+    let pack = rules.join("2027.json").display().to_string();
+    let env = Env::for_test(&[("HOME", &home), ("VN_FINANCE_RULES", &pack)], false);
+    let session = Session::open_in(dir.path(), &env, env!("CARGO_PKG_VERSION"), 2027)?;
+    let mut app = App::build(session, "2027-01-10", 2027);
+    app.go(Page::Regras);
+    let texts: Vec<String> = painted_text_at(&mut app, vec2(1280.0, 2600.0))
+        .into_iter()
+        .map(|(text, _)| text)
+        .collect();
+
+    assert!(
+        texts
+            .iter()
+            .any(|text| text.contains("Alterações face ao pacote embutido")),
+        "the page must say the pack is not the one it was built with: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("desatualizada")),
+        "every carried rule must be shown as not reconfirmed: {texts:?}"
+    );
+    let model = app.model().ok_or("the window has a model")?;
+    let changes = model.rules.changes.as_ref().ok_or("a diff must be carried")?;
+    assert_eq!((changes.from_year, changes.to_year), (2026, 2027));
+    assert!(changes.total() > 0, "a scaffolded pack differs");
+    Ok(())
+}
+
+#[test]
 fn the_rules_page_reports_a_copy_that_verified_and_the_ones_that_are_missing() -> Result<(), Problem> {
     // The evidence layer, seen by a person: one source whose bytes and quote check
     // out, and a page that says so instead of showing a citation with no basis.

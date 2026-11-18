@@ -24,6 +24,7 @@ use vnf_core::dates::DateError;
 use vnf_core::estimate::{Invoice, QuarterReport, ReserveEstimate, estimate_reserve, quarter_report};
 use vnf_core::flags::{Flag, FlagInput, FlagSummary, compute_flags, pack_health_flags, summarise_flags};
 use vnf_core::profile::{ProfileProblem, default_cae, missing_profile_inputs, validate_profile};
+use vnf_core::rollover::PackDiff;
 use vnf_core::rules::{Freshness, PackSummary, constant_bp, freshness, summarise_pack};
 use vnf_core::sources::{CorpusProblem, SourceCheck, SourceState, check as check_corpus};
 use vnf_core::types::{
@@ -106,6 +107,9 @@ pub struct ModelConfig<'a> {
     pub pack_rejected: &'a [PackCandidate],
     /// The documents the citations are checked against, or an empty corpus.
     pub corpus: &'a CorpusLoad,
+    /// What changed between the pack in use and the one compiled into the binary,
+    /// when they are not the same pack.
+    pub changes: Option<&'a PackDiff>,
     /// Where the vault folder came from.
     pub data_dir_source: VaultLocationSource,
     /// The pointer file that remembers a chosen folder.
@@ -245,6 +249,8 @@ pub struct RulesView {
     pub todo: Vec<String>,
     /// How the evidence held up.
     pub corpus: CorpusView,
+    /// What moved since the pack compiled into the binary, when another one is in use.
+    pub changes: Option<PackDiff>,
 }
 
 /// One obligation, and whether the passage it rests on was found.
@@ -529,6 +535,7 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
                 not_named: corpus.not_named,
                 problems: corpus.problems,
             },
+            changes: config.changes.cloned(),
         },
     })
 }
@@ -624,6 +631,7 @@ mod tests {
             pack_exact: true,
             pack_rejected: &[],
             corpus: CorpusLoad::empty(),
+            changes: None,
             data_dir_source: VaultLocationSource::Default,
             pointer_path: PathBuf::from("/tmp/vault-location.json"),
         }

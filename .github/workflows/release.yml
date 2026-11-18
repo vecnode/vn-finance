@@ -125,6 +125,12 @@ jobs:
           mkdir -p "dist/${ROOT}"
           cp README.md LICENSE THIRD-PARTY-NOTICES.md "dist/${ROOT}/"
           cp "target/${{ matrix.target }}/release/vnfin.exe" "dist/${ROOT}/"
+          # The rule pack is a folder the binary reads, not only a constant it carries.
+          # Shipping it beside the executable is what lets a new year — or a corrected
+          # pack — arrive as a file, checked against the SHA-256 the page prints, without
+          # a new release of the application. It is also the copy the Regras page points
+          # at when it says where the law on screen came from.
+          cp -r rules "dist/${ROOT}/rules"
           # bsdtar writes forward-slash entries; the GNU tar in Git Bash does not make a
           # zip at all, so the Windows bsdtar is called explicitly. The folder is what is
           # zipped, so unpacking it gives one directory with everything in it.

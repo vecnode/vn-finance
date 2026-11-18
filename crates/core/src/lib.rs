@@ -35,6 +35,7 @@ pub mod nif;
 pub mod pdf;
 pub mod profile;
 pub mod receipt;
+pub mod rollover;
 pub mod rules;
 pub mod sources;
 pub mod types;

@@ -40,6 +40,49 @@ Two mechanisms keep it true:
    the single place that carries one out, through the session, against the vault.
    The model is rebuilt after every write, and the page redraws from the new one.
 
+## The law: three layers
+
+A figure on screen has to be traceable to a sentence of Portuguese law, and that
+sentence has to be checkable on a machine with no network. That requirement splits
+into three layers, and keeping them apart is what decides where a change goes.
+
+| Layer | The question it answers | Where it lives | How it arrives |
+| --- | --- | --- | --- |
+| **Computable law** | which rate, which ceiling, on which day | `rules/pt/<year>.json` | read from `rules/` beside the binary, with the newest year compiled in as the fallback |
+| **Evidence** | where is that written, in which article, and has the page moved since | `rules/pt/sources/` — *planned* | a folder beside the binary, content-addressed by SHA-256 |
+| **Update** | what changed between two years, and who confirmed it | `cargo xtask rules` — *planned* | a reviewed diff, never a runtime fetch |
+
+Three rules follow, and they are not negotiable:
+
+1. **The pack is the only place the law is computable.** Rates, ceilings and
+   deadline shapes are data. A missing value makes the calculation refuse; it is
+   never defaulted, and a rate literal outside `rules/` is a bug.
+2. **The evidence never feeds the computation.** A document in the corpus proves
+   that a cited figure is in a source; it does not produce the figure. Deriving a
+   rate from a *Portaria* would be a guess with a checksum, which is the failure
+   this project exists to avoid.
+3. **The update is a diff a person reads.** The authority publishes next year's
+   calendar weeks before it starts, so a new year is authored, reviewed and
+   committed. Nothing here fetches, watches or infers; `freshness()` says which year
+   a pack covers and both the Regras and Diagnóstico pages say so plainly.
+
+The pack's location is resolved **explicit before implicit**, the same discipline as
+the vault's (`location::resolve_vault_location`): `VN_FINANCE_RULES`, then `rules/`
+beside the executable — the release archive's layout — then `rules/` in the
+repository when the binary is running out of `target/`, then the pack compiled in.
+The first candidate that validates wins and its origin is carried onto the model, so
+"embutido no binário" and "pasta junto ao programa" can never look the same. A file
+that is found and cannot be used is refused and reported on the Regras page, and the
+window still opens on the pack it can trust: losing the agenda because a file in a
+folder is malformed would take the tool away from the person who can fix it by
+deleting one file.
+
+The year is never in the code. `EMBEDDED_PACKS` is a list of `(year, label, bytes)`,
+`load_for_year` reads `exact` from the year the pack *declares* rather than the year
+asked for, and a 2027 agenda built from a 2026 pack is marked `provisional` on every
+instance. That is why "2026 is enough for now" is true and time-limited at once: the
+rules carry forward, the published dates do not.
+
 ## The crates
 
 ### `crates/core` — the domain
@@ -79,8 +122,10 @@ The only crate that touches the filesystem. It owns four promises:
 - **A cached size walk.** `describe()` used to walk every file on every model
   build; it now runs once and is invalidated by a write.
 
-It also holds `model.rs`: the single view model the window renders, which is the
-browser panel's `buildDashboard` minus the two blocks that died with the assistant.
+It also holds `pack.rs`, which finds the rule pack and says where it came from — the
+filesystem half of the three layers above — and `model.rs`: the single view model the
+window renders, which is the browser panel's `buildDashboard` minus the two blocks
+that died with the assistant.
 
 ### `crates/ui` — the window
 
@@ -170,18 +215,29 @@ JavaScript implementation wrote, and a folder from that era opens here unchanged
 `serde_json`'s `preserve_order` is on so a file written by either implementation
 has its keys in the same order.
 
-`core` never sees a path, a `PathBuf` or a `std::io` type. That is what makes the
-domain testable without a temporary directory, and it is why `store` is the only
-crate that can create one.
+`core` never sees a path, a `PathBuf` or a `std::io` type, with one deliberate
+exception: `rules::load_file`, which exists so that a pack found on disk is read by
+the same function that validates the compiled-in one, rather than by a second reader
+that could diverge from it. Everything else in the domain takes its inputs as
+parameters, which is what makes it testable without a temporary directory — and why
+`store` is the crate that resolves *which* file to read.
 
 ## Where the seams are
 
 - **A new page**: `crates/ui/src/pages/`, an entry in `Page::ALL`, a branch in
   `App::content`. If it needs a number the model does not carry, the number
   belongs in `build_model`, not in the page.
-- **A new rule**: `rules/pt/2026.json`, with a source. Then check that
+- **A new rule**: `rules/pt/<year>.json`, with a source. Then check that
   `cargo xtask ci` still passes — the pack validator and the calendar fixtures
   will both have an opinion.
+- **A new year of law**: one JSON file. Dropping `rules/pt/2027.json` beside the
+  binary is enough for that machine; adding it to `EMBEDDED_PACKS` with
+  `include_str!` makes it the fallback every build carries, and the registry test
+  fails if the file and its registered year disagree.
+- **A source document**: a file under `rules/pt/sources/` with its SHA-256 in the
+  pack's `sources[]` entry, so the reader can prove the citation is in the copy it
+  was reviewed against. *Not built yet* — the pack cites URLs and retrieval dates,
+  and that is the gap F1 closes.
 - **A new estimate**: a function in `crates/core/src/estimate.rs`, a field on the
   view model, and a widget. Not a calculation in a page.
 - **Storage that is not JSON**: do not. The vault is readable with a text editor,

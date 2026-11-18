@@ -47,8 +47,10 @@ dashboard.
   number, threshold and deadline comes from `crates/core/` through the single view
   model.
 - **The rule pack is the only place Portuguese tax law is written down.** Rates,
-  coefficients and ceilings are read from `rules/pt/2026.json`. A missing value means
-  the calculation is *refused*, never defaulted.
+  coefficients and ceilings are read from `rules/pt/<year>.json`, from disk first
+  (`VN_FINANCE_RULES`, then beside the binary, then the repository when running out
+  of `target/`) with the newest year compiled in as the fallback. A missing value
+  means the calculation is *refused*, never defaulted.
 - **No guessing personal inputs.** The NIF, the declared IVA regime, turnover and
   eligible expenses are declarations. If they are absent, say which check cannot run
   instead of assuming a value.
@@ -77,7 +79,7 @@ dashboard.
 | `apps/vnfin/` | The binary |
 | `assets/logo/` | The mark: the three SVGs, the rendered PNGs at nine sizes, the two `.rgba` icons, `BRAND.md` the design record and `MANIFEST.toml` the digests |
 | `xtask/` | `cargo xtask ci` — the gate |
-| `rules/pt/2026.json` | The versioned rule pack: constants, obligations, sources, verification status |
+| `rules/pt/` | The versioned rule packs, one JSON file per year: constants, obligations, sources, verification status. Read from disk at startup and shipped beside the binary; the newest is also compiled in. |
 | `design/` | The reviewed mockup the window's structure and colour were ported from |
 | `scripts/` | Launchers: `scripts/run.bat` builds the release and opens the window |
 | `docs/` | Domain reference, privacy model, the port plan, and `UI.md` — the window's own rules: palette, type scale, tables, figures, and the constraints a page has to keep |

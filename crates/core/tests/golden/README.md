@@ -60,12 +60,22 @@ checksum, version, summary, problems and the answers to the freshness/declare/co
 questions the fixture asks; for `calendar.json` four fields per case (`counts`, `ids`,
 `digest`, `window`), leaving each case's inputs — its profile, its day, its holidays —
 exactly as the file writes them. It touches no other fixture: money, dates, conditions,
-countries, NIF, profile, flags, estimate and pdf hold no pack.
+countries, NIF, profile, flags and pdf hold no pack.
 
 It is a **re-baseline, not a fix**. Run it on an unchanged pack and every file must come
 back byte-identical; if it does not, the tool is wrong, not the answer. When it does move
 a line, the line is the finding: a digest that changed is a page a person reads
 differently, and the commit that carries it says why the pack changed.
+
+### The one behaviour it may also rewrite
+
+`estimate.json` has one array that the reference itself got wrong: its Segurança Social
+cases were computed as 70 % × 21,4 % of the quarter, with no floor and no ceiling, so a
+worker earning less than 1,5 × IAS was shown a contribution nobody pays. When the engine
+is deliberately changed to follow the law instead of the reference, that is the only case
+where a behavioural fixture may be rewritten — `social_security` and `quarters`, and
+nothing else in the file — and the commit has to name which side was wrong and why. A
+fixture rewritten without that sentence is a test that has stopped testing.
 
 ## Why they are hex and not a corpus of PDFs
 

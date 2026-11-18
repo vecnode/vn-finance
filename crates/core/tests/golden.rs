@@ -1298,6 +1298,39 @@ fn the_estimates_match_the_reference() -> Result<(), Problem> {
     let fixture: EstimateFixture = serde_json::from_str(include_str!("golden/estimate.json"))?;
     let pack = load_embedded()?;
 
+    // The Segurança Social numbers were wrong in the reference: it applied 70 % × 21,4 %
+    // to the quarter with no floor and no ceiling, so a worker under 1,5 × IAS was shown a
+    // contribution nobody pays. This is the one fixture a *deliberate* change of behaviour
+    // re-baselines, and only its two Segurança Social arrays: the rest of the file still
+    // answers what the reference answered.
+    if updating() {
+        let path = fixture_path("estimate.json");
+        let mut document: Value = serde_json::from_str(&std::fs::read_to_string(&path)?)?;
+        let cases = document
+            .get_mut("social_security")
+            .and_then(Value::as_array_mut)
+            .ok_or("estimate.json holds a `social_security` array")?;
+        for (case, slot) in fixture.social_security.iter().zip(cases.iter_mut()) {
+            slot["estimate"] =
+                serde_json::to_value(estimate_social_security(&pack.pack, case.service_income_cents, 3))?;
+        }
+        let quarters = document
+            .get_mut("quarters")
+            .and_then(Value::as_array_mut)
+            .ok_or("estimate.json holds a `quarters` array")?;
+        for (case, slot) in fixture.quarters.iter().zip(quarters.iter_mut()) {
+            slot["report"] = serde_json::to_value(quarter_report(
+                &pack.pack,
+                &fixture.invoices,
+                case.year,
+                case.quarter,
+            )?)?;
+        }
+        std::fs::write(&path, format!("{}\n", serde_json::to_string_pretty(&document)?))?;
+        println!("re-baselined {}", path.display());
+        return Ok(());
+    }
+
     for case in &fixture.invoice_totals {
         let ours = serde_json::to_value(invoice_totals(&case.invoice))?;
         assert_eq!(ours, case.totals, "the totals of invoice {}", case.invoice.number);

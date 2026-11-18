@@ -1,5 +1,5 @@
 {
-  "checksum": "4799a7fb844c8fd8a49acef981383e654004733452e63bc79f553b3f800cab9f",
+  "checksum": "d753d60332acc321e9df3dfefccfa2e99337c3d5a0af6e948a42e990ca4c78e1",
   "year": 2026,
   "pack_version": "2026.1.5",
   "obligation_ids": [
@@ -27,7 +27,7 @@
   "summary": {
     "pack_version": "2026.1.5",
     "year": 2026,
-    "checksum": "4799a7fb844c8fd8a49acef981383e654004733452e63bc79f553b3f800cab9f",
+    "checksum": "d753d60332acc321e9df3dfefccfa2e99337c3d5a0af6e948a42e990ca4c78e1",
     "sources": 22,
     "official_sources": 19,
     "obligations": 20,
@@ -49,7 +49,7 @@
       "Segurança Social: não foi encontrado calendário oficial anual (a seg-social.pt devolveu 404 nos PDFs do Guia Prático e redirecionou as paginas de documentos para a área reservada). Os prazos, a taxa de 21,4 % e os coeficientes de 70 %/20 % foram confirmados no Guia Prático da OCC de agosto de 2026 e corroborados pela DECO. Confirmar igualmente o artigo exato do CRC da declaração trimestral (o Guia cita o art. 151.º-A para a declaração anual, sugerindo o art. 151.º para a trimestral, mas isso não foi confirmado).",
       "Segurança Social, inicio de atividade: os primeiros 12 meses Não são uma isenção. O Guia Prático da OCC indica que o enquadramento existe mas os seus efeitos so se produzem no 1.º dia do 12.º mês posterior ao inicio de atividade, pelo que o campo startupExemptionMonths foi fixado em 12 como periodo sem obrigação contributiva. Não foi encontrada qualquer redução faseada (por exemplo 50 % e depois 25 %) após esse periodo, pelo que startupReductions ficou vazio: o pressuposto de 'isenção de 12 meses seguida de reduções' não esta sustentado nas fontes consultadas e deve ser confirmado. Também não foram confirmadas as condições de acesso (por exemplo cessação anterior de atividade) nem a regra de suspensão da contagem do prazo em caso de cessação durante os primeiros 12 meses.",
       "constants.socialSecurity.iasMonthly = 53713 (537,13 EUR): valor corroborado pelo Guia Prático da OCC, que cita a Portaria n.º 480-A/2025/1, de 30 de dezembro, e por fontes secundárias (Garrigues, imprensa). A pagina oficial do Diário da República foi pedida mas não devolveu texto legível por máquina, pelo que o valor não foi lido diretamente no diploma.",
-      "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): a base de incidência mensal é um duodécimo do rendimento relevante trimestral, limitada entre 1,5 × IAS e 12 × IAS, com um valor mínimo de contribuição de 20,00 EUR (Despacho n.º 599/2019, citado pelo Guia da OCC e não lido diretamente). O pacote tem as chaves e o cálculo não as usa: a estimativa aplica 70 % × 21,4 % ao rendimento bruto e só avisa que não consegue verificar o limite. Aplicar o mínimo e o máximo, ou recusar a estimativa com esse motivo — é a diferença entre uma estimativa e um número errado para quem está num dos limiares.",
+      "constants.socialSecurity.baseMinMultipleIas (150) e baseMaxMultipleIas (1200): a base de incidência mensal é um terço do rendimento relevante trimestral, limitada entre 1,5 × IAS e 12 × IAS, com um valor mínimo de contribuição de 20,00 EUR por mês (minimumContributionCents; o Despacho n.º 599/2019 é citado pelo Guia da OCC e não foi lido diretamente). A estimativa já aplica os três limites e mostra-os no passo a passo da Segurança Social. Fica por codificar o direito de opção do art. 164.º (rendimento relevante até 25 % acima ou abaixo, por escalões de 5 %), que muda a base por decisão do trabalhador e não por regra do pacote.",
       "Segurança Social, direito de opção: o trabalhador pode fixar rendimento relevante superior ou inferior até 25 %, por escalões de 5 % (art. 164.º do CRC, citado pelo Guia da OCC). Não esta codificado por falta de chave na estrutura; a aplicação deve ter isto em conta ao estimar contribuições.",
       "Retenção na fonte: as taxas do art. 101.º n.º 1 do CIRS estão citadas (passagem art101-n1) — 16,5 % para rendimentos da categoria B da alínea c) do n.º 1 do art. 3.º (propriedade intelectual ou industrial), 23 % para as profissões da tabela do art. 151.º e 11,5 % para as restantes da categoria B. O pacote codifica a de 23 % e a de 11,5 %; a de 16,5 % e a de 20 % do art. 58.º-A do EBF exigem chaves próprias e opções no formulário de fatura, e não estão codificadas.",
       "Retenção na fonte sobre rendimentos pagos a não residentes: 25 % a título definitivo, citado do art. 71.º n.º 4 a) (passagem art71-n4), com a regra do n.º 5 para rendimentos mensais pagos por uma única entidade até ao valor da retribuição mínima mensal garantida (passagem art71-n5). O texto está lido e citado; o que exige revisão humana é a sua aplicação a casos concretos — convenções para evitar a dupla tributação e estabelecimento estável —, que a aplicação não decide.",

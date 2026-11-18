@@ -765,11 +765,17 @@
         "relevantIncomeShareBp": 7000,
         "relevantIncomeCents": 0,
         "contributionRateBp": 2140,
-        "contributionCents": 0,
+        "monthlyBaseBeforeLimitsCents": 0,
+        "monthlyBaseCents": 0,
+        "baseFloorCents": 80570,
+        "baseCeilingCents": 644556,
+        "minimumContributionCents": 2000,
+        "monthlyContributionCents": 2000,
+        "contributionCents": 6000,
         "instalmentsCents": [
-          0,
-          0,
-          0
+          2000,
+          2000,
+          2000
         ],
         "limitations": []
       }
@@ -781,11 +787,17 @@
         "relevantIncomeShareBp": 7000,
         "relevantIncomeCents": 70000,
         "contributionRateBp": 2140,
-        "contributionCents": 14980,
+        "monthlyBaseBeforeLimitsCents": 23333,
+        "monthlyBaseCents": 80570,
+        "baseFloorCents": 80570,
+        "baseCeilingCents": 644556,
+        "minimumContributionCents": 2000,
+        "monthlyContributionCents": 17242,
+        "contributionCents": 51726,
         "instalmentsCents": [
-          4994,
-          4993,
-          4993
+          17242,
+          17242,
+          17242
         ],
         "limitations": []
       }
@@ -797,6 +809,12 @@
         "relevantIncomeShareBp": 7000,
         "relevantIncomeCents": 1050000,
         "contributionRateBp": 2140,
+        "monthlyBaseBeforeLimitsCents": 350000,
+        "monthlyBaseCents": 350000,
+        "baseFloorCents": 80570,
+        "baseCeilingCents": 644556,
+        "minimumContributionCents": 2000,
+        "monthlyContributionCents": 74900,
         "contributionCents": 224700,
         "instalmentsCents": [
           74900,
@@ -827,11 +845,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 0,
           "contributionRateBp": 2140,
-          "contributionCents": 0,
+          "monthlyBaseBeforeLimitsCents": 0,
+          "monthlyBaseCents": 0,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 2000,
+          "contributionCents": 6000,
           "instalmentsCents": [
-            0,
-            0,
-            0
+            2000,
+            2000,
+            2000
           ],
           "limitations": []
         }
@@ -856,11 +880,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 0,
           "contributionRateBp": 2140,
-          "contributionCents": 0,
+          "monthlyBaseBeforeLimitsCents": 0,
+          "monthlyBaseCents": 0,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 2000,
+          "contributionCents": 6000,
           "instalmentsCents": [
-            0,
-            0,
-            0
+            2000,
+            2000,
+            2000
           ],
           "limitations": []
         }
@@ -885,11 +915,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 0,
           "contributionRateBp": 2140,
-          "contributionCents": 0,
+          "monthlyBaseBeforeLimitsCents": 0,
+          "monthlyBaseCents": 0,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 2000,
+          "contributionCents": 6000,
           "instalmentsCents": [
-            0,
-            0,
-            0
+            2000,
+            2000,
+            2000
           ],
           "limitations": []
         }
@@ -914,11 +950,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 210000,
           "contributionRateBp": 2140,
-          "contributionCents": 44940,
+          "monthlyBaseBeforeLimitsCents": 70000,
+          "monthlyBaseCents": 80570,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 17242,
+          "contributionCents": 51726,
           "instalmentsCents": [
-            14980,
-            14980,
-            14980
+            17242,
+            17242,
+            17242
           ],
           "limitations": []
         }
@@ -943,11 +985,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 105000,
           "contributionRateBp": 2140,
-          "contributionCents": 22470,
+          "monthlyBaseBeforeLimitsCents": 35000,
+          "monthlyBaseCents": 80570,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 17242,
+          "contributionCents": 51726,
           "instalmentsCents": [
-            7490,
-            7490,
-            7490
+            17242,
+            17242,
+            17242
           ],
           "limitations": []
         }
@@ -972,11 +1020,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 979999,
           "contributionRateBp": 2140,
-          "contributionCents": 209720,
+          "monthlyBaseBeforeLimitsCents": 326666,
+          "monthlyBaseCents": 326666,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 69907,
+          "contributionCents": 209721,
           "instalmentsCents": [
             69907,
             69907,
-            69906
+            69907
           ],
           "limitations": []
         }
@@ -1001,11 +1055,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 0,
           "contributionRateBp": 2140,
-          "contributionCents": 0,
+          "monthlyBaseBeforeLimitsCents": 0,
+          "monthlyBaseCents": 0,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 2000,
+          "contributionCents": 6000,
           "instalmentsCents": [
-            0,
-            0,
-            0
+            2000,
+            2000,
+            2000
           ],
           "limitations": []
         }
@@ -1030,11 +1090,17 @@
           "relevantIncomeShareBp": 7000,
           "relevantIncomeCents": 175000,
           "contributionRateBp": 2140,
-          "contributionCents": 37450,
+          "monthlyBaseBeforeLimitsCents": 58333,
+          "monthlyBaseCents": 80570,
+          "baseFloorCents": 80570,
+          "baseCeilingCents": 644556,
+          "minimumContributionCents": 2000,
+          "monthlyContributionCents": 17242,
+          "contributionCents": 51726,
           "instalmentsCents": [
-            12484,
-            12483,
-            12483
+            17242,
+            17242,
+            17242
           ],
           "limitations": []
         }

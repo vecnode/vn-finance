@@ -612,3 +612,64 @@ fn collect(directory: &Path, found: &mut Vec<PathBuf>) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_day_count_becomes_the_date_it_names() {
+        // The epoch, a day in the first non-leap March, two leap days a century apart,
+        // and the date the 2027 scaffold was first written with. A civil calendar with
+        // one rule wrong is wrong once every four years, in February.
+        for (days, expected) in [
+            (0_i64, "1970-01-01"),
+            (59, "1970-03-01"),
+            (11_016, "2000-02-29"),
+            (19_782, "2024-02-29"),
+            (20_788, "2026-12-01"),
+            (20_819, "2027-01-01"),
+        ] {
+            let (year, month, day) = civil_from_days(days);
+            assert_eq!(format!("{year:04}-{month:02}-{day:02}"), expected, "day {days}");
+        }
+    }
+
+    #[test]
+    fn today_is_a_date_a_pack_can_carry() {
+        let today = today_utc();
+        assert_eq!(today.len(), 10);
+        assert_eq!(today.as_bytes()[4], b'-');
+        assert_eq!(today.as_bytes()[7], b'-');
+        let year: i64 = today[..4].parse().unwrap_or_default();
+        assert!(
+            (2000..2100).contains(&year),
+            "a year outside this century means the clock arithmetic is wrong: {today}"
+        );
+    }
+
+    #[test]
+    fn a_year_names_the_pack_file_and_a_path_is_left_alone() {
+        assert_eq!(
+            pack_file("2027"),
+            PathBuf::from("rules").join("pt").join("2027.json")
+        );
+        assert_eq!(pack_file("outro/2027.json"), PathBuf::from("outro/2027.json"));
+    }
+
+    #[test]
+    fn rules_with_no_action_says_what_to_type() {
+        let problem = rules(std::iter::empty()).err().unwrap_or_default();
+        assert!(problem.contains("rules scaffold"), "{problem}");
+        assert!(problem.contains("rules diff"), "{problem}");
+    }
+
+    #[test]
+    fn an_unknown_action_is_refused_with_the_two_that_exist() {
+        let problem = rules(["scaffld".to_owned()].into_iter())
+            .err()
+            .unwrap_or_default();
+        assert!(problem.contains("scaffld"), "{problem}");
+        assert!(problem.contains("scaffold"), "{problem}");
+    }
+}

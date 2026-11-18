@@ -76,7 +76,9 @@ cargo build --release
 
 ## Segurança e licença
 
-- **AGPL-3.0-only** — ver [`LICENSE`](LICENSE). O vn-finance é *copyleft*: podes
+- **AGPL-3.0-only**, Copyright (C) 2026 vecnode — ver [`LICENSE`](LICENSE), que é o texto
+  da licença e nada mais, e [`NOTICE`](NOTICE), com o aviso de copyright e a aplicação
+  «versão 3 ou posterior». O vn-finance é *copyleft*: podes
   executá-lo, estudá-lo, alterá-lo e partilhá-lo, e uma versão que distribuías ou
   serves por rede tem de levar o código-fonte com a mesma licença.
 - A promessa de "sem rede" é verificável em dois sítios: uma varredura ao código das

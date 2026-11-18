@@ -196,12 +196,21 @@ pub fn pill(ui: &mut Ui, text: &str, tone: Tone) {
         .corner_radius(theme::radius_small())
         .inner_margin(egui::Margin::symmetric(9, 2))
         .show(ui, |ui| {
-            ui.label(
-                RichText::new(text)
-                    .size(theme::CAPTION)
-                    .strong()
-                    .color(foreground),
-            );
+            // Truncated, not left to grow: a pill lives in a table cell, a cell has a
+            // fixed width, and a pill two points wider than its column pushes every
+            // column after it — which is how the Agenda page came to be wider than the
+            // window. `truncate` only bites when the cell really has no room; when it
+            // does, the text is drawn whole and the hover has the rest.
+            ui.add(
+                Label::new(
+                    RichText::new(text)
+                        .size(theme::CAPTION)
+                        .strong()
+                        .color(foreground),
+                )
+                .truncate(),
+            )
+            .on_hover_text(text);
         });
 }
 
@@ -231,7 +240,8 @@ pub fn badge(ui: &mut Ui, text: &str, tone: Tone) {
                 },
             );
             job.wrap.max_width = f32::INFINITY;
-            ui.label(job);
+            // See `pill`: a badge in a fixed-width cell must not widen the row.
+            ui.add(Label::new(job).truncate()).on_hover_text(text);
         });
 }
 
@@ -488,16 +498,28 @@ pub fn defs(ui: &mut Ui, rows: &[Def<'_>]) {
     }
 }
 
-/// A list of one-line notes, each with a coloured mark.
+/// A list of notes, each with a coloured mark.
+///
+/// A note is a sentence, so it has to wrap, and wrapping is the thing this widget got
+/// wrong once: egui sets a horizontal layout's wrap mode to `Extend`, so a label inside
+/// `ui.horizontal_top` is laid out on one line however narrow its `max_width` is made.
+/// The pack's 21 open questions became 21 lines of four to six thousand points, the page
+/// grew to seven thousand points wide, the vertical scroll area followed its content
+/// into that width (its disabled axis expands to fit), and the scroll bar was painted
+/// four thousand points to the right of the window — invisible, with no way to scroll a
+/// page taller than the screen. The paragraph is therefore a *vertical* child of a fixed
+/// width, which is the layout that wraps.
 pub fn notes(ui: &mut Ui, tone: Tone, lines: &[String]) {
     let palette = palette(ui.ctx());
     let (foreground, _, _) = tone.colours(&palette);
     for line in lines {
         ui.horizontal_top(|ui| {
+            // The mark's square, then the air after it: the paragraph gets what is left.
             let (rect, _) = ui.allocate_exact_size(Vec2::splat(12.0), Sense::hover());
             ui.painter().circle_filled(rect.center(), 3.0, foreground);
-            ui.scope(|ui| {
-                ui.set_max_width(ui.available_width());
+            let width = ui.available_width();
+            ui.allocate_ui_with_layout(Vec2::new(width, 0.0), Layout::top_down(Align::LEFT), |ui| {
+                ui.set_max_width(width);
                 ui.label(RichText::new(line).size(theme::BODY_SMALL).color(palette.text_2));
             });
         });

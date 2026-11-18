@@ -80,7 +80,13 @@ pub struct Palette {
     pub slate_bg: Color32,
     /// Neutral, bordered.
     pub slate_border: Color32,
-    /// The scroll bar's handle: light chrome, never the dark text colour.
+    /// The scroll bar's handle: chrome, but chrome you can find.
+    ///
+    /// `#CBD5E1` was chosen as "a light grey you can find on a white page" and it is not
+    /// one: 1.48:1 on `surface` and 1.39:1 on `bg`, which is a scroll bar that is
+    /// *painted* and not *seen*. The handle is the only thing that says a page continues
+    /// below the window, so it is held to the 3:1 a meaningful control boundary owes
+    /// (WCAG 1.4.11) — `the_scroll_bar_can_be_found` measures it in both palettes.
     pub scroll: Color32,
     /// The scroll bar's handle under the pointer, or while it is being dragged.
     pub scroll_hover: Color32,
@@ -121,10 +127,10 @@ impl Palette {
             slate: Color32::from_rgb(0x47, 0x55, 0x69),
             slate_bg: Color32::from_rgb(0xF1, 0xF5, 0xF9),
             slate_border: Color32::from_rgb(0xE2, 0xE8, 0xF0),
-            // Chrome, not ink: the bar is a light grey you can find on a white page,
-            // and it darkens one step when the pointer is on it.
-            scroll: Color32::from_rgb(0xCB, 0xD5, 0xE1),
-            scroll_hover: Color32::from_rgb(0x9F, 0xB0, 0xC4),
+            // Chrome, and a scroll bar nobody can see is not chrome: 3.2:1 on the page
+            // and 3.4:1 on a card, darkening one step under the pointer.
+            scroll: Color32::from_rgb(0x7E, 0x8B, 0x9E),
+            scroll_hover: Color32::from_rgb(0x4A, 0x57, 0x69),
         }
     }
 
@@ -160,9 +166,10 @@ impl Palette {
             slate: Color32::from_rgb(0xA9, 0xB7, 0xC9),
             slate_bg: Color32::from_rgb(0x16, 0x22, 0x3A),
             slate_border: Color32::from_rgb(0x24, 0x31, 0x49),
-            // The same idea in the dark: a step above the surface, never a bright line.
-            scroll: Color32::from_rgb(0x33, 0x41, 0x55),
-            scroll_hover: Color32::from_rgb(0x47, 0x55, 0x69),
+            // The same idea in the dark: a step above the surface, never a bright line —
+            // but still 3:1 above it, because the bar is the only sign of more page.
+            scroll: Color32::from_rgb(0x63, 0x72, 0x8A),
+            scroll_hover: Color32::from_rgb(0x93, 0xA3, 0xB8),
         }
     }
 
@@ -299,12 +306,15 @@ pub fn apply(ctx: &Context, dark: bool) {
         style.spacing.interact_size.y = 28.0;
         style.spacing.window_margin = Margin::symmetric(20, 18);
         style.spacing.scroll = egui::style::ScrollStyle {
+            // Solid, not floating: a floating bar fades to nothing when the pointer is
+            // elsewhere, and this window has one bar and no other sign that a page
+            // continues. Solid also means it owns its column, so it never covers text.
             floating: false,
-            // `bg_fill`, not `fg_stroke`: the handle is chrome (a light grey, from the
-            // palette's `scroll` token) rather than ink. Nothing else in this window
-            // draws with `bg_fill` — buttons use `weak_bg_fill`, text fields use
-            // `extreme_bg_color` — so the bars can be tinted without repainting a
-            // single control.
+            // `bg_fill`, not `fg_stroke`: the handle is chrome (the palette's `scroll`
+            // token) rather than ink. Nothing else in this window draws with `bg_fill` —
+            // buttons use `weak_bg_fill`, text fields use `extreme_bg_color` — so the bar
+            // can be tinted without repainting a single control, which is why darkening
+            // that token to a findable grey changed the bar and nothing else.
             foreground_color: false,
             bar_width: 8.0,
             handle_min_length: 28.0,
@@ -428,6 +438,46 @@ mod tests {
             let ratio = contrast(palette.text_4, palette.surface);
             assert!(ratio >= 3.0, "a control's edge must be seen: {ratio:.2}:1");
         }
+    }
+
+    #[test]
+    fn the_scroll_bar_can_be_found() {
+        // The bar is the only thing that says a page continues past the window, and the
+        // first version of it was painted at 1.4:1 — technically there, practically not.
+        // A meaningful control boundary owes 3:1 (WCAG 1.4.11), so the handle is measured
+        // against both surfaces it is ever drawn over: the page and a card.
+        for palette in [Palette::light(), Palette::dark()] {
+            for (label, background) in [("bg", palette.bg), ("surface", palette.surface)] {
+                let ratio = contrast(palette.scroll, background);
+                assert!(
+                    ratio >= 3.0,
+                    "the scroll bar's handle is {ratio:.2}:1 on {label}; it has to be findable"
+                );
+                let hover = contrast(palette.scroll_hover, background);
+                assert!(
+                    hover >= 3.0,
+                    "the scroll bar's handle under the pointer is {hover:.2}:1 on {label}"
+                );
+            }
+            // Under the pointer it moves, and in the direction that reads as "pressed":
+            // darker on a light window, lighter on a dark one.
+            let moved = if is_lighter(palette.scroll_hover, palette.scroll) {
+                "lighter"
+            } else {
+                "darker"
+            };
+            let wanted = if palette == Palette::light() {
+                "darker"
+            } else {
+                "lighter"
+            };
+            assert_eq!(moved, wanted, "the handle must answer the pointer");
+        }
+    }
+
+    /// Whether `left` is lighter than `right`.
+    fn is_lighter(left: Color32, right: Color32) -> bool {
+        luminance(left) > luminance(right)
     }
 
     #[test]

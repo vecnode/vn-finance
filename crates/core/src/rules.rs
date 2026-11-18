@@ -32,9 +32,9 @@ use unicode_normalization::UnicodeNormalization;
 use crate::conditions::{is_condition_field, is_condition_op};
 use crate::dates;
 use crate::types::{
-    Condition, ConstantProvenance, DateExtension, DeadlineKind, DeadlineRule, LoadedPack, ObligationKind,
-    ObligationRule, OfficialDate, PackProblem, Periodicity, PeriodicityType, ProblemLevel, RulePack,
-    RuleSource, SourceTier, Units, Verification,
+    Citation, Condition, ConstantProvenance, DateExtension, DeadlineKind, DeadlineRule, LoadedPack,
+    ObligationKind, ObligationRule, OfficialDate, PackProblem, Passage, Periodicity, PeriodicityType,
+    ProblemLevel, RulePack, RuleSource, SourceTier, Units, Verification,
 };
 
 /// One rule pack compiled into the binary.
@@ -165,7 +165,7 @@ pub fn canonicalise(value: &Value) -> String {
 }
 
 /// Lower-case hex of a SHA-256.
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
         out.push_str(&format!("{byte:02x}"));
@@ -474,6 +474,78 @@ fn collect_nulls(node: &Value, path: &str, out: &mut Vec<String>) {
     }
 }
 
+/// The passages a source declares, refusing a malformed one.
+///
+/// A passage is the unit a reader can check: a quote and a place. An empty quote
+/// would "verify" nothing, so it is an error rather than a warning — the difference
+/// between a pack that promises evidence and one that only looks like it does.
+fn parse_passages(value: Option<&Value>, at: &str, problems: &mut Problems) -> Vec<Passage> {
+    let Some(Value::Array(entries)) = value else {
+        if value.is_some_and(|value| !value.is_null()) {
+            problems.error(&format!("{at}.passages"), "tem de ser uma lista de passagens");
+        }
+        return Vec::new();
+    };
+    let mut passages: Vec<Passage> = Vec::new();
+    for (index, entry) in entries.iter().enumerate() {
+        let here = format!("{at}.passages[{index}]");
+        let Value::Object(fields) = entry else {
+            problems.error(&here, "tem de ser um objeto");
+            continue;
+        };
+        let id = text(fields.get("id"));
+        let quote = text(fields.get("quote"));
+        if id.is_empty() {
+            problems.error(&format!("{here}.id"), "falta o id da passagem");
+        } else if passages.iter().any(|passage| passage.id == id) {
+            problems.error(&format!("{here}.id"), format!("passagem duplicada \"{id}\""));
+        }
+        if quote.trim().is_empty() {
+            problems.error(
+                &format!("{here}.quote"),
+                "uma passagem sem citação não verifica nada",
+            );
+        }
+        passages.push(Passage {
+            id,
+            locator: as_text(fields.get("locator")),
+            quote,
+        });
+    }
+    passages
+}
+
+/// The citations a rule declares.
+fn parse_citations(value: Option<&Value>, at: &str, problems: &mut Problems) -> Vec<Citation> {
+    let Some(Value::Array(entries)) = value else {
+        if value.is_some_and(|value| !value.is_null()) {
+            problems.error(&format!("{at}.citations"), "tem de ser uma lista de citações");
+        }
+        return Vec::new();
+    };
+    let mut citations: Vec<Citation> = Vec::new();
+    for (index, entry) in entries.iter().enumerate() {
+        let here = format!("{at}.citations[{index}]");
+        let Value::Object(fields) = entry else {
+            problems.error(&here, "tem de ser um objeto");
+            continue;
+        };
+        let source_id = text(fields.get("sourceId"));
+        let passage_id = text(fields.get("passageId"));
+        if source_id.is_empty() {
+            problems.error(&format!("{here}.sourceId"), "falta a fonte");
+        }
+        if passage_id.is_empty() {
+            problems.error(&format!("{here}.passageId"), "falta a passagem");
+        }
+        citations.push(Citation {
+            source_id,
+            passage_id,
+        });
+    }
+    citations
+}
+
 /// Validate a pack that has already been parsed.
 ///
 /// # Errors
@@ -536,12 +608,36 @@ pub fn validate_rule_pack(raw: &Value) -> Result<(RulePack, Vec<PackProblem>), P
                     title: text(fields.get("title")),
                     url: text(fields.get("url")),
                     retrieved_at: text(fields.get("retrievedAt")),
+                    file: as_text(fields.get("file")),
+                    sha256: as_text(fields.get("sha256")).map(|hash| hash.trim().to_lowercase()),
+                    passages: parse_passages(fields.get("passages"), &at, &mut problems),
                 };
                 if source.id.is_empty() {
                     problems.error(&format!("{at}.id"), "falta o id");
                 }
                 if !source.url.starts_with("http") {
                     problems.error(&format!("{at}.url"), "url ausente ou não-http");
+                }
+                match (&source.file, &source.sha256) {
+                    // A copy without a hash cannot prove it is the one that was read,
+                    // which is the only reason to keep a copy at all.
+                    (Some(_), None) => problems.warn(
+                        &format!("{at}.sha256"),
+                        "declara uma cópia local sem sha256: nada prova que é a cópia que foi lida.",
+                    ),
+                    (None, Some(_)) => problems.warn(
+                        &format!("{at}.sha256"),
+                        "declara um sha256 sem indicar o ficheiro a que pertence.",
+                    ),
+                    (Some(_), Some(hash)) => {
+                        if hash.len() != 64 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+                            problems.warn(
+                                &format!("{at}.sha256"),
+                                format!("\"{hash}\" não parece um SHA-256 em hexadecimal."),
+                            );
+                        }
+                    }
+                    (None, None) => {}
                 }
                 sources.push(source);
             }
@@ -769,6 +865,33 @@ pub fn validate_rule_pack(raw: &Value) -> Result<(RulePack, Vec<PackProblem>), P
                         "sem base legal registada; todas as regras devem citar a lei",
                     );
                 }
+                // A citation is checked against the pack itself first, because both
+                // halves are here: a passage id the source does not declare is a typo
+                // whoever reads it, with or without the corpus on disk.
+                let citations = parse_citations(fields.get("citations"), &at, &mut problems);
+                for citation in &citations {
+                    match sources.iter().find(|source| source.id == citation.source_id) {
+                        None => problems.warn(
+                            &format!("{at}.citations"),
+                            format!("cita uma fonte desconhecida \"{}\"", citation.source_id),
+                        ),
+                        Some(source)
+                            if !source
+                                .passages
+                                .iter()
+                                .any(|passage| passage.id == citation.passage_id) =>
+                        {
+                            problems.warn(
+                                &format!("{at}.citations"),
+                                format!(
+                                    "cita a passagem \"{}\", que a fonte \"{}\" não declara",
+                                    citation.passage_id, citation.source_id
+                                ),
+                            );
+                        }
+                        Some(_) => {}
+                    }
+                }
                 if state == Verification::Verified && rule_source_ids.is_empty() {
                     problems.warn(
                         &format!("{at}.verification"),
@@ -792,6 +915,7 @@ pub fn validate_rule_pack(raw: &Value) -> Result<(RulePack, Vec<PackProblem>), P
                     official_dates,
                     legal_basis,
                     source_ids: rule_source_ids,
+                    citations,
                     portal_url: as_text(fields.get("portalUrl")),
                     documents_to_keep: string_list(fields.get("documentsToKeep")),
                     penalty_note: as_text(fields.get("penaltyNote")),

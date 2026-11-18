@@ -357,6 +357,50 @@ pub struct RuleSource {
     pub url: String,
     /// When it was retrieved.
     pub retrieved_at: String,
+    /// The stored copy, relative to the corpus root.
+    ///
+    /// Absent for a source the repository does not redistribute (a commercial
+    /// publication), and for one that was never collected. The difference between
+    /// those two is what the interface has to show, so neither is an error.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
+    /// The SHA-256 of those bytes, as they were retrieved.
+    ///
+    /// This is the whole point of keeping the copy: a source that still answers a URL
+    /// can change under a rule that says `verified`, and only a hash notices.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sha256: Option<String>,
+    /// The passages the pack relies on.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passages: Vec<Passage>,
+}
+
+/// One quoted passage of a source, and where it sits.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Passage {
+    /// Stable identifier within the source.
+    pub id: String,
+    /// Where it is: `art. 60.º n.º 1`, `p. 12`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locator: Option<String>,
+    /// The words, as the source has them.
+    ///
+    /// `…` joins two fragments that are not adjacent in the document, for a page that
+    /// puts a table between them. Everything else must appear verbatim, after
+    /// whitespace is collapsed — accents included, because the law is Portuguese and
+    /// `e` is not `é`.
+    pub quote: String,
+}
+
+/// What a rule binds itself to: a passage of a source, not just the source.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Citation {
+    /// The source's id.
+    pub source_id: String,
+    /// The passage's id within that source.
+    pub passage_id: String,
 }
 
 /// How often an obligation recurs.
@@ -509,6 +553,12 @@ pub struct ObligationRule {
     pub legal_basis: Vec<String>,
     /// The citations it rests on.
     pub source_ids: Vec<String>,
+    /// The passages it rests on, when it says which part of the source it means.
+    ///
+    /// `source_ids` says "this article"; a citation says "this sentence of it", which
+    /// is the one claim a reader can check against the stored copy.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub citations: Vec<Citation>,
     /// Where the person would go to comply.
     pub portal_url: Option<String>,
     /// Documents worth keeping for this obligation.
@@ -702,6 +752,9 @@ pub struct ObligationInstance {
     pub legal_basis: Vec<String>,
     /// The citations it rests on.
     pub source_ids: Vec<String>,
+    /// The passages it rests on, carried so the agenda can say what was checked.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub citations: Vec<Citation>,
     /// Where the person would go to comply.
     pub portal_url: Option<String>,
     /// Documents worth keeping.

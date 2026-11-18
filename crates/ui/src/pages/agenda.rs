@@ -313,6 +313,7 @@ mod tests {
             verify_note: None,
             legal_basis: vec!["Art. 41.º CIVA".to_owned()],
             source_ids: vec![],
+            citations: vec![],
             portal_url: None,
             documents_to_keep: vec![],
             penalty_note: None,

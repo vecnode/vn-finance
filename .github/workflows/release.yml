@@ -5,10 +5,10 @@ name: Release
 # once the archive and `SHA256SUMS.txt` are on it.
 #
 # One platform: Windows x86_64, as a folder zipped whole. The code is not Windows-only —
-# the gate still runs on Linux and macOS, which is where a `#[cfg]` mistake or a lint that
-# only exists on one platform gets caught — but the release is the build the person
-# actually runs, and the one they run is the Windows one. An archive nobody executes is an
-# artifact that only pretends to have been tested.
+# the gate compiles and lints the Linux and macOS targets, which is where a `#[cfg]`
+# mistake or a lint that only exists on one platform gets caught — but the release is the
+# build the person actually runs, and the one they run is the Windows one. An archive
+# nobody executes is an artifact that only pretends to have been tested.
 #
 # The Windows build links the C runtime statically, so the binary runs on a machine with
 # no redistributable installed.

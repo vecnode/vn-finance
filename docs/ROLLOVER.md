@@ -60,7 +60,13 @@ carried forward is a rule **not** confirmed.
    to `stale`; a rule goes back to `verified` when its own `verifyNote` says what was
    read and where.
 8. **Run the gate.** `cargo xtask ci` — the pack validator, the calendar fixtures, the
-   corpus check and the privacy scan over the sources all have an opinion.
+   corpus check and the privacy scan over the sources all have an opinion. Two of those
+   fixtures follow the pack by construction: `golden/rules.json` pins its checksum, version
+   and `todo`, and `golden/calendar.json` a digest over every agenda instance. A new pack
+   therefore means re-baselining them — `UPDATE_GOLDEN=1 cargo test -p vnf-core --test
+   golden` — and reading that diff rather than accepting it: every line of it is a date or
+   a page somebody will now read differently. `crates/core/tests/golden/README.md` says
+   what the run may and may not touch.
 9. **Commit.** One commit for the pack, one for the documents if they are separate
    concerns, and the diff output in the message where it is long.
 

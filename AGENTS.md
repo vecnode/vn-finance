@@ -87,14 +87,20 @@ dashboard.
 
 ## Branches
 
-- **`main`** is what ships. A push to it runs CI; a tag `v*` on it runs the release
-  workflow, which gates on CI and then publishes one Windows archive — the build the
-  project actually runs. The gate still runs on Linux and macOS; the *release* does not.
+- **`main`** is what ships, and it is **protected**: pull requests only, linear
+  history, no force pushes, no deletions. A push to it runs CI; a tag `v*` on it runs
+  the release workflow, which gates on CI and then publishes one Windows archive — the
+  build the project actually runs.
+- **The gate runs on Windows**, the platform the release ships. It compiles and lints
+  the Linux and macOS targets explicitly, so a `#[cfg]` mistake is still caught; what
+  it does not do is *run* the tests on those platforms. That is a deliberate trade —
+  three full builds per pull request for a fact one runner can establish — and a
+  contributor on Linux or macOS runs the same `cargo xtask ci` themselves.
 - **`dev`** is where work happens. **A push to `dev` runs no CI** — the `on.push`
   trigger names `main` only — so a work-in-progress commit costs nothing. Opening a
-  pull request from `dev` to `main` runs the full three-platform matrix, which is
-  where the gate is enforced.
-- A release is cut by merging `dev` into `main`, seeing CI green, and tagging.
+  pull request from `dev` to `main` runs the gate, which is where it is enforced.
+- A release is cut by merging into `main`, seeing CI green, and tagging. Nothing reaches
+  `main` except through a pull request, including a workflow change.
 
 ## Commands
 

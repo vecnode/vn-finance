@@ -305,6 +305,21 @@ fn the_rules_page_reports_a_copy_that_verified_and_the_ones_that_are_missing() -
         texts.iter().any(|text| text == "1 de 22"),
         "the page must say one source is backed by a verified copy: {texts:?}"
     );
+    // And the rule that rests on that article knows it: the model carries the state of
+    // each citation, so the table can say "citação conferida" without the page
+    // deciding for itself what "verified" means.
+    let model = app.model().ok_or("the window has a model")?;
+    let row = model
+        .rules
+        .obligations
+        .iter()
+        .find(|row| row.rule.id == "irs.modelo3")
+        .ok_or("the pack declares irs.modelo3")?;
+    assert_eq!(row.confirmed(), 1, "art. 60.º was copied in and verified");
+    assert_eq!(
+        row.citations.first().map(|citation| citation.passage_id.as_str()),
+        Some("art60-n1")
+    );
     assert!(
         texts.iter().any(|text| text.contains("Cópia local das fontes")),
         "the section is missing: {texts:?}"

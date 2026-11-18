@@ -25,7 +25,7 @@ use vnf_core::estimate::{Invoice, QuarterReport, ReserveEstimate, estimate_reser
 use vnf_core::flags::{Flag, FlagInput, FlagSummary, compute_flags, pack_health_flags, summarise_flags};
 use vnf_core::profile::{ProfileProblem, default_cae, missing_profile_inputs, validate_profile};
 use vnf_core::rules::{Freshness, PackSummary, constant_bp, freshness, summarise_pack};
-use vnf_core::sources::{CorpusProblem, SourceCheck, check as check_corpus};
+use vnf_core::sources::{CorpusProblem, SourceCheck, SourceState, check as check_corpus};
 use vnf_core::types::{
     AgendaOptions, CaeEntry, IrsRegime, IvaRegime, LoadedPack, ObligationInstance, ObligationRule,
     PackProblem, RuleSource, TaxProfile,
@@ -239,12 +239,45 @@ pub struct VaultView {
 pub struct RulesView {
     /// The sources the pack cites, each with the state of its local copy.
     pub sources: Vec<SourceRow>,
-    /// The obligations it declares.
-    pub obligations: Vec<ObligationRule>,
+    /// The obligations it declares, each with what its citations proved.
+    pub obligations: Vec<RuleRow>,
     /// What the maintainers know is unfinished.
     pub todo: Vec<String>,
     /// How the evidence held up.
     pub corpus: CorpusView,
+}
+
+/// One obligation, and whether the passage it rests on was found.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuleRow {
+    /// The pack's own rule.
+    pub rule: ObligationRule,
+    /// The passages it cites, with the state of each source behind them.
+    pub citations: Vec<CitationCheck>,
+}
+
+impl RuleRow {
+    /// How many of its citations were proved against a stored copy.
+    #[must_use]
+    pub fn confirmed(&self) -> usize {
+        self.citations
+            .iter()
+            .filter(|citation| citation.state == SourceState::Verified)
+            .count()
+    }
+}
+
+/// One passage a rule names, and what became of it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CitationCheck {
+    /// The source the passage is in.
+    pub source_id: String,
+    /// The passage's id within it.
+    pub passage_id: String,
+    /// The state of that source's copy, which is what the passage rests on.
+    pub state: SourceState,
 }
 
 /// One source, and what became of the copy that backs it.
@@ -467,7 +500,22 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
                     check: corpus.check_of(&source.id),
                 })
                 .collect(),
-            obligations: pack.obligations.clone(),
+            obligations: pack
+                .obligations
+                .iter()
+                .map(|rule| RuleRow {
+                    rule: rule.clone(),
+                    citations: rule
+                        .citations
+                        .iter()
+                        .map(|citation| CitationCheck {
+                            source_id: citation.source_id.clone(),
+                            passage_id: citation.passage_id.clone(),
+                            state: corpus.state_of(&citation.source_id),
+                        })
+                        .collect(),
+                })
+                .collect(),
             todo: pack.todo.clone(),
             corpus: CorpusView {
                 root: config.corpus.root_display(),
@@ -654,6 +702,23 @@ mod tests {
             model.rules.corpus.has_errors(),
             "a bound copy that is not here is an error, not a silence"
         );
+        // And the rule that cites art. 60.º says so, with the state of the copy behind
+        // it: the page can now answer "which document backs this deadline".
+        let modelo3 = model
+            .rules
+            .obligations
+            .iter()
+            .find(|row| row.rule.id == "irs.modelo3")
+            .ok_or("the pack declares irs.modelo3")?;
+        let citation = modelo3.citations.first().ok_or("it cites a passage")?;
+        assert_eq!(citation.source_id, "at-cirs-art60");
+        assert_eq!(citation.passage_id, "art60-n1");
+        assert_eq!(
+            citation.state,
+            vnf_core::sources::SourceState::Absent,
+            "this corpus is not the folder that has the article"
+        );
+        assert_eq!(modelo3.confirmed(), 0);
         assert_eq!(
             model.rules.corpus.root.as_deref(),
             Some(expected_root.as_str()),

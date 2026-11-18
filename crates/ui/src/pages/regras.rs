@@ -214,14 +214,15 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
         Column::at("Imposto", 80.0),
         Column::new("Obrigação"),
         Column::at("Periodicidade", 130.0),
-        Column::at("Base legal", 150.0),
+        Column::at("Base legal", 168.0),
     ];
     widgets::table(
         ui,
         &obligation_columns,
         &model.rules.obligations,
         |_| false,
-        |cells, rule| {
+        |cells, row| {
+            let rule = &row.rule;
             cells.mono(&rule.id);
             cells.text(&rule.tax);
             cells.text(&rule.title);
@@ -241,6 +242,16 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                         .size(theme::CAPTION)
                         .color(theme::palette(ui.ctx()).text_3),
                 );
+                if !row.citations.is_empty() {
+                    let confirmed = row.confirmed();
+                    let total = row.citations.len();
+                    let (label, tone) = if confirmed == total {
+                        ("citação conferida".to_owned(), Tone::Ok)
+                    } else {
+                        (format!("{confirmed}/{total} citações"), Tone::Warn)
+                    };
+                    widgets::badge(ui, &label, tone);
+                }
             });
         },
     );

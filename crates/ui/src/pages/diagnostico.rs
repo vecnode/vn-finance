@@ -210,6 +210,23 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     let pack_sources = summary.sources.to_string();
     let pack_obligations = summary.obligations.to_string();
     let verified = format!("{} verificadas · {} parciais", summary.verified, summary.partial);
+    // Where the evidence is, and whether it was read: a citation that cannot be checked
+    // on this machine is a different fact from one that was checked and failed.
+    let documents = match model.rules.corpus.files {
+        1 => "1 documento".to_owned(),
+        count => format!("{count} documentos"),
+    };
+    let corpus_line = format!(
+        "{documents} · {}",
+        crate::pages::cofre::bytes(model.rules.corpus.bytes)
+    );
+    let corpus_detail = match &model.rules.corpus.root {
+        Some(root) if model.rules.corpus.files > 0 => {
+            format!("{} conferidas em {root}", model.rules.corpus.verified)
+        }
+        Some(root) => format!("nenhum documento encontrado em {root}"),
+        None => "pasta não localizada".to_owned(),
+    };
     widgets::card(ui, |ui| {
         widgets::defs(
             ui,
@@ -243,6 +260,11 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                     label: "Estado",
                     value: &model.pack.freshness.message,
                     small: None,
+                },
+                Def {
+                    label: "Cópia das fontes",
+                    value: &corpus_line,
+                    small: Some(&corpus_detail),
                 },
             ],
         );

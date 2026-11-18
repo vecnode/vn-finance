@@ -35,6 +35,7 @@
 
 pub mod atomic;
 pub mod clock;
+pub mod corpus;
 pub mod documents;
 pub mod location;
 pub mod lock;
@@ -43,6 +44,7 @@ pub mod pack;
 pub mod risk;
 pub mod vault;
 
+pub use corpus::{CORPUS_DIR, CorpusLoad, read_corpus};
 pub use documents::{DocumentEntry, sanitise_document_name};
 pub use location::{
     DirectoryEntry, DirectoryListing, Env, ResolvedVault, VaultLocationSource, VaultPointer,

@@ -13,7 +13,7 @@ use vnf_store::location::{Env, VaultLocationSource, resolve_vault_location, vaul
 use vnf_store::model::{DashboardModel, ModelConfig, ModelError, build_model};
 use vnf_store::pack::{PackOrigin, PackResolution, PackSearch, resolve_pack};
 use vnf_store::risk::{RiskLevel, check_data_dir_risk};
-use vnf_store::{StoreError, Vault, VaultLock};
+use vnf_store::{CorpusLoad, StoreError, Vault, VaultLock};
 
 /// Why the window could not open a vault.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +43,8 @@ impl std::error::Error for OpenError {}
 pub struct Session {
     vault: Vault,
     pack: PackResolution,
+    /// The documents the pack's citations are checked against.
+    corpus: CorpusLoad,
     env: Env,
     /// Held for the lifetime of the window; dropping it releases the vault.
     _lock: VaultLock,
@@ -102,9 +104,21 @@ impl Session {
             },
         )
         .map_err(|error: PackError| OpenError::Pack(error.to_string()))?;
+        // The evidence is read once, like the pack: the documents ship with the
+        // application and do not change while the window is open. A folder that cannot
+        // be read costs the checks, not the window.
+        let corpus = match pack.sources_dir.as_deref() {
+            Some(dir) => vnf_store::corpus::read_corpus(dir).unwrap_or_else(|error| CorpusLoad {
+                root: Some(dir.to_path_buf()),
+                notes: vec![error.to_string()],
+                ..CorpusLoad::none()
+            }),
+            None => CorpusLoad::none(),
+        };
         Ok(Self {
             vault,
             pack,
+            corpus,
             env: env.clone(),
             _lock: lock,
             version: version.to_owned(),
@@ -165,6 +179,7 @@ impl Session {
                 pack_origin: self.pack.origin,
                 pack_exact: self.pack.exact,
                 pack_rejected: &self.pack.rejected,
+                corpus: &self.corpus,
                 data_dir_source: self.data_dir_source(),
                 pointer_path: self.pointer_path(),
             },

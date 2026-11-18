@@ -110,6 +110,61 @@ fn a_year_without_a_pack_is_served_the_newest_one_and_says_so() -> Result<(), Pr
 }
 
 #[test]
+fn the_corpus_beside_the_pack_is_read_and_reported() -> Result<(), Problem> {
+    // The whole chain in one test: a pack found through the environment decides where
+    // the evidence is, the folder is read once, and the model says what it holds. This
+    // is the seam F1 exists to create.
+    let dir = tempfile::tempdir()?;
+    let rules = dir.path().join("rules").join("pt");
+    std::fs::create_dir_all(rules.join("sources"))?;
+    std::fs::write(rules.join("2026.json"), pack_for(2026)?)?;
+    std::fs::write(rules.join("sources").join("pagina.html"), "<p>artigo 60.º</p>")?;
+    let pack = rules.join("2026.json");
+
+    let session = session_for(&dir.path().join("cofre"), Some(&pack), 2026)?;
+    let model = session.reload("2026-09-20", 2026)?;
+
+    let expected = rules.join("sources").display().to_string();
+    assert_eq!(model.rules.corpus.root.as_deref(), Some(expected.as_str()));
+    assert_eq!(model.rules.corpus.files, 1);
+    assert!(model.rules.corpus.bytes > 0);
+    assert_eq!(
+        model.rules.corpus.not_named, model.pack.summary.sources,
+        "the pack binds no copy yet, and the model must say so per source"
+    );
+    Ok(())
+}
+
+#[test]
+fn a_pack_with_no_sources_folder_still_opens_and_says_the_evidence_is_missing() -> Result<(), Problem> {
+    let dir = tempfile::tempdir()?;
+    let rules = dir.path().join("rules").join("pt");
+    std::fs::create_dir_all(&rules)?;
+    let pack = rules.join("2026.json");
+    std::fs::write(&pack, pack_for(2026)?)?;
+
+    let session = session_for(&dir.path().join("cofre"), Some(&pack), 2026)?;
+    let model = session.reload("2026-09-20", 2026)?;
+
+    assert_eq!(model.rules.corpus.files, 0);
+    assert!(model.rules.corpus.bytes == 0);
+    assert!(
+        model
+            .rules
+            .corpus
+            .root
+            .as_deref()
+            .is_some_and(|root| root.ends_with("sources")),
+        "the page must be able to say where it looked: {:?}",
+        model.rules.corpus.root
+    );
+    // No copy is not a failure: nothing claims to be verified against one.
+    assert!(!model.rules.corpus.has_errors());
+    assert_eq!(model.rules.corpus.failed, 0);
+    Ok(())
+}
+
+#[test]
 fn a_refused_pack_leaves_the_window_open_on_the_pack_it_can_trust() -> Result<(), Problem> {
     let dir = tempfile::tempdir()?;
     let pack = dir.path().join("partido.json");

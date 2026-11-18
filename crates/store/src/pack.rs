@@ -94,6 +94,8 @@ pub struct PackResolution {
     pub exact: bool,
     /// Files that exist and were refused, in the order they were tried.
     pub rejected: Vec<PackCandidate>,
+    /// The folder the evidence would be in: `sources/`, beside the pack.
+    pub sources_dir: Option<PathBuf>,
 }
 
 /// What to search, and where.
@@ -169,19 +171,21 @@ pub fn pack_candidates(search: &PackSearch<'_>, year: i64) -> Vec<(PackOrigin, P
 /// is a build defect. Every other failure is recorded in
 /// [`PackResolution::rejected`] and the next candidate is tried.
 pub fn resolve_pack(year: i64, search: &PackSearch<'_>) -> Result<PackResolution, PackError> {
+    let candidates = pack_candidates(search, year);
     let mut rejected: Vec<PackCandidate> = Vec::new();
 
-    for (origin, path) in pack_candidates(search, year) {
+    for (origin, path) in &candidates {
         if !path.is_file() {
             continue;
         }
-        match load_for_year(year, Some(&path)) {
+        match load_for_year(year, Some(path)) {
             Ok(PackChoice { loaded, exact }) => {
                 return Ok(PackResolution {
                     loaded,
-                    origin,
+                    origin: *origin,
                     exact,
                     rejected,
+                    sources_dir: corpus_beside(path),
                 });
             }
             Err(error) => rejected.push(PackCandidate {
@@ -197,7 +201,17 @@ pub fn resolve_pack(year: i64, search: &PackSearch<'_>) -> Result<PackResolution
         origin: PackOrigin::Embedded,
         exact,
         rejected,
+        // A pack compiled into the binary has no folder of its own, so the evidence
+        // is looked for beside any of the places a pack could have been.
+        sources_dir: candidates
+            .iter()
+            .find_map(|(_, path)| corpus_beside(path).filter(|dir| dir.is_dir())),
     })
+}
+
+/// The `sources/` folder beside a pack file, whether or not it exists.
+fn corpus_beside(pack_file: &Path) -> Option<PathBuf> {
+    pack_file.parent().map(|dir| dir.join(crate::corpus::CORPUS_DIR))
 }
 
 #[cfg(test)]

@@ -73,9 +73,10 @@ fn main() -> ExitCode {
         "test" => run("cargo", &["test", "--workspace", "--locked"]),
         "notices" => notices(),
         "notices-check" => notices_check(),
+        "rules" => rules(arguments),
         other => Err(format!(
-            "unknown task `{other}`; try `ci`, `lint`, `test`, `fmt-fix`, `notices` or \
-             `notices-check`"
+            "unknown task `{other}`; try `ci`, `lint`, `test`, `fmt-fix`, `notices`, \
+             `notices-check` or `rules`"
         )),
     };
     match outcome {
@@ -127,6 +128,274 @@ fn run(program: &str, arguments: &[&str]) -> Result<(), String> {
     } else {
         Err(format!("{program} {} failed ({status})", arguments.join(" ")))
     }
+}
+
+/// `cargo xtask rules <scaffold|diff>`: next year's pack, and what changed.
+///
+/// Both are bookkeeping a person would otherwise do by hand and with no record. The
+/// domain owns the two answers — [`vnf_core::rollover`] — so this parses arguments,
+/// reads and writes files, and prints what it did; the rules about *which* dates carry
+/// forward live in one place with tests around them.
+fn rules(arguments: impl Iterator<Item = String>) -> Result<(), String> {
+    let arguments: Vec<String> = arguments.collect();
+    match arguments.first().map(String::as_str) {
+        Some("scaffold") => rules_scaffold(&arguments[1..]),
+        Some("diff") => rules_diff(&arguments[1..]),
+        Some(other) => Err(format!(
+            "unknown `rules` action `{other}`; try `rules scaffold` or `rules diff`"
+        )),
+        None => Err(
+            "`rules` needs an action: `rules scaffold --from 2026 --to 2027`, or `rules diff 2026 2027`"
+                .to_owned(),
+        ),
+    }
+}
+
+/// The pack file for a year or a path.
+fn pack_file(argument: &str) -> PathBuf {
+    if argument.ends_with(".json") {
+        PathBuf::from(argument)
+    } else {
+        PathBuf::from("rules").join("pt").join(format!("{argument}.json"))
+    }
+}
+
+/// One flag's value, and the index after it.
+fn flag_value(arguments: &[String], index: usize, name: &str) -> Result<String, String> {
+    arguments
+        .get(index + 1)
+        .cloned()
+        .ok_or_else(|| format!("{name} needs a value"))
+}
+
+/// A year from a flag.
+fn flag_year(value: &str, name: &str) -> Result<i64, String> {
+    value
+        .parse::<i64>()
+        .map_err(|_| format!("{name} expects a year, got `{value}`"))
+}
+
+/// Start next year's pack from this one, and validate it before writing.
+///
+/// Refusing to write a pack that does not load is the whole safety of this command: a
+/// scaffolded file that the validator rejects would be discovered at the next
+/// `cargo xtask ci`, in a commit that also contains the work of transcribing a
+/// calendar.
+fn rules_scaffold(arguments: &[String]) -> Result<(), String> {
+    let mut from: Option<i64> = None;
+    let mut to: Option<i64> = None;
+    let mut on: Option<String> = None;
+    let mut force = false;
+    let mut index = 0;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--from" => {
+                let value = flag_value(arguments, index, "--from")?;
+                from = Some(flag_year(&value, "--from")?);
+                index += 1;
+            }
+            "--to" => {
+                let value = flag_value(arguments, index, "--to")?;
+                to = Some(flag_year(&value, "--to")?);
+                index += 1;
+            }
+            "--on" => {
+                on = Some(flag_value(arguments, index, "--on")?);
+                index += 1;
+            }
+            "--force" => force = true,
+            other => return Err(format!("unknown argument `{other}` for `rules scaffold`")),
+        }
+        index += 1;
+    }
+
+    let from = from.ok_or("`rules scaffold` needs --from <year>")?;
+    let to = to.ok_or("`rules scaffold` needs --to <year>")?;
+    if to <= from {
+        return Err(format!("--to {to} must be after --from {from}"));
+    }
+    let on = on.unwrap_or_else(today_utc);
+
+    let source = pack_file(&from.to_string());
+    let target = pack_file(&to.to_string());
+    if target.exists() && !force {
+        return Err(format!(
+            "{} already exists; pass --force to replace it, or start from it with --from {}",
+            target.display(),
+            to
+        ));
+    }
+
+    let text = std::fs::read_to_string(&source)
+        .map_err(|error| format!("could not read {}: {error}", source.display()))?;
+    let raw: serde_json::Value =
+        serde_json::from_str(&text).map_err(|error| format!("{} is not JSON: {error}", source.display()))?;
+    let next = vnf_core::rollover::scaffold(&raw, to, &on)
+        .map_err(|error| format!("the pack could not be scaffolded: {error}"))?;
+
+    let rendered = serde_json::to_string_pretty(&next)
+        .map_err(|error| format!("the scaffolded pack could not be written: {error}"))?;
+    let rendered = format!("{rendered}\n");
+    // Validate before writing: the file this command produces has to be one the
+    // application would load, not one a person discovers at the next gate.
+    let loaded = vnf_core::rules::load_rule_pack(&rendered, &target.display().to_string())
+        .map_err(|error| format!("the scaffolded pack does not validate:\n{error}"))?;
+
+    std::fs::write(&target, &rendered)
+        .map_err(|error| format!("could not write {}: {error}", target.display()))?;
+
+    println!(
+        "xtask: wrote {} — {} rules, all stale, no published dates",
+        target.display(),
+        loaded.pack.obligations.len()
+    );
+    println!(
+        "xtask: packVersion {}, generatedAt {on}",
+        loaded.pack.pack_version
+    );
+    if let Some(note) = loaded.pack.todo.last() {
+        println!("xtask: {note}");
+    }
+    println!(
+        "xtask: next — transcribe the {to} calendar into it, re-check every constant, then \
+         `cargo xtask rules diff {from} {to}`"
+    );
+    Ok(())
+}
+
+/// Print what differs between two packs.
+fn rules_diff(arguments: &[String]) -> Result<(), String> {
+    let [from_argument, to_argument] = arguments else {
+        return Err("`rules diff` needs two packs: `rules diff 2026 2027`, or two paths".to_owned());
+    };
+    let from_path = pack_file(from_argument);
+    let to_path = pack_file(to_argument);
+    let from = vnf_core::rules::load_file(&from_path)
+        .map_err(|error| format!("could not load {}: {error}", from_path.display()))?;
+    let to = vnf_core::rules::load_file(&to_path)
+        .map_err(|error| format!("could not load {}: {error}", to_path.display()))?;
+
+    let report = vnf_core::rollover::diff(&from.pack, &to.pack);
+    print_diff(&report);
+    Ok(())
+}
+
+/// The diff, as a reviewer reads it.
+fn print_diff(report: &vnf_core::rollover::PackDiff) {
+    println!(
+        "{} {} → {} {}",
+        report.from_year, report.from_version, report.to_year, report.to_version
+    );
+    if report.is_empty() {
+        println!("  nenhuma diferença de conteúdo.");
+        return;
+    }
+
+    let group = |title: &str, lines: Vec<String>| {
+        if lines.is_empty() {
+            return;
+        }
+        println!("{title}");
+        for line in lines {
+            println!("  {line}");
+        }
+    };
+
+    group(
+        "constantes",
+        report
+            .constants
+            .iter()
+            .map(|change| {
+                format!(
+                    "~ {}: {} → {}",
+                    change.path,
+                    change.from.as_deref().unwrap_or("—"),
+                    change.to.as_deref().unwrap_or("—")
+                )
+            })
+            .collect(),
+    );
+    group(
+        "obrigações",
+        report
+            .obligations_added
+            .iter()
+            .map(|id| format!("+ {id}"))
+            .chain(report.obligations_removed.iter().map(|id| format!("− {id}")))
+            .collect(),
+    );
+    group(
+        "verificação",
+        report
+            .verification
+            .iter()
+            .map(|change| {
+                format!(
+                    "~ {}: {} → {}",
+                    change.id,
+                    vnf_core::rollover::verification_label(change.from),
+                    vnf_core::rollover::verification_label(change.to)
+                )
+            })
+            .collect(),
+    );
+    group(
+        "datas publicadas",
+        report
+            .dates
+            .iter()
+            .map(|change| format!("~ {}: {} → {}", change.id, change.from, change.to))
+            .collect(),
+    );
+    group(
+        "fontes",
+        report
+            .sources_added
+            .iter()
+            .map(|id| format!("+ {id}"))
+            .chain(report.sources_removed.iter().map(|id| format!("− {id}")))
+            .chain(report.sources_changed.iter().map(|change| {
+                format!(
+                    "~ {} · {}: {} → {}",
+                    change.id, change.field, change.from, change.to
+                )
+            }))
+            .collect(),
+    );
+    println!("{} alteração(ões).", report.total());
+}
+
+/// The civil date for a count of days since 1970-01-01, in UTC.
+///
+/// The scaffold's `generatedAt` has to be a real date, and xtask carries no date crate
+/// and no time-zone database. This is Howard Hinnant's `civil_from_days`, exact for
+/// every date the application will ever write.
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let shifted = days + 719_468;
+    let era = if shifted >= 0 { shifted } else { shifted - 146_096 } / 146_097;
+    let day_of_era = shifted - era * 146_097;
+    let year_of_era = (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let year = year_of_era + era * 400;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_index = (5 * day_of_year + 2) / 153;
+    let day = (day_of_year - (153 * month_index + 2) / 5 + 1) as u32;
+    let month = if month_index < 10 {
+        month_index + 3
+    } else {
+        month_index - 9
+    } as u32;
+    (year + i64::from(month <= 2), month, day)
+}
+
+/// Today, in UTC, as `YYYY-MM-DD`.
+fn today_utc() -> String {
+    let seconds = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|since| since.as_secs())
+        .unwrap_or_default();
+    let (year, month, day) = civil_from_days((seconds / 86_400) as i64);
+    format!("{year:04}-{month:02}-{day:02}")
 }
 
 /// Write `THIRD-PARTY-NOTICES.md` from what the build actually depends on.

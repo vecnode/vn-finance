@@ -2,8 +2,8 @@
 
 The documents the rule pack cites, kept so that a citation can be checked on a
 machine with no network. This folder is **evidence**, not input: nothing here is
-compiled into the binary, nothing here runs, and no rate is ever derived from it. The
-pack (`../2026.json`) remains the only place a figure is computed.
+compiled into the application, no rate is ever derived from it, and the pack
+(`../2026.json`) remains the only place a figure is computed.
 
 `fetch.json` is the record of how these bytes arrived: the URL each came from, the
 date it was retrieved, its size, its SHA-256, and whether the body is stored here.
@@ -46,13 +46,38 @@ the corpus is worth having.
   to decode entities and collapse whitespace before it compares, and it must keep
   accents: the law is Portuguese.
 
-## What happens next (F1, not built yet)
+## How a citation is checked
 
-1. Each `sources[]` entry in the pack gains `file` and `sha256`, and the rules that
-   rest on it gain `citations` naming a passage instead of only a source id.
-2. `core::sources::verify` fails when a hash does not match, a quoted passage is not
-   in the stored document, or a `verified` rule has no local copy at all.
-3. The Regras page shows, per obligation, which documents back it and whether the
-   quote matched.
+F1 is built. For every source the pack **binds** — it carries a `file` and a
+`sha256` — the application does three things at startup:
 
-Until then this folder is inert: a person may read it, and the application does not.
+1. reads the stored bytes from `rules/pt/sources/`, beside the pack;
+2. hashes them and compares with the `sha256` in the pack, which is the only thing
+   that notices a document that changed after it was read;
+3. extracts the text (tags stripped, entities decoded, whitespace collapsed) and
+   looks for every `passages[].quote` the pack declares for that source.
+
+The result is on the Regras page, per source: `conferida`, `em falta`, `sem hash`,
+`não confere`, or `sem cópia` for the sources the pack never promised to keep. A
+quote that is not found, or a hash that moved, is an error that names the passage
+and the file — `cargo xtask ci` fails on it too, through
+`crates/core/tests/corpus.rs`, which runs this check over the shipped pack and this
+folder.
+
+## What is not built yet
+
+- **Constants do not carry citations.** `citations` exists on obligations, so a rule
+  says which passage it rests on. A constant — the €25 retention threshold, the IAS,
+  the coefficients — is still bound to a *document* (`sourceIds`) and not to a
+  passage. Its value is verified by the hash and by whatever passage that source
+  declares, but the pack does not say "this number comes from this sentence". That is
+  a schema change for a later version.
+- **Four of the 22 sources have no copy here**: the three secondary publications
+  (recorded, not redistributed) and the FAQ that answers 404. Their rows say
+  `sem cópia`, and no rule claims to be verified against one.
+- **Only eight passages are quoted so far**, from five articles. The other thirteen
+  bound documents are hash-verified but not yet read by a machine. Adding a passage is
+  two lines of pack and one `citations` entry — see `docs/` for the yearly rollover.
+
+Until someone adds them, this folder is inert beyond the hash check: a person may
+read it, and the application only proves that what it holds is what was retrieved.

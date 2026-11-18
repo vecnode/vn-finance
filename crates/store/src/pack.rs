@@ -224,14 +224,17 @@ mod tests {
     type Problem = Box<dyn std::error::Error>;
 
     /// The shipped pack's text, with a version no release has, so a test can tell the
-    /// file apart from the copy in the binary.
+    /// file apart from the copy in the binary. The version is replaced by position, not
+    /// by its current value, so a version bump cannot quietly disable the check.
     fn pack_text() -> Result<String, Problem> {
         let text = vnf_core::rules::EMBEDDED_PACKS
             .first()
             .map(|entry| entry.text)
-            .ok_or("the binary carries no embedded pack")?
-            .replace("\"packVersion\": \"2026.1.2\"", "\"packVersion\": \"2099.9.9\"");
-        Ok(text)
+            .ok_or("the binary carries no embedded pack")?;
+        let marker = "\"packVersion\": \"";
+        let start = text.find(marker).ok_or("no packVersion in the pack")? + marker.len();
+        let end = start + text[start..].find('"').ok_or("unterminated packVersion")?;
+        Ok(format!("{}2099.9.9{}", &text[..start], &text[end..]))
     }
 
     fn write_pack(dir: &Path, year: i64, text: &str) -> Result<PathBuf, Problem> {

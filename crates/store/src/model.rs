@@ -635,19 +635,25 @@ mod tests {
 
         assert_eq!(model.rules.corpus.files, 1);
         assert!(model.rules.corpus.bytes > 0);
+        let bound = model
+            .rules
+            .sources
+            .iter()
+            .filter(|row| row.source.file.is_some())
+            .count();
+        assert_eq!(
+            model.rules.corpus.absent, bound,
+            "the pack binds copies and this corpus is not where they are"
+        );
         assert_eq!(
             model.rules.corpus.not_named,
-            model.rules.sources.len(),
-            "the shipped pack binds no file yet, so every source has no copy"
+            model.rules.sources.len() - bound,
+            "every source is either bound to a copy, or names none"
         );
         assert!(
-            model
-                .rules
-                .sources
-                .iter()
-                .all(|row| row.check.state == vnf_core::sources::SourceState::NotNamed)
+            model.rules.corpus.has_errors(),
+            "a bound copy that is not here is an error, not a silence"
         );
-        assert!(!model.rules.corpus.has_errors());
         assert_eq!(
             model.rules.corpus.root.as_deref(),
             Some(expected_root.as_str()),

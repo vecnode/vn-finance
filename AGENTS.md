@@ -80,6 +80,7 @@ dashboard.
 | `assets/logo/` | The mark: the three SVGs, the rendered PNGs at nine sizes, the two `.rgba` icons, `BRAND.md` the design record and `MANIFEST.toml` the digests |
 | `xtask/` | `cargo xtask ci` — the gate |
 | `rules/pt/` | The versioned rule packs, one JSON file per year: constants, obligations, sources, verification status. Read from disk at startup and shipped beside the binary; the newest is also compiled in. |
+| `rules/pt/sources/` | The documents the pack cites, with `fetch.json` recording each retrieval and hash. Evidence, not input: read only to check a citation, and never a source of a rate. |
 | `design/` | The reviewed mockup the window's structure and colour were ported from |
 | `scripts/` | Launchers: `scripts/run.bat` builds the release and opens the window |
 | `docs/` | Domain reference, privacy model, the port plan, and `UI.md` — the window's own rules: palette, type scale, tables, figures, and the constraints a page has to keep |

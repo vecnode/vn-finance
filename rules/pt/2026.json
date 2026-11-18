@@ -1,8 +1,8 @@
 {
   "jurisdiction": "PT",
   "year": 2026,
-  "packVersion": "2026.1.2",
-  "generatedAt": "2026-09-20",
+  "packVersion": "2026.1.3",
+  "generatedAt": "2026-11-18",
   "units": {
     "money": "EUR_cents",
     "rate": "basis_points"
@@ -15,7 +15,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "Resumo anual - Obrigações declarativas em 2026 (Calendário Fiscal)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/calendario_fiscal/Pages/Quadro_res_Decl_2026.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-agenda-decl-2026.html",
+      "sha256": "0f5027abba1f3a89037b70f7c423729f1b4cdd907c4cce5fead14a10c39e8762"
     },
     {
       "id": "at-agenda-pag-2026",
@@ -23,7 +25,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "Resumo anual - Obrigações de pagamento em 2026 (Calendário Fiscal)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/calendario_fiscal/Pages/Quadro_res_Pag_2026.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-agenda-pag-2026.html",
+      "sha256": "30b7192365e7e47d58f49cc8c6b6d8c24a10327de667e2190db1c0bf3586031f"
     },
     {
       "id": "at-riti-art30",
@@ -31,7 +35,26 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "RITI, artigo 30.º - Declaração recapitulativa (prazos e periodicidade), republicação com efeitos a partir de 01/07/2021",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/RITI_2021/Paginas/riti030.aspx",
-      "retrievedAt": "2026-09-24"
+      "retrievedAt": "2026-09-24",
+      "file": "at-riti-art30.html",
+      "sha256": "252d85498d35b57d4c7a5ae16b7eba4975ca26da5347454d8c83198f416eac37",
+      "passages": [
+        {
+          "id": "art30-n1-a",
+          "locator": "art. 30.º n.º 1 alínea a)",
+          "quote": "Até ao dia 20 do mês seguinte àquele a que respeitam as operações, no caso dos sujeitos passivos abrangidos pela alínea a) do n.º 1 do artigo 41.º do Código do IVA"
+        },
+        {
+          "id": "art30-n1-b",
+          "locator": "art. 30.º n.º 1 alínea b)",
+          "quote": "Até ao dia 20 do mês seguinte ao final do trimestre civil a que respeitam as operações, no caso dos sujeitos passivos abrangidos pela alínea b) do n.º 1 do artigo 41.º do Código do IVA"
+        },
+        {
+          "id": "art30-n2",
+          "locator": "art. 30.º n.º 2",
+          "quote": "os sujeitos passivos aí referidos devem enviar a declaração recapitulativa até ao dia 20 do mês seguinte àquele a que respeitam as operações, quando o montante total das operações referidas na alínea c) do n.º 1 do artigo 23.º, durante o trimestre civil em curso ou em qualquer dos quatro trimestres civis anteriores, seja superior a 50 000 (euro)"
+        }
+      ]
     },
     {
       "id": "at-faq-art53-iva",
@@ -47,7 +70,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "Folheto informativo - Inicio de atividade: rendimentos empresariais e profissionais (IRS e IVA)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/Folhetos_informativos/Documents/Inicio_atividade.pdf",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-folheto-inicio-atividade.pdf",
+      "sha256": "ca98cff1c4785d50949f39673478711cdf3aacfb951516b8f86dac6d6470e0cd"
     },
     {
       "id": "at-cirs-art28",
@@ -55,7 +80,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 28.º - Formas de determinacao dos rendimentos empresariais e profissionais",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs28.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art28.html",
+      "sha256": "acec9336640bdf985532440512a0b01315404cc6ac86f7fc0dcda3030cd23391"
     },
     {
       "id": "at-cirs-art31",
@@ -63,7 +90,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 31.º - Regime simplificado",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs31.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art31.html",
+      "sha256": "423e65d84fced0fa3a603c0a83b8f12c858bdcf32336eb975de06546d39e8426"
     },
     {
       "id": "at-cirs-art60",
@@ -71,7 +100,16 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 60.º - Prazo de entrega da declaração",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs60.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art60.html",
+      "sha256": "20dcfcbdc76eacab88576843725753fc4c716f1a93b7f81529b616cd1dafee6f",
+      "passages": [
+        {
+          "id": "art60-n1",
+          "locator": "art. 60.º n.º 1",
+          "quote": "é entregue, por transmissão eletrónica de dados, de 1 de abril a 30 de junho, independentemente de este dia ser útil ou não útil"
+        }
+      ]
     },
     {
       "id": "at-cirs-art71",
@@ -79,7 +117,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 71.º - Taxas liberatórias (retenção sobre rendimentos de não residentes)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs71.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art71.html",
+      "sha256": "530f811f9ef519f2024055f5e08373ccb89d2f3260f912afbe54955f5b2aedf7"
     },
     {
       "id": "at-cirs-art101",
@@ -87,7 +127,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 101.º - Retenção sobre rendimentos de outras categorias",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art101.html",
+      "sha256": "372a451a7e4f4f128a0509f96bb58e646bd4bca7f14a2f07611a4a2495874dc7"
     },
     {
       "id": "at-cirs-art101b",
@@ -95,7 +137,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 101.º-B - Dispensa de retenção na fonte",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs101b.aspx",
-      "retrievedAt": "2026-11-17"
+      "retrievedAt": "2026-11-17",
+      "file": "at-cirs-art101b.html",
+      "sha256": "bc2f744d72dc075844e967cd9f5c85ab9c5aaf3102a93412fb2fcf8dadc0dc98"
     },
     {
       "id": "at-cirs-art102",
@@ -103,7 +147,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 102.º - Pagamentos por conta",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs102.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art102.html",
+      "sha256": "1369411225642924ad7362b77454a8f09b26d26e379bbf61546cd8037b4b3bbf"
     },
     {
       "id": "at-cirs-art128",
@@ -111,7 +157,16 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIRS, artigo 128.º - Obrigação de comprovar os elementos das declarações",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs128.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-cirs-art128.html",
+      "sha256": "59996cc3e6f432149044cef0442913b38d911bb2d7ed21be5292c16b4d67f70e",
+      "passages": [
+        {
+          "id": "art128-n3",
+          "locator": "art. 128.º n.º 3",
+          "quote": "A obrigação estabelecida no n.º 1 mantém-se durante os quatro anos seguintes àquele a que respeitem os documentos"
+        }
+      ]
     },
     {
       "id": "at-civa-art18",
@@ -119,7 +174,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIVA, artigo 18.º - Taxas do imposto",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva18.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-civa-art18.html",
+      "sha256": "f9560e37d6408c68b0513cce14967fa23ae4c519e7297b998805eb4120b78764"
     },
     {
       "id": "at-civa-art41",
@@ -127,7 +184,21 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIVA, artigo 41.º - Prazo de entrega da declaração periódica",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva41.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-civa-art41.html",
+      "sha256": "f784c79c528e58cdff81e38bfec4de5d227aab96353f444fc6592c5e30d31b47",
+      "passages": [
+        {
+          "id": "art41-n1-a",
+          "locator": "art. 41.º n.º 1 alínea a)",
+          "quote": "Até ao dia 20 do 2.º mês seguinte àquele a que respeitam as operações, no caso de sujeitos passivos com um volume de negócios igual ou superior a 650 000 € no ano civil anterior"
+        },
+        {
+          "id": "art41-n1-b",
+          "locator": "art. 41.º n.º 1 alínea b)",
+          "quote": "Até ao dia 20 do 2.º mês seguinte ao trimestre do ano civil a que respeitam as operações"
+        }
+      ]
     },
     {
       "id": "at-civa-art52",
@@ -135,7 +206,16 @@
       "authority": "Autoridade Tributária e Aduaneira (AT)",
       "title": "CIVA, artigo 52.º - Prazo de arquivo e conservação dos registos e documentos de suporte",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/Pages/iva52.aspx",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-civa-art52.html",
+      "sha256": "d380aa2ee8638ce6b5d8ce70fca204e92cfb64d490e410b8a54455e74100e8a3",
+      "passages": [
+        {
+          "id": "art52-n1",
+          "locator": "art. 52.º n.º 1",
+          "quote": "Os sujeitos passivos são obrigados a arquivar e conservar em boa ordem durante os 10 anos civis subsequentes todos os registos e respetivos documentos de suporte"
+        }
+      ]
     },
     {
       "id": "at-despacho-68-2026",
@@ -143,7 +223,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT) / SEAF",
       "title": "Despacho n.º 68/2026 - XXV, de 12/05, da SEAF (link referenciado no calendário fiscal de 2026; PDF não recolhido)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/Despachos_SEAF/Documents/Despacho-SEAF-68-2026-XXV.pdf",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-despacho-68-2026.pdf",
+      "sha256": "e67789a50777df48746db69a1bff0faf60c9fd36499adfd0614abcfb0b2f873e"
     },
     {
       "id": "at-despacho-81-2026",
@@ -151,7 +233,9 @@
       "authority": "Autoridade Tributária e Aduaneira (AT) / SEAF",
       "title": "Despacho n.º 81/2026 - XXV, de 17/06, da SEAF (prorrogação referenciada no calendário fiscal de 2026; PDF não recolhido)",
       "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/Despachos_SEAF/Documents/Despacho-SEAF-81-2026-XXV.pdf",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "at-despacho-81-2026.pdf",
+      "sha256": "904403e319e4ce4fd0789625fd1ac93c474c0eb29388427818cbd73cb3fc0e4e"
     },
     {
       "id": "occ-guia-ti-2026",
@@ -183,7 +267,9 @@
       "authority": "Diário da República",
       "title": "Portaria n.º 480-A/2025/1, de 30 de dezembro (fixa o IAS de 2026 em 537,13 EUR) - pagina oficial não devolveu texto legível por máquina na recolha",
       "url": "https://diariodarepublica.pt/dr/detalhe/portaria/480-a-2025-993056222",
-      "retrievedAt": "2026-09-20"
+      "retrievedAt": "2026-09-20",
+      "file": "dr-portaria-480a-2025.html",
+      "sha256": "0794abe5f8088cfd34e8e50bb5f9f7828b20a3c505f702e4b51be3bbb0631b57"
     }
   ],
   "constants": {
@@ -264,6 +350,9 @@
   "obligations": [
     {
       "id": "irs.modelo3",
+      "citations": [
+        { "sourceId": "at-cirs-art60", "passageId": "art60-n1" }
+      ],
       "kind": "declare",
       "authority": "AT",
       "tax": "IRS",
@@ -438,6 +527,9 @@
     },
     {
       "id": "iva.dp.mensal",
+      "citations": [
+        { "sourceId": "at-civa-art41", "passageId": "art41-n1-a" }
+      ],
       "kind": "declare",
       "authority": "AT",
       "tax": "IVA",
@@ -523,6 +615,9 @@
     },
     {
       "id": "iva.dp.trimestral",
+      "citations": [
+        { "sourceId": "at-civa-art41", "passageId": "art41-n1-b" }
+      ],
       "kind": "declare",
       "authority": "AT",
       "tax": "IVA",
@@ -718,6 +813,9 @@
     },
     {
       "id": "iva.recapitulativa",
+      "citations": [
+        { "sourceId": "at-riti-art30", "passageId": "art30-n1-a" }
+      ],
       "kind": "communicate",
       "authority": "AT",
       "tax": "IVA",
@@ -813,6 +911,9 @@
     },
     {
       "id": "iva.recapitulativa.trimestral",
+      "citations": [
+        { "sourceId": "at-riti-art30", "passageId": "art30-n1-b" }
+      ],
       "kind": "communicate",
       "authority": "AT",
       "tax": "IVA",
@@ -879,6 +980,9 @@
     },
     {
       "id": "iva.recapitulativa.mensalPorVolume",
+      "citations": [
+        { "sourceId": "at-riti-art30", "passageId": "art30-n2" }
+      ],
       "kind": "communicate",
       "authority": "AT",
       "tax": "IVA",
@@ -1477,6 +1581,10 @@
     },
     {
       "id": "guardar.documentos",
+      "citations": [
+        { "sourceId": "at-civa-art52", "passageId": "art52-n1" },
+        { "sourceId": "at-cirs-art128", "passageId": "art128-n3" }
+      ],
       "kind": "save",
       "authority": "AT",
       "tax": "IRS-IVA",

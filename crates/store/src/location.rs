@@ -271,27 +271,6 @@ pub fn resolve_vault_location(explicit: Option<&Path>, env: &Env) -> ResolvedVau
     }
 }
 
-/// The vault path, refusing one inside this application's own repository.
-///
-/// # Errors
-///
-/// The multi-line refusal when the folder sits inside the repository the binary was
-/// built from, unless `VN_FINANCE_ALLOW_IN_REPO=1`.
-pub fn resolve_data_dir(explicit: Option<&Path>, env: &Env) -> Result<PathBuf, StoreError> {
-    let dir = resolve_vault_location(explicit, env).dir;
-    if env.var("VN_FINANCE_ALLOW_IN_REPO") == Some("1") {
-        return Ok(dir);
-    }
-    let risk = check_data_dir_risk(&dir);
-    match (risk.level, risk.message) {
-        (crate::risk::RiskLevel::Fatal, Some(message)) => Err(StoreError::Io {
-            path: dir.display().to_string(),
-            message,
-        }),
-        _ => Ok(dir),
-    }
-}
-
 /// Make a path absolute without touching the filesystem's symlinks.
 #[must_use]
 pub fn absolute(path: &Path) -> PathBuf {

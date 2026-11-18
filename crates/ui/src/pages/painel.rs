@@ -1,11 +1,11 @@
-﻿//! The dashboard: what is due, what it adds up to, and the fiscal situation.
+//! The dashboard: what is due, what it adds up to, and the fiscal situation.
 //!
 //! Three questions, in the order a person has them when they open the application:
 //! is anything wrong or late; how much have I made and what is my share; and is the
 //! framework the agenda is built on still the one I declared.
 
 use egui::Ui;
-use vnf_core::estimate::{PeriodTotals, QuarterReport};
+use vnf_core::estimate::PeriodTotals;
 use vnf_core::flags::{Flag, FlagSeverity};
 use vnf_core::money::{format_bp_as_percent, format_eur};
 use vnf_core::profile::ProblemLevel;
@@ -563,17 +563,6 @@ fn regime_irs(regime: IrsRegime) -> &'static str {
         IrsRegime::Organizada => "Contabilidade organizada",
     }
 }
-
-/// The quarters of a year, in order.
-#[must_use]
-pub fn quarters_of(model: &DashboardModel, year: i64) -> Vec<&QuarterReport> {
-    model
-        .quarters
-        .iter()
-        .filter(|quarter| quarter.year == year)
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

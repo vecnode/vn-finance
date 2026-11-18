@@ -5,7 +5,7 @@
 //! correct it, and only then write. A form that pre-filled itself from a half-read
 //! document and offered a Save button would be an invoice nobody checked.
 
-use vnf_core::estimate::{InvoiceStatus, VatTreatment};
+use vnf_core::estimate::VatTreatment;
 use vnf_core::money::{format_eur, parse_eur_to_cents};
 use vnf_core::receipt::{ReceiptConfirmation, ReceiptDraft};
 use vnf_core::types::IsoDate;
@@ -343,17 +343,6 @@ fn form_field(ui: &mut egui::Ui, label: &str, value: &mut String, hint: &str, wi
     );
     ui.end_row();
 }
-
-/// The status label for an invoice the document said was paid.
-#[must_use]
-pub fn status_for(draft: &ReceiptDraft) -> InvoiceStatus {
-    if draft.declares_paid {
-        InvoiceStatus::Paid
-    } else {
-        InvoiceStatus::Issued
-    }
-}
-
 /// The VAT treatment the document implies, for the form's preview line.
 ///
 /// The rule itself lives in the core, because it is a statement about the document and

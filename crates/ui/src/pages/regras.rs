@@ -7,13 +7,15 @@
 use egui::Ui;
 use vnf_core::money::format_bp_as_percent;
 use vnf_core::rules::FreshnessStatus;
-use vnf_core::types::{PeriodicityType, SourceTier, Verification};
-use vnf_store::model::DashboardModel;
+use vnf_core::sources::SourceState;
+use vnf_core::types::{PeriodicityType, ProblemLevel, SourceTier, Verification};
+use vnf_store::model::{CorpusView, DashboardModel};
 use vnf_store::pack::PackOrigin;
 
 use crate::pages::Action;
+use crate::pages::cofre::bytes as human_bytes;
 use crate::theme;
-use crate::widgets::{self, Column, Kpi, Tone};
+use crate::widgets::{self, Column, Def, Kpi, Tone};
 
 /// Draw the page.
 pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
@@ -142,6 +144,9 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     }
 
     ui.add_space(18.0);
+    corpus_section(ui, &model.rules.corpus);
+
+    ui.add_space(18.0);
     widgets::section(
         ui,
         "Fontes citadas",
@@ -150,17 +155,19 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     );
     let source_columns = [
         Column::at("Id", 120.0),
-        Column::at("Tipo", 90.0),
-        Column::at("Autoridade", 150.0),
+        Column::at("Tipo", 74.0),
+        Column::at("Autoridade", 132.0),
         Column::new("Título"),
-        Column::at("Obtida", 104.0),
+        Column::at("Obtida", 96.0),
+        Column::at("Cópia", 92.0),
     ];
     widgets::table(
         ui,
         &source_columns,
         &model.rules.sources,
         |_| false,
-        |cells, source| {
+        |cells, row| {
+            let source = &row.source;
             cells.mono(&source.id);
             cells.custom(|ui| {
                 let (label, tone) = match source.tier {
@@ -179,6 +186,19 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                 widgets::caption(ui, &source.url);
             });
             cells.mono(&source.retrieved_at);
+            cells.custom(|ui| {
+                let (label, tone) = source_state_label(row.check.state);
+                widgets::badge(ui, label, tone);
+                if row.check.passages_expected > 0 {
+                    widgets::caption(
+                        ui,
+                        &format!(
+                            "{}/{} passagens",
+                            row.check.passages_found, row.check.passages_expected
+                        ),
+                    );
+                }
+            });
         },
     );
 
@@ -258,8 +278,119 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     action
 }
 
-/// Where the rule pack came from, in words a person reads.
+/// The evidence: what was read, how it held up, and what is wrong with it.
 ///
+/// This is the section that keeps the page honest. A citation is only worth the copy
+/// behind it, so the page says how many sources have one, how many were compared, and
+/// every passage that did not check out — in the place where the law is shown, not in
+/// a log.
+fn corpus_section(ui: &mut Ui, corpus: &CorpusView) {
+    let total = corpus.verified + corpus.absent + corpus.failed + corpus.unproven + corpus.not_named;
+    let documents = format!(
+        "{} · {}",
+        plural_documents(corpus.files),
+        human_bytes(corpus.bytes)
+    );
+    widgets::section(
+        ui,
+        "Cópia local das fontes",
+        Some(&documents),
+        Some(
+            "A lei que esta aplicação cita está guardada numa pasta e é comparada com o que o \
+             pacote afirma: o hash de cada documento e as passagens que dele se citam. Sem esta \
+             cópia, uma citação pode ser lida mas não conferida.",
+        ),
+    );
+
+    if corpus.files == 0 {
+        let root = corpus
+            .root
+            .clone()
+            .unwrap_or_else(|| "rules/pt/sources".to_owned());
+        widgets::empty(
+            ui,
+            "Sem cópia local das fontes",
+            &format!(
+                "Esta instalação não trouxe os documentos: esperava encontrá-los em {root}. As \
+                 citações continuam a ser mostradas, mas nada neste computador as pode conferir."
+            ),
+        );
+    } else {
+        let root = corpus.root.clone().unwrap_or_else(|| "—".to_owned());
+        let confirmed = format!("{} de {}", corpus.verified, total);
+        let breakdown = format!(
+            "{} em falta · {} não conferem · {} sem hash · {} sem cópia",
+            corpus.absent, corpus.failed, corpus.unproven, corpus.not_named
+        );
+        widgets::card(ui, |ui| {
+            widgets::defs(
+                ui,
+                &[
+                    Def {
+                        label: "Pasta",
+                        value: &root,
+                        small: None,
+                    },
+                    Def {
+                        label: "Fontes conferidas",
+                        value: &confirmed,
+                        small: Some(&breakdown),
+                    },
+                ],
+            );
+        });
+    }
+
+    if !corpus.notes.is_empty() {
+        ui.add_space(8.0);
+        widgets::notes(ui, Tone::Warn, &corpus.notes);
+    }
+
+    if !corpus.problems.is_empty() {
+        ui.add_space(8.0);
+        widgets::card(ui, |ui| {
+            widgets::micro_label(
+                ui,
+                "o que a conferência encontrou",
+                theme::palette(ui.ctx()).text_3,
+            );
+            for problem in &corpus.problems {
+                let colour = match problem.level {
+                    ProblemLevel::Error => theme::palette(ui.ctx()).danger,
+                    ProblemLevel::Warning => theme::palette(ui.ctx()).text_2,
+                };
+                ui.label(
+                    egui::RichText::new(&problem.message)
+                        .size(theme::BODY_SMALL)
+                        .color(colour),
+                );
+            }
+        });
+    }
+}
+
+/// The badge for one source's local copy.
+#[must_use]
+pub fn source_state_label(state: SourceState) -> (&'static str, Tone) {
+    match state {
+        SourceState::Verified => ("conferida", Tone::Ok),
+        SourceState::Unproven => ("sem hash", Tone::Warn),
+        SourceState::Absent => ("em falta", Tone::Warn),
+        SourceState::Failed => ("não confere", Tone::Danger),
+        SourceState::NotNamed => ("sem cópia", Tone::Slate),
+    }
+}
+
+/// A document count with its noun agreeing.
+fn plural_documents(count: usize) -> String {
+    if count == 1 {
+        "1 documento".to_owned()
+    } else {
+        format!("{count} documentos")
+    }
+}
+
+/// Where the rule pack came from, in words a person reads.///
 /// "embutido no binário" and "pasta junto ao programa" are different promises: the
 /// first travels with the executable and cannot be edited, the second is a file the
 /// person can replace. The page must not let them look the same.

@@ -81,6 +81,11 @@ impl Corpus {
     pub fn bytes(&self) -> u64 {
         self.entries.values().map(|entry| entry.bytes.len() as u64).sum()
     }
+
+    /// The paths it holds, in order.
+    pub fn keys(&self) -> impl Iterator<Item = &str> {
+        self.entries.keys().map(String::as_str)
+    }
 }
 
 /// What happened to one source's local copy.
@@ -171,9 +176,17 @@ impl CorpusReport {
     /// The state of one source.
     #[must_use]
     pub fn state_of(&self, source_id: &str) -> SourceState {
-        self.sources
-            .get(source_id)
-            .map_or(SourceState::NotNamed, |check| check.state)
+        self.check_of(source_id).state
+    }
+
+    /// The check of one source; a source the pack does not declare reads as not named.
+    #[must_use]
+    pub fn check_of(&self, source_id: &str) -> SourceCheck {
+        self.sources.get(source_id).cloned().unwrap_or(SourceCheck {
+            state: SourceState::NotNamed,
+            passages_found: 0,
+            passages_expected: 0,
+        })
     }
 
     /// Whether anything is wrong with the evidence.

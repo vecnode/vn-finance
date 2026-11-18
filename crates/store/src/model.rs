@@ -25,12 +25,14 @@ use vnf_core::estimate::{Invoice, QuarterReport, ReserveEstimate, estimate_reser
 use vnf_core::flags::{Flag, FlagInput, FlagSummary, compute_flags, pack_health_flags, summarise_flags};
 use vnf_core::profile::{ProfileProblem, default_cae, missing_profile_inputs, validate_profile};
 use vnf_core::rules::{Freshness, PackSummary, constant_bp, freshness, summarise_pack};
+use vnf_core::sources::{CorpusProblem, SourceCheck, check as check_corpus};
 use vnf_core::types::{
     AgendaOptions, CaeEntry, IrsRegime, IvaRegime, LoadedPack, ObligationInstance, ObligationRule,
     PackProblem, RuleSource, TaxProfile,
 };
 
 use crate::StoreError;
+use crate::corpus::CorpusLoad;
 use crate::documents::DocumentEntry;
 use crate::location::{VaultLocationSource, looks_like_vault};
 use crate::pack::{PackCandidate, PackOrigin};
@@ -102,6 +104,8 @@ pub struct ModelConfig<'a> {
     pub pack_exact: bool,
     /// Pack files that were found and refused, with the reason.
     pub pack_rejected: &'a [PackCandidate],
+    /// The documents the citations are checked against, or an empty corpus.
+    pub corpus: &'a CorpusLoad,
     /// Where the vault folder came from.
     pub data_dir_source: VaultLocationSource,
     /// The pointer file that remembers a chosen folder.
@@ -233,12 +237,64 @@ pub struct VaultView {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RulesView {
-    /// The sources the pack cites.
-    pub sources: Vec<RuleSource>,
+    /// The sources the pack cites, each with the state of its local copy.
+    pub sources: Vec<SourceRow>,
     /// The obligations it declares.
     pub obligations: Vec<ObligationRule>,
     /// What the maintainers know is unfinished.
     pub todo: Vec<String>,
+    /// How the evidence held up.
+    pub corpus: CorpusView,
+}
+
+/// One source, and what became of the copy that backs it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceRow {
+    /// The pack's own record of the source.
+    pub source: RuleSource,
+    /// Whether its stored copy matches, and every declared passage was found.
+    pub check: SourceCheck,
+}
+
+/// The evidence, as the Regras page reports it.
+///
+/// Absent evidence is a state, not a failure: a machine that installed the binary
+/// without the documents still opens, and the page says what was not checked rather
+/// than leaving a blank where a checkmark would be.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CorpusView {
+    /// The folder the documents would be in, when there is one.
+    pub root: Option<String>,
+    /// Anything worth saying about the read itself.
+    pub notes: Vec<String>,
+    /// How many documents were read.
+    pub files: usize,
+    /// How large they are together.
+    pub bytes: u64,
+    /// How many sources are backed by a copy whose hash and quotes both hold.
+    pub verified: usize,
+    /// How many name a copy that is not here.
+    pub absent: usize,
+    /// How many have a copy that did not match.
+    pub failed: usize,
+    /// How many have a copy with no hash to prove it.
+    pub unproven: usize,
+    /// How many declare no local copy at all.
+    pub not_named: usize,
+    /// Everything the check found, worst first.
+    pub problems: Vec<CorpusProblem>,
+}
+
+impl CorpusView {
+    /// Whether anything is wrong with the evidence, as opposed to missing.
+    #[must_use]
+    pub fn has_errors(&self) -> bool {
+        self.problems
+            .iter()
+            .any(|problem| problem.level == vnf_core::types::ProblemLevel::Error)
+    }
 }
 
 /// The whole picture, in one value.
@@ -292,6 +348,9 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
     let profile = vault.load_profile()?;
     let invoices = vault.load_invoices()?;
     let summary = summarise_pack(config.pack);
+    // The evidence check is computed here, once, and carried: a page that recomputed
+    // it, or worse decided what "verified" means, would be a second definition.
+    let corpus = check_corpus(pack, &config.corpus.corpus);
 
     let agenda = match &profile {
         None => Vec::new(),
@@ -400,9 +459,28 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
             bytes: stats.bytes,
         },
         rules: RulesView {
-            sources: pack.sources.clone(),
+            sources: pack
+                .sources
+                .iter()
+                .map(|source| SourceRow {
+                    source: source.clone(),
+                    check: corpus.check_of(&source.id),
+                })
+                .collect(),
             obligations: pack.obligations.clone(),
             todo: pack.todo.clone(),
+            corpus: CorpusView {
+                root: config.corpus.root_display(),
+                notes: config.corpus.notes.clone(),
+                files: corpus.files,
+                bytes: corpus.bytes,
+                verified: corpus.verified,
+                absent: corpus.absent,
+                failed: corpus.failed,
+                unproven: corpus.unproven,
+                not_named: corpus.not_named,
+                problems: corpus.problems,
+            },
         },
     })
 }
@@ -497,6 +575,7 @@ mod tests {
             pack_origin: PackOrigin::Embedded,
             pack_exact: true,
             pack_rejected: &[],
+            corpus: CorpusLoad::empty(),
             data_dir_source: VaultLocationSource::Default,
             pointer_path: PathBuf::from("/tmp/vault-location.json"),
         }
@@ -531,6 +610,50 @@ mod tests {
             status: InvoiceStatus::Issued,
             payment_proof_in_vault: false,
         }
+    }
+
+    #[test]
+    fn the_model_carries_the_corpus_it_was_given() -> Result<(), Problem> {
+        // The store's half of the evidence layer: whatever folder it is given is read
+        // into the model, and the sources the pack does not bind are reported as having
+        // no copy rather than as verified.
+        let vault_dir = tempfile::tempdir()?;
+        let corpus_dir = tempfile::tempdir()?;
+        std::fs::write(corpus_dir.path().join("pagina.html"), "<p>artigo 60.º</p>")?;
+        let corpus = crate::corpus::read_corpus(corpus_dir.path())?;
+        let pack = load_embedded()?;
+        let vault = Vault::new(vault_dir.path());
+        let expected_root = corpus_dir.path().display().to_string();
+
+        let model = build_model(
+            &vault,
+            &ModelConfig {
+                corpus: &corpus,
+                ..config(&pack)
+            },
+        )?;
+
+        assert_eq!(model.rules.corpus.files, 1);
+        assert!(model.rules.corpus.bytes > 0);
+        assert_eq!(
+            model.rules.corpus.not_named,
+            model.rules.sources.len(),
+            "the shipped pack binds no file yet, so every source has no copy"
+        );
+        assert!(
+            model
+                .rules
+                .sources
+                .iter()
+                .all(|row| row.check.state == vnf_core::sources::SourceState::NotNamed)
+        );
+        assert!(!model.rules.corpus.has_errors());
+        assert_eq!(
+            model.rules.corpus.root.as_deref(),
+            Some(expected_root.as_str()),
+            "the page has to be able to say which folder it read"
+        );
+        Ok(())
     }
 
     #[test]

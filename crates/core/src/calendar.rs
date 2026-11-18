@@ -508,7 +508,10 @@ fn resolve_due_date(
         ));
     }
     if let Some(extension) = &matched.extension {
-        discrepancies.push(format!("Prorrogação aplicada: {}.", extension.reason));
+        // The despacho is the thing a reader can look up; the reason is the fallback for a
+        // pack that gives one but names no act.
+        let what = extension.despacho.as_deref().unwrap_or(&extension.reason);
+        discrepancies.push(format!("Prorrogação aplicada: {what}."));
     }
     if let Some(note) = &matched.note
         && !discrepancies.contains(note)
@@ -775,6 +778,30 @@ mod tests {
                 holidays: Vec::new(),
             },
         )?)
+    }
+
+    #[test]
+    fn a_postponed_date_says_which_despacho_moved_it() -> Result<(), Box<dyn std::error::Error>> {
+        // The pack records the postponements the AT publishes as `extensions`, and the
+        // reader used to look for a singular `extension` — so the dates the calendar moves
+        // arrived as the plain rule, and the agenda never said why a date was not the one
+        // the law states.
+        let instances = agenda(&profile(), "2026-09-20")?;
+        let named: Vec<&ObligationInstance> = instances
+            .iter()
+            .filter(|instance| {
+                instance
+                    .discrepancies
+                    .iter()
+                    .any(|note| note.contains("Prorrogação aplicada: Despacho n.º"))
+            })
+            .collect();
+        assert!(
+            !named.is_empty(),
+            "the agenda must name the act that moved a date, and none of the {} instances does",
+            instances.len()
+        );
+        Ok(())
     }
 
     #[test]

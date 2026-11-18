@@ -1,5 +1,5 @@
 {
-  "checksum": "0b64bac1642574f9b2e6c6a19f9b03116fb6333dd1fcab739e0cfa19349ac6ef",
+  "checksum": "4799a7fb844c8fd8a49acef981383e654004733452e63bc79f553b3f800cab9f",
   "year": 2026,
   "pack_version": "2026.1.5",
   "obligation_ids": [
@@ -27,7 +27,7 @@
   "summary": {
     "pack_version": "2026.1.5",
     "year": 2026,
-    "checksum": "0b64bac1642574f9b2e6c6a19f9b03116fb6333dd1fcab739e0cfa19349ac6ef",
+    "checksum": "4799a7fb844c8fd8a49acef981383e654004733452e63bc79f553b3f800cab9f",
     "sources": 22,
     "official_sources": 19,
     "obligations": 20,

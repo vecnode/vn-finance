@@ -307,6 +307,35 @@ impl Problems {
     }
 }
 
+/// The postponement on one published date, whichever shape the pack writes it in.
+///
+/// The pack writes `extensions`, an **array**, because a date can be moved more than once
+/// in a year — 31 May became 19 June by Despacho n.º 68/2026 and 30 June by Despacho
+/// n.º 81/2026 — and an older generation of packs wrote a single `extension` object. This
+/// reader only looked for the singular, so four postponements that the calendar publishes
+/// arrived as none at all and the agenda never told anyone why a date was not the one the
+/// law states. The last entry wins, which is what "moved again" means.
+fn read_extension(fields: &Map<String, Value>) -> Option<DateExtension> {
+    let entry = fields
+        .get("extensions")
+        .and_then(Value::as_array)
+        .and_then(|list| list.iter().rev().find(|entry| entry.is_object()))
+        .or_else(|| fields.get("extension").filter(|value| value.is_object()))?;
+    let despacho = as_text(entry.get("despacho"));
+    let reason = as_text(entry.get("reason")).unwrap_or_else(|| {
+        if despacho.is_some() {
+            "prorrogação por despacho".to_owned()
+        } else {
+            "prorrogação".to_owned()
+        }
+    });
+    Some(DateExtension {
+        reason,
+        despacho,
+        url: as_text(entry.get("url")),
+    })
+}
+
 /// Normalise the published dates, tolerating both shapes packs use.
 fn normalise_official_dates(record: &Map<String, Value>) -> BTreeMap<String, Vec<OfficialDate>> {
     let mut result: BTreeMap<String, Vec<OfficialDate>> = BTreeMap::new();
@@ -330,12 +359,8 @@ fn normalise_official_dates(record: &Map<String, Value>) -> BTreeMap<String, Vec
                 extension: None,
                 note: as_text(fields.get("note")),
             };
-            if let Some(Value::Object(extension)) = fields.get("extension") {
-                date.extension = Some(DateExtension {
-                    reason: as_text(extension.get("reason")).unwrap_or_else(|| "prorrogação".to_owned()),
-                    despacho: as_text(extension.get("despacho")),
-                    url: as_text(extension.get("url")),
-                });
+            if let Some(extension) = read_extension(fields) {
+                date.extension = Some(extension);
             }
             bucket.push(date);
         }
@@ -1407,6 +1432,85 @@ mod tests {
         assert_eq!(constant_ratio(&pack.pack, &["nada"]), None);
         // And a path that does exist reads as the number the pack wrote.
         assert_eq!(constant_bp(&pack.pack, &["iva", "rates", "normal"]), Some(2300));
+        Ok(())
+    }
+
+    #[test]
+    fn a_date_moved_twice_keeps_the_move_that_moved_it_last() -> Result<(), PackError> {
+        // The pack writes `extensions` because a year can move one date more than once:
+        // the Modelo 22 of 2025 went to 19 June by Despacho n.º 68/2026 and to 30 June by
+        // Despacho n.º 81/2026. A reader that only knew a singular `extension` saw none of
+        // them, and the agenda showed a date with no reason for it.
+        let text = r#"
+        {
+          "jurisdiction": "PT",
+          "year": 2026,
+          "packVersion": "teste",
+          "generatedAt": "2026-01-01",
+          "units": { "money": "EUR_cents", "rate": "basis_points" },
+          "disclaimer": "teste",
+          "sources": [],
+          "constants": {},
+          "obligations": [
+            {
+              "id": "uma.regra",
+              "kind": "declare",
+              "authority": "AT",
+              "tax": "IRC",
+              "title": "Uma regra",
+              "appliesWhen": [],
+              "periodicity": { "type": "annual" },
+              "deadlineRule": { "kind": "day_of_month", "day": 30, "month": 6 },
+              "officialDates2026": [
+                {
+                  "month": 6,
+                  "day": 30,
+                  "extensions": [
+                    { "despacho": "Despacho n.º 68/2026 - XXV, de 12/05" },
+                    { "despacho": "Despacho n.º 81/2026 - XXV, de 17/06" }
+                  ]
+                },
+                {
+                  "month": 7,
+                  "day": 15,
+                  "extension": { "reason": "prorrogação", "despacho": "Despacho antigo" }
+                }
+              ],
+              "legalBasis": [],
+              "sourceIds": [],
+              "verification": "partial"
+            }
+          ],
+          "todo": []
+        }"#;
+        let pack = load_rule_pack(text, "teste.json")?.pack;
+        let dates = &pack.obligations[0].official_dates;
+
+        let june = dates
+            .values()
+            .flatten()
+            .find(|date| date.month == 6)
+            .ok_or(PackError::NotAnObject)?;
+        let extension = june.extension.as_ref().ok_or(PackError::NotAnObject)?;
+        assert_eq!(
+            extension.despacho.as_deref(),
+            Some("Despacho n.º 81/2026 - XXV, de 17/06"),
+            "the last move is the one in force"
+        );
+        assert_eq!(extension.reason, "prorrogação por despacho");
+
+        // The shape an older pack wrote is still read.
+        let july = dates
+            .values()
+            .flatten()
+            .find(|date| date.month == 7)
+            .ok_or(PackError::NotAnObject)?;
+        assert_eq!(
+            july.extension
+                .as_ref()
+                .and_then(|extension| extension.despacho.as_deref()),
+            Some("Despacho antigo")
+        );
         Ok(())
     }
 

@@ -16,7 +16,7 @@ use vnf_core::estimate::Invoice;
 use vnf_core::types::TaxProfile;
 
 use crate::atomic::{
-    append_line, append_typed, read_json, read_jsonl, write_bytes_atomic, write_json_atomic, write_typed,
+    append_typed, read_json, read_jsonl, write_bytes_atomic, write_json_atomic, write_typed,
 };
 use crate::documents::{DocumentEntry, DocumentMeta, base_name, sanitise_document_name, stored_name};
 use crate::location::{
@@ -172,16 +172,6 @@ impl Vault {
     pub fn write_json(&self, relative: &str, value: &Value) -> Result<(), StoreError> {
         self.invalidate();
         write_json_atomic(&self.path(relative), value)
-    }
-
-    /// Append one record to a JSONL file and flush it.
-    ///
-    /// # Errors
-    ///
-    /// [`StoreError::Io`] when it cannot be written.
-    pub fn append_jsonl(&self, relative: &str, value: &Value) -> Result<(), StoreError> {
-        self.invalidate();
-        append_line(&self.path(relative), value)
     }
 
     /// Read a JSONL file.

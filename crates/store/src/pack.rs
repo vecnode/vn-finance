@@ -56,20 +56,6 @@ pub enum PackOrigin {
     Embedded,
 }
 
-impl PackOrigin {
-    /// The phrase the interface uses for it.
-    #[must_use]
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Flag => "flag",
-            Self::Env => "env",
-            Self::Beside => "beside",
-            Self::SourceTree => "source",
-            Self::Embedded => "embedded",
-        }
-    }
-}
-
 /// One candidate file that was found and refused.
 ///
 /// Only refusals are kept: a missing file is the normal state of every year that has
@@ -372,18 +358,5 @@ mod tests {
         assert!(!resolution.exact);
         assert!(resolution.rejected.is_empty(), "nothing was found to refuse");
         Ok(())
-    }
-
-    #[test]
-    fn every_origin_has_a_label() {
-        for origin in [
-            PackOrigin::Flag,
-            PackOrigin::Env,
-            PackOrigin::Beside,
-            PackOrigin::SourceTree,
-            PackOrigin::Embedded,
-        ] {
-            assert!(!origin.label().is_empty());
-        }
     }
 }

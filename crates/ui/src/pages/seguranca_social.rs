@@ -5,7 +5,7 @@
 //! working would be indistinguishable from a guess.
 
 use egui::Ui;
-use vnf_core::estimate::{QuarterReport, SsContributionEstimate};
+
 use vnf_core::money::{format_bp_as_percent, format_eur};
 use vnf_store::model::DashboardModel;
 
@@ -196,10 +196,4 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
         ),
     );
     action
-}
-
-/// The contribution of one quarter, for a caller that wants only the number.
-#[must_use]
-pub fn contribution_of(report: &QuarterReport) -> &SsContributionEstimate {
-    &report.social_security
 }

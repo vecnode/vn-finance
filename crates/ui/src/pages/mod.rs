@@ -106,24 +106,3 @@ pub fn needs_profile(ui: &mut Ui, page: Page, action: &mut Option<Action>) {
         }
     });
 }
-
-/// A page that exists in the rail but has not been ported yet.
-///
-/// It says so rather than showing an empty card: a page that is not finished is a
-/// fact, and a blank one reads as a bug.
-pub fn placeholder(ui: &mut Ui, page: Page) -> Option<Action> {
-    widgets::section(ui, page.label(), None, Some(page.subtitle()));
-    widgets::empty(
-        ui,
-        "Esta página ainda está a ser portada",
-        "O Resumo já funciona com os teus dados. As restantes páginas chegam nas próximas \
-         etapas da migração, uma de cada vez.",
-    );
-    ui.add_space(12.0);
-    widgets::footnote(
-        ui,
-        "Nada foi perdido: o cofre é o mesmo ficheiro que a versão anterior usava, e o \
-         Resumo já o lê.",
-    );
-    None
-}

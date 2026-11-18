@@ -537,27 +537,6 @@ pub fn empty(ui: &mut Ui, title: &str, body: &str) {
         3.0,
     ));
 }
-
-/// A key and a value, with the value selectable and monospaced.
-pub fn key_value(ui: &mut Ui, key: &str, value: &str) {
-    let palette = palette(ui.ctx());
-    ui.horizontal(|ui| {
-        ui.allocate_ui_with_layout(Vec2::new(150.0, 0.0), Layout::top_down(Align::LEFT), |ui| {
-            ui.label(RichText::new(key).size(theme::MICRO).color(palette.text_3));
-        });
-        ui.add(
-            Label::new(
-                RichText::new(value)
-                    .size(theme::MONO)
-                    .monospace()
-                    .color(palette.text_2),
-            )
-            .truncate()
-            .selectable(true),
-        );
-    });
-}
-
 /// A monospaced, selectable path or hash.
 pub fn path(ui: &mut Ui, value: &str) {
     let palette = palette(ui.ctx());

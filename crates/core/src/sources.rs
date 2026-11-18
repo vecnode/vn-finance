@@ -28,10 +28,11 @@ use crate::rules::hex;
 use crate::types::{ProblemLevel, RulePack, RuleSource, Verification};
 
 /// One document of the corpus, as the caller read it.
+///
+/// The path is the key in [`Corpus`], not a field here: one document is one entry, and
+/// carrying its own name on it invited the two to disagree.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CorpusEntry {
-    /// The path the pack names, relative to the corpus root.
-    pub path: String,
     /// The bytes, exactly as they were retrieved.
     pub bytes: Vec<u8>,
 }
@@ -54,8 +55,7 @@ impl Corpus {
 
     /// Add one document.
     pub fn insert(&mut self, path: impl Into<String>, bytes: Vec<u8>) {
-        let path = path.into();
-        self.entries.insert(path.clone(), CorpusEntry { path, bytes });
+        self.entries.insert(path.into(), CorpusEntry { bytes });
     }
 
     /// One document, by the path the pack names.

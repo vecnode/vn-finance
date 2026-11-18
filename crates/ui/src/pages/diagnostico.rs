@@ -11,6 +11,7 @@ use vnf_core::types::{CaeRole, IrsRegime, IvaRegime};
 use vnf_store::model::DashboardModel;
 
 use crate::pages::Action;
+use crate::pages::regras::origin_label;
 use crate::theme;
 use crate::widgets::{self, Def, Tone};
 
@@ -226,7 +227,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                 Def {
                     label: "Origem",
                     value: &model.meta.pack_path,
-                    small: None,
+                    small: Some(origin_label(model.pack.origin)),
                 },
                 Def {
                     label: "Fontes",

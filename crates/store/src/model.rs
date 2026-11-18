@@ -33,6 +33,7 @@ use vnf_core::types::{
 use crate::StoreError;
 use crate::documents::DocumentEntry;
 use crate::location::{VaultLocationSource, looks_like_vault};
+use crate::pack::{PackCandidate, PackOrigin};
 use crate::risk::{DataDirRisk, check_data_dir_risk};
 use crate::vault::Vault;
 
@@ -95,6 +96,12 @@ pub struct ModelConfig<'a> {
     pub runtime: String,
     /// The rule pack in use.
     pub pack: &'a LoadedPack,
+    /// Where the pack's bytes came from.
+    pub pack_origin: PackOrigin,
+    /// Whether the pack is the requested year's own.
+    pub pack_exact: bool,
+    /// Pack files that were found and refused, with the reason.
+    pub pack_rejected: &'a [PackCandidate],
     /// Where the vault folder came from.
     pub data_dir_source: VaultLocationSource,
     /// The pointer file that remembers a chosen folder.
@@ -184,6 +191,12 @@ pub struct DashboardPack {
     pub freshness: Freshness,
     /// Everything the validator noticed.
     pub problems: Vec<PackProblem>,
+    /// Where the pack came from.
+    pub origin: PackOrigin,
+    /// Whether the pack is the requested year's own.
+    pub exact: bool,
+    /// Pack files that were found and refused, with the reason.
+    pub rejected: Vec<PackCandidate>,
 }
 
 /// One archived document, as the Cofre shows it.
@@ -371,6 +384,9 @@ pub fn build_model(vault: &Vault, config: &ModelConfig<'_>) -> Result<DashboardM
             summary,
             freshness: freshness(pack, &config.today)?,
             problems: config.pack.problems.clone(),
+            origin: config.pack_origin,
+            exact: config.pack_exact,
+            rejected: config.pack_rejected.to_vec(),
         },
         agenda,
         flags,
@@ -478,6 +494,9 @@ mod tests {
             version: env!("CARGO_PKG_VERSION").to_owned(),
             runtime: "teste".to_owned(),
             pack,
+            pack_origin: PackOrigin::Embedded,
+            pack_exact: true,
+            pack_rejected: &[],
             data_dir_source: VaultLocationSource::Default,
             pointer_path: PathBuf::from("/tmp/vault-location.json"),
         }

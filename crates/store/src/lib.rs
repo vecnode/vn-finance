@@ -39,6 +39,7 @@ pub mod documents;
 pub mod location;
 pub mod lock;
 pub mod model;
+pub mod pack;
 pub mod risk;
 pub mod vault;
 
@@ -50,6 +51,7 @@ pub use location::{
 };
 pub use lock::VaultLock;
 pub use model::{DashboardModel, ModelConfig, build_model};
+pub use pack::{PACK_DIR, PACK_ENV, PackCandidate, PackOrigin, PackResolution, PackSearch, resolve_pack};
 pub use risk::{DataDirRisk, RiskLevel, check_data_dir_risk, find_git_root};
 pub use vault::{AuditEvent, CompletionRecord, Vault, VaultStats};
 

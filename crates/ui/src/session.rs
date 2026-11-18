@@ -1,16 +1,17 @@
 //! Opening the vault, and everything a page needs from it.
 //!
 //! A session owns three things for the lifetime of the window: the folder (locked, so
-//! a second window cannot write to it), the rule pack (compiled in), and the
-//! environment it resolved. Nothing here decides anything either; it loads, and it
-//! rebuilds the model on demand.
+//! a second window cannot write to it), the rule pack (found on disk or compiled in,
+//! for the year the window opened on), and the environment it resolved. Nothing here
+//! decides anything either; it loads, and it rebuilds the model on demand.
 
 use std::path::PathBuf;
 
-use vnf_core::rules::{PackError, load_embedded};
+use vnf_core::rules::PackError;
 use vnf_core::types::LoadedPack;
 use vnf_store::location::{Env, VaultLocationSource, resolve_vault_location, vault_pointer_path};
 use vnf_store::model::{DashboardModel, ModelConfig, ModelError, build_model};
+use vnf_store::pack::{PackOrigin, PackResolution, PackSearch, resolve_pack};
 use vnf_store::risk::{RiskLevel, check_data_dir_risk};
 use vnf_store::{StoreError, Vault, VaultLock};
 
@@ -23,7 +24,7 @@ pub enum OpenError {
     Refused(String),
     /// The vault could not be read.
     Store(String),
-    /// The rule pack compiled into the binary is broken.
+    /// The rule pack compiled into the binary is broken, or there is none.
     Pack(String),
 }
 
@@ -31,7 +32,7 @@ impl core::fmt::Display for OpenError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Locked(message) | Self::Refused(message) | Self::Store(message) => f.write_str(message),
-            Self::Pack(message) => write!(f, "o pacote de regras embutido está inválido: {message}"),
+            Self::Pack(message) => write!(f, "não foi possível usar qualquer pacote de regras: {message}"),
         }
     }
 }
@@ -41,7 +42,7 @@ impl std::error::Error for OpenError {}
 /// Everything the window holds open.
 pub struct Session {
     vault: Vault,
-    pack: LoadedPack,
+    pack: PackResolution,
     env: Env,
     /// Held for the lifetime of the window; dropping it releases the vault.
     _lock: VaultLock,
@@ -52,11 +53,15 @@ pub struct Session {
 impl Session {
     /// Open the vault this machine resolves, and lock it.
     ///
+    /// `year` decides which rule pack is looked for: the window opened in 2027 asks
+    /// for `pt/2027.json` first and falls back to the newest pack the application can
+    /// trust when that year has not been written yet.
+    ///
     /// # Errors
     ///
     /// [`OpenError`] when the folder is refused, already held by another window, or
-    /// cannot be read.
-    pub fn open(version: &str) -> Result<Self, OpenError> {
+    /// cannot be read, and when no rule pack at all can be loaded.
+    pub fn open(version: &str, year: i64) -> Result<Self, OpenError> {
         let env = Env::from_process();
         let resolved = resolve_vault_location(None, &env);
         let risk = check_data_dir_risk(&resolved.dir);
@@ -65,7 +70,7 @@ impl Session {
         {
             return Err(OpenError::Refused(message));
         }
-        Self::open_in(&resolved.dir, &env, version)
+        Self::open_in(&resolved.dir, &env, version, year)
     }
 
     /// Open a named folder, which is what a test does.
@@ -73,8 +78,8 @@ impl Session {
     /// # Errors
     ///
     /// [`OpenError`] when the folder cannot be created, is already held by another
-    /// window, or cannot be read.
-    pub fn open_in(dir: &std::path::Path, env: &Env, version: &str) -> Result<Self, OpenError> {
+    /// window, cannot be read, or when no rule pack at all can be loaded.
+    pub fn open_in(dir: &std::path::Path, env: &Env, version: &str, year: i64) -> Result<Self, OpenError> {
         std::fs::create_dir_all(dir)
             .map_err(|error| OpenError::Store(format!("{}: {error}", dir.display())))?;
         let lock = VaultLock::acquire(dir).map_err(|error| OpenError::Locked(error.to_string()))?;
@@ -85,7 +90,18 @@ impl Session {
         // A failed audit line is not a reason to refuse to open: the vault is still
         // readable, and the person can see the window.
         let _ = vault.append_audit("vault.opened", Some("janela"), &vnf_store::clock::now_iso8601());
-        let pack = load_embedded().map_err(|error: PackError| OpenError::Pack(error.to_string()))?;
+        let exe_dir = std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf));
+        let pack = resolve_pack(
+            year,
+            &PackSearch {
+                explicit: None,
+                env,
+                exe_dir: exe_dir.as_deref(),
+            },
+        )
+        .map_err(|error: PackError| OpenError::Pack(error.to_string()))?;
         Ok(Self {
             vault,
             pack,
@@ -105,7 +121,13 @@ impl Session {
     /// The rule pack in use.
     #[must_use]
     pub fn pack(&self) -> &LoadedPack {
-        &self.pack
+        &self.pack.loaded
+    }
+
+    /// Where the pack's bytes came from.
+    #[must_use]
+    pub fn pack_origin(&self) -> PackOrigin {
+        self.pack.origin
     }
 
     /// Where the folder came from.
@@ -139,7 +161,10 @@ impl Session {
                 today: today.to_owned(),
                 version: self.version.clone(),
                 runtime: self.runtime.clone(),
-                pack: &self.pack,
+                pack: &self.pack.loaded,
+                pack_origin: self.pack.origin,
+                pack_exact: self.pack.exact,
+                pack_rejected: &self.pack.rejected,
                 data_dir_source: self.data_dir_source(),
                 pointer_path: self.pointer_path(),
             },

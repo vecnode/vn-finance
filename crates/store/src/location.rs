@@ -56,6 +56,9 @@ impl Env {
             "XDG_DATA_HOME",
             "VN_FINANCE_DATA_DIR",
             "VN_FINANCE_ALLOW_IN_REPO",
+            // The rule pack's door: the window has no command line, so a pack outside
+            // the ones the application looks for can only arrive this way.
+            crate::pack::PACK_ENV,
         ] {
             if let Ok(value) = std::env::var(key) {
                 vars.insert(key.to_owned(), value);

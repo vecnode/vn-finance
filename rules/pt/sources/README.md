@@ -77,7 +77,8 @@ folder.
   `sem cópia`, and no rule claims to be verified against one.
 - **Only eight passages are quoted so far**, from five articles. The other thirteen
   bound documents are hash-verified but not yet read by a machine. Adding a passage is
-  two lines of pack and one `citations` entry — see `docs/` for the yearly rollover.
+  two lines of pack and one `citations` entry; the yearly rollover that will want them
+  all is F2, and it is not written yet.
 
 Until someone adds them, this folder is inert beyond the hash check: a person may
 read it, and the application only proves that what it holds is what was retrieved.

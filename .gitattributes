@@ -13,3 +13,10 @@
 # The application icon's raw bytes, read straight into egui::IconData. A text filter
 # that "normalised" line endings here would corrupt the icon without saying so.
 *.rgba binary
+
+# The source corpus is evidence, and evidence is bytes. `rules/pt/sources/fetch.json`
+# records the SHA-256 of each file as it was retrieved; a line-ending translation on
+# the way into the repository would make every one of those hashes describe a file
+# that is not here, which is worse than having no hashes at all. No conversion, and
+# no text diff: a changed document must show up as a changed hash, not as a diff.
+rules/pt/sources/** -text

@@ -57,10 +57,11 @@ F1 is built. For every source the pack **binds** — it carries a `file` and a
 3. extracts the text (tags stripped, entities decoded, whitespace collapsed) and
    looks for every `passages[].quote` the pack declares for that source.
 
-The result is on the Regras page, per source: `conferida`, `em falta`, `sem hash`,
-`não confere`, or `sem cópia` for the sources the pack never promised to keep. A
-quote that is not found, or a hash that moved, is an error that names the passage
-and the file — `cargo xtask ci` fails on it too, through
+The result is on the Regras page twice over: per source — `conferida`, `em falta`,
+`sem hash`, `não confere`, or `sem cópia` for the sources the pack never promised to
+keep — and per obligation, where a rule whose passage was found says `citação
+conferida`. A quote that is not found, or a hash that moved, is an error that names
+the passage and the file; `cargo xtask ci` fails on it too, through
 `crates/core/tests/corpus.rs`, which runs this check over the shipped pack and this
 folder.
 

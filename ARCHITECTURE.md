@@ -61,7 +61,10 @@ decoded, tags stripped, whitespace collapsed and accents compared. A rule names 
 passage it rests on (`citations`), so the Regras page can say which sentence of which
 article a deadline comes from — and say `conferida`, `em falta`, `sem hash`,
 `não confere` or `sem cópia` per source rather than implying that a citation is a
-proof.
+proof. The obligations table carries the same state per rule: a rule whose passage was
+found says `citação conferida`, and one whose source is missing says how many of its
+citations are unproven — the one place where "this deadline comes from that sentence"
+is either true or visibly not.
 
 The distinction the page draws is deliberate: `sem cópia` means the pack never
 promised a copy (most secondary sources, and the one FAQ that now answers 404);

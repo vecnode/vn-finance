@@ -78,6 +78,69 @@ fn every_source_the_shipped_pack_binds_verifies_against_its_copy() -> Result<(),
 }
 
 #[test]
+fn the_corpus_holds_the_law_and_nothing_personal() -> Result<(), Box<dyn Error>> {
+    // The mistake this guards against is concrete: saving a page from a logged-in
+    // session — the one with the person's own NIF, address or session cookie — into
+    // the corpus and committing it. The law is public and belongs here; an account is
+    // not. PDFs are skipped: their compressed streams produce false positives, and a
+    // scan that cries wolf is a scan nobody keeps.
+    let mut scanned = 0usize;
+    for entry in std::fs::read_dir(corpus_dir())? {
+        let entry = entry?;
+        if !entry.file_type()?.is_file() {
+            continue;
+        }
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if !(name.ends_with(".html") || name.ends_with(".json") || name.ends_with(".md")) {
+            continue;
+        }
+        let text = std::fs::read_to_string(entry.path())?;
+        scanned += 1;
+        assert!(
+            !looks_like_email(&text),
+            "{name} contains something shaped like an email address"
+        );
+        for needle in ["C:\\Users", "/home/", "ghp_", "sk-", "SessionId="] {
+            assert!(!text.contains(needle), "{name} contains {needle:?}");
+        }
+    }
+    // 15 pages plus the manifest: the three PDFs are skipped above. The guard is here
+    // so a wrong path cannot make this test pass by scanning nothing.
+    assert!(scanned >= 15, "the scan looked at {scanned} files");
+    Ok(())
+}
+
+/// Whether the text holds something shaped like an address: a local part, an `@`, and
+/// a dotted domain. Deliberately narrow — a false positive here fails the build.
+fn looks_like_email(text: &str) -> bool {
+    let characters: Vec<char> = text.chars().collect();
+    for (index, character) in characters.iter().enumerate() {
+        if *character != '@' {
+            continue;
+        }
+        let local = characters[..index]
+            .iter()
+            .rev()
+            .take_while(|ch| ch.is_ascii_alphanumeric() || "._+-".contains(**ch))
+            .count();
+        if local < 2 {
+            continue;
+        }
+        let domain: String = characters[index + 1..]
+            .iter()
+            .take_while(|ch| ch.is_ascii_alphanumeric() || **ch == '.' || **ch == '-')
+            .collect();
+        let dotted = domain
+            .split_once('.')
+            .is_some_and(|(label, rest)| !label.is_empty() && rest.len() >= 2);
+        if dotted && domain.chars().count() <= 64 {
+            return true;
+        }
+    }
+    false
+}
+
+#[test]
 fn the_bound_sources_are_the_ones_that_carry_quotes() -> Result<(), Box<dyn Error>> {
     let loaded = load_file(&pack_path())?;
 

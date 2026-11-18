@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use crate::countries::{TurnoverScope, scope_of};
 use crate::dates;
 use crate::money::{BasisPoints, Cents, apply_bp, format_eur, split_evenly};
-use crate::rules::constant_bp;
+use crate::rules::{constant, constant_bp, constant_cents};
 use crate::types::{IsoDate, IvaRegime, RulePack, TaxProfile};
 
 /// Where an invoice stands in its own life.
@@ -251,10 +251,22 @@ pub struct SsContributionEstimate {
     pub service_income_cents: Cents,
     /// The share of it that is relevant, in basis points.
     pub relevant_income_share_bp: BasisPoints,
-    /// The relevant income itself.
+    /// The relevant income itself, for the quarter.
     pub relevant_income_cents: Cents,
     /// The contribution rate, in basis points.
     pub contribution_rate_bp: BasisPoints,
+    /// A third of the relevant income: the month's base before the legal limits.
+    pub monthly_base_before_limits_cents: Cents,
+    /// The base actually used for a month, after the limits.
+    pub monthly_base_cents: Cents,
+    /// 1,5 × IAS: the smallest monthly base the law allows.
+    pub base_floor_cents: Option<Cents>,
+    /// 12 × IAS: the largest monthly base the law allows.
+    pub base_ceiling_cents: Option<Cents>,
+    /// The least a month can cost, whatever the base.
+    pub minimum_contribution_cents: Option<Cents>,
+    /// The contribution of one month, after the limits.
+    pub monthly_contribution_cents: Cents,
     /// The contribution owed for the quarter.
     pub contribution_cents: Cents,
     /// The contribution settled in three monthly instalments.
@@ -263,12 +275,66 @@ pub struct SsContributionEstimate {
     pub limitations: Vec<String>,
 }
 
-/// Segurança Social for one quarter, for a worker whose income is services:
-/// relevant income is a share of gross service income, the contribution is a rate
-/// applied to it, and it is paid in three monthly instalments.
+/// Which legal limit, if either, set the month's base.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SsBaseLimit {
+    /// Neither: a third of the relevant income was within both.
+    None,
+    /// The base was raised to 1,5 × IAS.
+    Floor,
+    /// The base was cut to 12 × IAS.
+    Ceiling,
+}
+
+impl SsContributionEstimate {
+    /// Which limit set the month's base, read back from the numbers.
+    #[must_use]
+    pub fn base_limit(&self) -> SsBaseLimit {
+        if self.monthly_base_cents < self.monthly_base_before_limits_cents {
+            SsBaseLimit::Ceiling
+        } else if self.monthly_base_cents > self.monthly_base_before_limits_cents {
+            SsBaseLimit::Floor
+        } else {
+            SsBaseLimit::None
+        }
+    }
+}
+
+/// One of the pack's multiples of the IAS, in hundredths of it.
 ///
-/// `instalments` is how many parts the contribution is split into; zero is treated
-/// as one rather than as an empty plan.
+/// The pack writes `baseMinMultipleIas: 150` for 1,5 × IAS and `baseMaxMultipleIas: 1200`
+/// for 12 × IAS, so the value is read as an integer and divided by the hundred where it is
+/// used — keeping the pack's own units instead of re-encoding them here.
+fn multiple_of_ias(pack: &RulePack, path: &[&str]) -> Option<i64> {
+    constant(pack, path).and_then(serde_json::Value::as_i64)
+}
+
+/// An amount scaled by a whole number of hundredths, rounded to the cent.
+///
+/// 1,5 × 537,13 EUR is 805,695 EUR and the base is a money amount, so the half cent has to
+/// go somewhere; it goes the way every other figure in this crate rounds — halves away from
+/// zero. Truncating would leave the floor a cent low and every contribution at it a cent
+/// short.
+fn scaled_by_hundredths(amount: Cents, hundredths: i64) -> Cents {
+    (amount * hundredths + 50) / 100
+}
+
+/// Segurança Social for one quarter, for a worker whose income is services.
+///
+/// The relevant income is a share of the quarter's gross service income; the *month's*
+/// base is a third of it, and the law puts a floor under that third and a ceiling over it
+/// — 1,5 × IAS and 12 × IAS (Código dos Regimes Contributivos, arts. 162.º a 164.º). The
+/// contribution is the rate applied to the month's base, never less than the minimum the
+/// pack records, and a quarter is three months of it.
+///
+/// Both limits are refused rather than guessed: a pack with no IAS or no multiples
+/// produces an estimate with no clamp and a limitation saying so, which is the same
+/// answer the port gave before — a number a person can see is unchecked, rather than a
+/// number they cannot.
+///
+/// `instalments` is how many parts the quarter is split into; zero is treated as one
+/// rather than as an empty plan.
 #[must_use]
 pub fn estimate_social_security(
     pack: &RulePack,
@@ -297,16 +363,69 @@ pub fn estimate_social_security(
         Some(share) => apply_bp(service_income_cents, share),
         None => 0,
     };
-    let contribution_cents = match rate_bp {
-        Some(rate) => apply_bp(relevant_income_cents, rate),
-        None => 0,
+    // A third of the quarter is the month's base; the limits are on the month, not on the
+    // quarter, which is why the arithmetic goes through it.
+    let monthly_before_limits = relevant_income_cents / 3;
+
+    let ias = constant_cents(pack, &["socialSecurity", "iasMonthly"]);
+    let floor = ias
+        .zip(multiple_of_ias(pack, &["socialSecurity", "baseMinMultipleIas"]))
+        .map(|(ias, multiple)| scaled_by_hundredths(ias, multiple));
+    let ceiling = ias
+        .zip(multiple_of_ias(pack, &["socialSecurity", "baseMaxMultipleIas"]))
+        .map(|(ias, multiple)| scaled_by_hundredths(ias, multiple));
+    if floor.is_none() || ceiling.is_none() {
+        limitations.push(
+            "Os limites da base de incidência (1,5 × IAS e 12 × IAS) não estão no pacote: a \
+             contribuição não foi limitada."
+                .to_owned(),
+        );
+    }
+    let monthly_base_cents = if relevant_income_cents == 0 {
+        // A month with no relevant income is not a month priced at 21,4 % of nothing: the
+        // thirds rule does not set a base at all, and the minimum contribution takes over.
+        0
+    } else {
+        match (floor, ceiling) {
+            (Some(floor), Some(ceiling)) => monthly_before_limits.clamp(floor, ceiling),
+            _ => monthly_before_limits,
+        }
     };
+
+    let minimum = constant_cents(pack, &["socialSecurity", "minimumContributionCents"]);
+    if minimum.is_none() {
+        limitations.push(
+            "O valor mínimo de contribuição mensal não está no pacote de regras: um mês sem \
+             rendimento relevante aparece a zero."
+                .to_owned(),
+        );
+    }
+    let monthly_contribution_cents = if relevant_income_cents == 0 {
+        // No relevant income: the declared contribution, not 21,4 % of nothing.
+        minimum.unwrap_or(0)
+    } else {
+        let contribution = match rate_bp {
+            Some(rate) => apply_bp(monthly_base_cents, rate),
+            None => 0,
+        };
+        match minimum {
+            Some(minimum) => contribution.max(minimum),
+            None => contribution,
+        }
+    };
+    let contribution_cents = monthly_contribution_cents * 3;
     let parts = instalments.max(1);
     SsContributionEstimate {
         service_income_cents,
         relevant_income_share_bp: share_bp.unwrap_or(0),
         relevant_income_cents,
         contribution_rate_bp: rate_bp.unwrap_or(0),
+        monthly_base_before_limits_cents: monthly_before_limits,
+        monthly_base_cents,
+        base_floor_cents: floor,
+        base_ceiling_cents: ceiling,
+        minimum_contribution_cents: minimum,
+        monthly_contribution_cents,
         contribution_cents,
         instalments_cents: split_evenly(contribution_cents, parts).unwrap_or_default(),
         limitations,
@@ -617,14 +736,87 @@ mod tests {
         assert_eq!(report.totals.base_cents, 150_000);
         assert_eq!(report.totals.iva_liquidado_cents, 34_500);
         assert_eq!(report.totals.retencao_sofrida_cents, 37_500);
-        // 70 % of 1 500,00 EUR, then 21,4 %, in three instalments that sum exactly.
+        // 70 % of 1 500,00 EUR is 1 050,00 EUR of relevant income, and a third of that is
+        // 350,00 EUR a month — below the 1,5 × IAS floor (805,70 EUR), so the month is
+        // carried at the floor and the quarter is three of those. Before the limits were
+        // applied this quarter claimed 224,70 EUR, which no independent worker at this
+        // income ever paid.
         let ss = &report.social_security;
         assert_eq!(ss.relevant_income_share_bp, 7000);
         assert_eq!(ss.relevant_income_cents, 105_000);
         assert_eq!(ss.contribution_rate_bp, 2140);
-        assert_eq!(ss.contribution_cents, 22_470);
-        assert_eq!(ss.instalments_cents.iter().sum::<Cents>(), 22_470);
+        assert_eq!(ss.monthly_base_before_limits_cents, 35_000);
+        assert_eq!(ss.base_floor_cents, Some(80_570));
+        assert_eq!(ss.base_ceiling_cents, Some(644_556));
+        assert_eq!(ss.base_limit(), SsBaseLimit::Floor);
+        assert_eq!(ss.monthly_base_cents, 80_570);
+        assert_eq!(ss.monthly_contribution_cents, 17_242);
+        assert_eq!(ss.contribution_cents, 51_726);
+        assert_eq!(ss.instalments_cents.iter().sum::<Cents>(), 51_726);
         assert_eq!(ss.instalments_cents.len(), 3);
+        Ok(())
+    }
+
+    #[test]
+    fn the_contribution_never_goes_below_the_month_the_law_prices() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let pack = load_embedded()?;
+        // 600,00 EUR a month of base sits inside both limits, so nothing moves.
+        let inside = estimate_social_security(&pack.pack, 600_000, 3);
+        assert_eq!(inside.monthly_base_before_limits_cents, 140_000);
+        assert_eq!(inside.monthly_base_cents, 140_000);
+        assert_eq!(inside.base_limit(), SsBaseLimit::None);
+        assert_eq!(inside.monthly_contribution_cents, 29_960);
+        assert_eq!(inside.contribution_cents, 89_880);
+
+        // A month of 7 000,00 EUR is over 12 × IAS, and the base stops at the ceiling.
+        let over = estimate_social_security(&pack.pack, 3_000_000, 3);
+        assert_eq!(over.monthly_base_before_limits_cents, 700_000);
+        assert_eq!(over.monthly_base_cents, 644_556);
+        assert_eq!(over.base_limit(), SsBaseLimit::Ceiling);
+        assert_eq!(over.monthly_contribution_cents, 137_935);
+        assert_eq!(over.contribution_cents, 413_805);
+        Ok(())
+    }
+
+    #[test]
+    fn a_quarter_with_no_relevant_income_pays_the_minimum_and_says_so()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let pack = load_embedded()?;
+        let empty = estimate_social_security(&pack.pack, 0, 3);
+        assert_eq!(empty.relevant_income_cents, 0);
+        assert_eq!(empty.monthly_base_cents, 0);
+        assert_eq!(empty.minimum_contribution_cents, Some(2_000));
+        assert_eq!(empty.monthly_contribution_cents, 2_000);
+        assert_eq!(empty.contribution_cents, 6_000);
+        assert_eq!(empty.instalments_cents.iter().sum::<Cents>(), 6_000);
+        Ok(())
+    }
+
+    #[test]
+    fn a_pack_without_the_ias_refuses_to_claim_the_limits_were_checked()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let mut pack = load_embedded()?.pack;
+        if let serde_json::Value::Object(constants) = &mut pack.constants
+            && let Some(serde_json::Value::Object(social)) = constants.get_mut("socialSecurity")
+        {
+            social.remove("iasMonthly");
+        }
+        let estimate = estimate_social_security(&pack, 150_000, 3);
+        assert_eq!(estimate.base_floor_cents, None);
+        assert_eq!(estimate.base_ceiling_cents, None);
+        assert_eq!(
+            estimate.monthly_base_cents,
+            estimate.monthly_base_before_limits_cents
+        );
+        assert!(
+            estimate
+                .limitations
+                .iter()
+                .any(|limitation| limitation.contains("IAS")),
+            "the refusal has to be readable: {:?}",
+            estimate.limitations
+        );
         Ok(())
     }
 

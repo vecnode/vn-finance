@@ -6,6 +6,7 @@
 
 use egui::Ui;
 
+use vnf_core::estimate::SsBaseLimit;
 use vnf_core::money::{format_bp_as_percent, format_eur};
 use vnf_store::model::DashboardModel;
 
@@ -81,6 +82,23 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
     let share = format_bp_as_percent(contribution.relevant_income_share_bp);
     let relevant = format_eur(contribution.relevant_income_cents);
     let rate = format_bp_as_percent(contribution.contribution_rate_bp);
+    // The month's base is a third of the quarter's relevant income, and the law puts a
+    // floor under it and a ceiling over it. Saying which of the two moved the figure is
+    // the difference between a number and an explanation of a number.
+    let monthly_base = format_eur(contribution.monthly_base_cents);
+    let base_limits = match (contribution.base_floor_cents, contribution.base_ceiling_cents) {
+        (Some(floor), Some(ceiling)) => format!(
+            "entre {} (1,5 × IAS) e {} (12 × IAS)",
+            format_eur(floor),
+            format_eur(ceiling)
+        ),
+        _ => "sem os limites do IAS no pacote".to_owned(),
+    };
+    let base_note = match contribution.base_limit() {
+        SsBaseLimit::Floor => format!("um terço do rendimento relevante, subiu ao mínimo, {base_limits}"),
+        SsBaseLimit::Ceiling => format!("um terço do rendimento relevante, desceu ao máximo, {base_limits}"),
+        SsBaseLimit::None => format!("um terço do rendimento relevante, dentro do intervalo {base_limits}"),
+    };
     let steps = [
         Def {
             label: "Rendimento de serviços",
@@ -96,6 +114,11 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
             label: "Rendimento relevante",
             value: &relevant,
             small: Some("rendimento de serviços × quota relevante"),
+        },
+        Def {
+            label: "Base mensal",
+            value: &monthly_base,
+            small: Some(&base_note),
         },
         Def {
             label: "Taxa contributiva",
@@ -145,6 +168,17 @@ pub fn show(ui: &mut Ui, model: &DashboardModel, today: &str, quarter: i64) -> O
                 widgets::caption(
                     ui,
                     &format!("em {} prestações mensais: {}", parts.len(), parts.join(" · ")),
+                );
+            }
+            if contribution.relevant_income_cents == 0
+                && let Some(minimum) = contribution.minimum_contribution_cents
+            {
+                widgets::caption(
+                    ui,
+                    &format!(
+                        "um trimestre sem rendimento relevante paga o mínimo de {} por mês",
+                        format_eur(minimum)
+                    ),
                 );
             }
         });

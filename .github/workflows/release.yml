@@ -123,7 +123,11 @@ jobs:
           NAME="${STEM}-${VERSION}-${{ matrix.system }}-${{ matrix.arch }}"
           ROOT="${STEM}-${VERSION}"
           mkdir -p "dist/${ROOT}"
-          cp README.md LICENSE THIRD-PARTY-NOTICES.md "dist/${ROOT}/"
+          # NOTICE carries the copyright line and the "version 3 or later" application;
+          # LICENSE is the licence text itself, verbatim from the SPDX list, with nothing
+          # in front of it — a preamble is enough to stop GitHub recognising the licence
+          # and to leave the repository labelled NOASSERTION.
+          cp README.md LICENSE NOTICE THIRD-PARTY-NOTICES.md "dist/${ROOT}/"
           cp "target/${{ matrix.target }}/release/vnfin.exe" "dist/${ROOT}/"
           # The rule pack is a folder the binary reads, not only a constant it carries.
           # Shipping it beside the executable is what lets a new year — or a corrected

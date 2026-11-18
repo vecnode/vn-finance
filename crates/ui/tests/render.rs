@@ -265,6 +265,57 @@ fn the_header_is_the_title_and_the_subtitle_and_nothing_else() -> Result<(), Pro
     Ok(())
 }
 
+/// A file from the repository root, which is where the shipped pack and its corpus
+/// live. A test of an artefact reads the artefact.
+fn repo_file(path: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join(path)
+}
+
+#[test]
+fn the_rules_page_reports_a_copy_that_verified_and_the_ones_that_are_missing() -> Result<(), Problem> {
+    // The evidence layer, seen by a person: one source whose bytes and quote check
+    // out, and a page that says so instead of showing a citation with no basis.
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    let rules = dir.path().join("rules").join("pt");
+    std::fs::create_dir_all(rules.join("sources"))?;
+    std::fs::copy(repo_file("rules/pt/2026.json"), rules.join("2026.json"))?;
+    std::fs::copy(
+        repo_file("rules/pt/sources/at-cirs-art60.html"),
+        rules.join("sources").join("at-cirs-art60.html"),
+    )?;
+    let home = dir.path().display().to_string();
+    let pack = rules.join("2026.json").display().to_string();
+    let env = Env::for_test(&[("HOME", &home), ("VN_FINANCE_RULES", &pack)], false);
+
+    let session = Session::open_in(dir.path(), &env, env!("CARGO_PKG_VERSION"), YEAR)?;
+    let mut app = App::build(session, TODAY, YEAR);
+    app.go(Page::Regras);
+    // Taller than the window so the evidence card is actually laid out: the page
+    // scrolls, and a shape that was never painted cannot be asserted on.
+    let texts: Vec<String> = painted_text_at(&mut app, vec2(1280.0, 2600.0))
+        .into_iter()
+        .map(|(text, _)| text)
+        .collect();
+
+    assert!(
+        texts.iter().any(|text| text == "1 de 22"),
+        "the page must say one source is backed by a verified copy: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("Cópia local das fontes")),
+        "the section is missing: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("não está no corpus")),
+        "a promised copy that is not here must be named: {texts:?}"
+    );
+    Ok(())
+}
+
 #[test]
 fn a_refused_rule_pack_is_reported_on_the_rules_page() -> Result<(), Problem> {
     // A pack file the resolver finds and must refuse: the window has to open on the

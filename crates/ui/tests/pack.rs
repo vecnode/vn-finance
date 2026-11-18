@@ -15,15 +15,18 @@ use vnf_ui::Session;
 type Problem = Box<dyn std::error::Error>;
 
 /// The shipped pack, retitled as another year — a calendar nobody wrote, which is
-/// exactly what a copy-pasted pack is.
+/// exactly what a copy-pasted pack is. The version is replaced by position so a bump
+/// in the real pack does not silently stop this from marking the file.
 fn pack_for(year: i64) -> Result<String, Problem> {
     let text = EMBEDDED_PACKS
         .first()
         .map(|entry| entry.text)
-        .ok_or("the binary carries no embedded pack")?;
-    Ok(text
-        .replace("\"year\": 2026", &format!("\"year\": {year}"))
-        .replace("\"packVersion\": \"2026.1.2\"", "\"packVersion\": \"2099.1.0\""))
+        .ok_or("the binary carries no embedded pack")?
+        .replace("\"year\": 2026", &format!("\"year\": {year}"));
+    let marker = "\"packVersion\": \"";
+    let start = text.find(marker).ok_or("no packVersion in the pack")? + marker.len();
+    let end = start + text[start..].find('"').ok_or("unterminated packVersion")?;
+    Ok(format!("{}2099.1.0{}", &text[..start], &text[end..]))
 }
 
 fn session_for(dir: &Path, pack: Option<&Path>, year: i64) -> Result<Session, Problem> {
@@ -129,14 +132,15 @@ fn the_corpus_beside_the_pack_is_read_and_reported() -> Result<(), Problem> {
     assert_eq!(model.rules.corpus.files, 1);
     assert!(model.rules.corpus.bytes > 0);
     assert_eq!(
-        model.rules.corpus.not_named, model.pack.summary.sources,
-        "the pack binds no copy yet, and the model must say so per source"
+        model.rules.corpus.not_named + model.rules.corpus.absent,
+        model.pack.summary.sources,
+        "every source is either bound to a copy that is not here, or names none"
     );
     Ok(())
 }
 
 #[test]
-fn a_pack_with_no_sources_folder_still_opens_and_says_the_evidence_is_missing() -> Result<(), Problem> {
+fn a_pack_whose_copies_are_missing_still_opens_and_names_them() -> Result<(), Problem> {
     let dir = tempfile::tempdir()?;
     let rules = dir.path().join("rules").join("pt");
     std::fs::create_dir_all(&rules)?;
@@ -158,9 +162,12 @@ fn a_pack_with_no_sources_folder_still_opens_and_says_the_evidence_is_missing() 
         "the page must be able to say where it looked: {:?}",
         model.rules.corpus.root
     );
-    // No copy is not a failure: nothing claims to be verified against one.
-    assert!(!model.rules.corpus.has_errors());
-    assert_eq!(model.rules.corpus.failed, 0);
+    // The shipped pack binds 18 official documents; without the folder those are
+    // copies that are promised and absent, which is the error the page must show. The
+    // window still opens, and the law is still computed.
+    assert_eq!(model.rules.corpus.absent, 18);
+    assert!(model.rules.corpus.has_errors());
+    assert_eq!(model.pack.summary.obligations, 20);
     Ok(())
 }
 

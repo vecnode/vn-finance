@@ -52,9 +52,26 @@ into three layers, and keeping them apart is what decides where a change goes.
 | **Evidence** | where is that written, in which article, and has the page moved since | `rules/pt/sources/` | a folder beside the binary, content-addressed by SHA-256 |
 | **Update** | what changed between two years, and who confirmed it | `cargo xtask rules` — *planned* | a reviewed diff, never a runtime fetch |
 
-The corpus exists (`rules/pt/sources/`, with `fetch.json` recording each retrieval,
-its hash and whether the body is stored); binding it to the pack is the next step, and
-nothing reads it yet.
+The evidence layer is built. At startup the store reads the `sources/` folder beside
+the pack and `core::sources` compares it with what the pack claims, twice over: the
+bytes are hashed and checked against the `sha256` the pack records, which is the only
+thing that notices a page that changed after it was read; and every `passages[].quote`
+a source declares must be found in the text extracted from those bytes, with entities
+decoded, tags stripped, whitespace collapsed and accents compared. A rule names the
+passage it rests on (`citations`), so the Regras page can say which sentence of which
+article a deadline comes from — and say `conferida`, `em falta`, `sem hash`,
+`não confere` or `sem cópia` per source rather than implying that a citation is a
+proof.
+
+The distinction the page draws is deliberate: `sem cópia` means the pack never
+promised a copy (most secondary sources, and the one FAQ that now answers 404);
+`em falta` means it promised one and it is not there. Only the second is the pack's
+word not kept.
+
+One gap is worth naming: `citations` exists on obligations, not on constants. A
+constant is bound to a document and to its hash, but not to the sentence it comes
+from. Closing that is a schema change to the `constants` tree, and until it happens a
+human is still the link between the €25 threshold and the article that states it.
 
 Three rules follow, and they are not negotiable:
 
@@ -238,10 +255,11 @@ parameters, which is what makes it testable without a temporary directory — an
   binary is enough for that machine; adding it to `EMBEDDED_PACKS` with
   `include_str!` makes it the fallback every build carries, and the registry test
   fails if the file and its registered year disagree.
-- **A source document**: a file under `rules/pt/sources/` with its SHA-256 in the
-  pack's `sources[]` entry, so the reader can prove the citation is in the copy it
-  was reviewed against. The folder and its manifest exist; the pack does not cite it
-  yet, so this is *half built* — see `rules/pt/sources/README.md` for what F1 does.
+- **A source document**: a file under `rules/pt/sources/`, its `sha256` in the pack's
+  `sources[]` entry, and one `passages[]` entry per sentence a rule relies on, quoted
+  verbatim. The rule then names it in `citations`. `cargo xtask ci` fails if the hash
+  moved or the quote is not in the copy, so a wrong transcription is a red build
+  rather than a page that quietly agrees with itself.
 - **A new estimate**: a function in `crates/core/src/estimate.rs`, a field on the
   view model, and a widget. Not a calculation in a page.
 - **Storage that is not JSON**: do not. The vault is readable with a text editor,

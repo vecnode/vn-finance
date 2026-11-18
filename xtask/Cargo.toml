@@ -15,3 +15,7 @@ workspace = true
 # `cargo metadata` prints JSON, and the notices file is generated from it. This is a
 # build-time tool; it is not linked into the application.
 serde_json = { workspace = true }
+# `rules scaffold` and `rules diff` call the domain's own two functions over a pack
+# rather than reimplementing them here: a second definition of "which dates carry
+# forward" would be a second way to be wrong.
+vnf-core = { workspace = true }

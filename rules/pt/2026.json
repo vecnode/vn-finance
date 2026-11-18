@@ -1,7 +1,7 @@
 {
   "jurisdiction": "PT",
   "year": 2026,
-  "packVersion": "2026.1.3",
+  "packVersion": "2026.1.4",
   "generatedAt": "2026-11-18",
   "units": {
     "money": "EUR_cents",

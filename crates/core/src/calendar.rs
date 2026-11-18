@@ -210,13 +210,19 @@ fn resolve_legal_day(deadline: Option<&DeadlineRule>, due_year: i64, due_month: 
 }
 
 /// The months an annual obligation falls due in, when the year is unpublished.
+///
+/// The rule's own `months` wins: an obligation with instalments says so in the pack,
+/// and a year whose calendar has not been published must still schedule all of them.
+/// A rule that names one month, or none, falls back to the months the last published
+/// calendar used, and then to June.
 fn annual_due_months(rule: &ObligationRule) -> Vec<i64> {
-    if let Some(explicit) = rule
-        .deadline_rule
-        .as_ref()
-        .and_then(|rule| rule.month.or(rule.month_to))
-    {
-        return vec![explicit];
+    if let Some(deadline) = &rule.deadline_rule {
+        if !deadline.months.is_empty() {
+            return deadline.months.clone();
+        }
+        if let Some(explicit) = deadline.month.or(deadline.month_to) {
+            return vec![explicit];
+        }
     }
     let pattern = pattern_months(rule);
     if pattern.is_empty() { vec![6] } else { pattern }
@@ -589,6 +595,10 @@ pub fn build_agenda(
         for seed in enumerate_periods(rule, year)? {
             let resolved = resolve_due_date(rule, &seed, &options.holidays)?;
             let due_date = resolved.due_date;
+            // Provisional means the pack is not this year's, not that a date was
+            // derived: a window rule's end is statutory and would be "provisional"
+            // every year. A scaffolded pack carries `stale` on every rule instead,
+            // which is the signal that its calendar has not been transcribed.
             let provisional = seed.due_year != pack.year;
             let id = format!("{}@{}", rule.id, due_date);
 
@@ -958,6 +968,64 @@ mod tests {
             "no date may fall back into the pack's own year"
         );
         Ok(())
+    }
+
+    #[test]
+    fn a_scaffolded_year_keeps_the_instalments_the_rule_declares() -> Result<(), Box<dyn std::error::Error>> {
+        // Pagamentos por conta fall due three times. The engine used to know that only
+        // because the calendar published three dates, so a year scaffolded from the
+        // last one — with no calendar of its own — scheduled one payment and silently
+        // dropped two. The rule says `months`, and now the engine reads it.
+        let raw: serde_json::Value = serde_json::from_str(shipped_pack_text())?;
+        let scaffolded = crate::rollover::scaffold(&raw, 2027, "2026-12-01")?;
+        let next = crate::rules::load_rule_pack(&scaffolded.to_string(), "2027.json")?;
+
+        let from_2026 = build_agenda(
+            &load_embedded()?.pack,
+            &profile(),
+            &AgendaOptions {
+                year: 2027,
+                today: "2027-01-10".to_owned(),
+                due_soon_days: None,
+                completed_ids: Vec::new(),
+                track_from: None,
+                holidays: Vec::new(),
+            },
+        )?;
+        let from_2027 = build_agenda(
+            &next.pack,
+            &profile(),
+            &AgendaOptions {
+                year: 2027,
+                today: "2027-01-10".to_owned(),
+                due_soon_days: None,
+                completed_ids: Vec::new(),
+                track_from: None,
+                holidays: Vec::new(),
+            },
+        )?;
+
+        let count = |instances: &[crate::types::ObligationInstance], rule: &str| {
+            instances
+                .iter()
+                .filter(|instance| instance.rule_id == rule)
+                .count()
+        };
+        assert_eq!(count(&from_2027, "irs.pagamentosPorConta"), 3);
+        assert_eq!(
+            from_2027.len(),
+            from_2026.len(),
+            "a rollover must not invent or drop a period"
+        );
+        Ok(())
+    }
+
+    /// The shipped pack's text, for the scaffold test.
+    fn shipped_pack_text() -> &'static str {
+        crate::rules::EMBEDDED_PACKS
+            .first()
+            .map(|entry| entry.text)
+            .unwrap_or("{}")
     }
 
     #[test]

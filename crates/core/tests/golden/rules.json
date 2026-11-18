@@ -1,7 +1,7 @@
 {
-  "checksum": "5283166084b1f1985b9c5c8fa66477b4db67e00095009385b6cb709bcab065b1",
+  "checksum": "4a608b33da2302de902b059f9adda36b5dc467e6ec3579dc029c4a600a0fdc61",
   "year": 2026,
-  "pack_version": "2026.1.3",
+  "pack_version": "2026.1.4",
   "obligation_ids": [
     "irs.modelo3",
     "irs.pagamentosPorConta",
@@ -25,9 +25,9 @@
     "guardar.documentos"
   ],
   "summary": {
-    "pack_version": "2026.1.3",
+    "pack_version": "2026.1.4",
     "year": 2026,
-    "checksum": "5283166084b1f1985b9c5c8fa66477b4db67e00095009385b6cb709bcab065b1",
+    "checksum": "4a608b33da2302de902b059f9adda36b5dc467e6ec3579dc029c4a600a0fdc61",
     "sources": 22,
     "official_sources": 19,
     "obligations": 20,
@@ -66,13 +66,8 @@
   "problems": [
     {
       "level": "warning",
-      "path": "obligations[1].deadlineRule.months",
-      "message": "a lista \"months\" não é usada pelo motor: o mês de vencimento resulta de periodicity.lagMonths. Confirma que as duas descrições coincidem."
-    },
-    {
-      "level": "warning",
       "path": "obligations[13].deadlineRule.months",
-      "message": "a lista \"months\" não é usada pelo motor: o mês de vencimento resulta de periodicity.lagMonths. Confirma que as duas descrições coincidem."
+      "message": "a lista \"months\" só é usada por obrigações anuais."
     },
     {
       "level": "warning",

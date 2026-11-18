@@ -810,18 +810,29 @@ pub fn validate_rule_pack(raw: &Value) -> Result<(RulePack, Vec<PackProblem>), P
                         let kind_name = text(deadline.get("kind"));
                         match deadline_kind(&kind_name) {
                             Some(kind) => {
-                                if deadline.get("months").is_some_and(Value::is_array) {
+                                let months: Vec<i64> = match deadline.get("months") {
+                                    Some(Value::Array(entries)) => {
+                                        entries.iter().filter_map(|entry| integer(Some(entry))).collect()
+                                    }
+                                    _ => Vec::new(),
+                                };
+                                // The months of an annual rule are the instalments; for a
+                                // monthly or quarterly one the due month comes from
+                                // `periodicity.lagMonths`, and two descriptions of one
+                                // thing are worth confirming.
+                                if !months.is_empty()
+                                    && !matches!(deadline_kind(&kind_name), Some(DeadlineKind::DayOfMonth))
+                                {
                                     problems.warn(
                                         &format!("{at}.deadlineRule.months"),
-                                        "a lista \"months\" não é usada pelo motor: o mês de vencimento \
-                                         resulta de periodicity.lagMonths. Confirma que as duas \
-                                         descrições coincidem.",
+                                        "a lista \"months\" só é usada por obrigações anuais.",
                                     );
                                 }
                                 deadline_rule = Some(DeadlineRule {
                                     kind,
                                     day: integer(deadline.get("day")),
                                     month: integer(deadline.get("month")),
+                                    months,
                                     month_from: integer(deadline.get("monthFrom")),
                                     month_to: integer(deadline.get("monthTo")),
                                     day_from: integer(deadline.get("dayFrom")),
@@ -1280,7 +1291,7 @@ mod tests {
         let pack = loaded()?;
         assert_eq!(pack.pack.jurisdiction, "PT");
         assert_eq!(pack.pack.year, 2026);
-        assert_eq!(pack.pack.pack_version, "2026.1.3");
+        assert_eq!(pack.pack.pack_version, "2026.1.4");
         assert_eq!(pack.pack.obligations.len(), 20);
         assert_eq!(pack.pack.sources.len(), 22);
         assert_eq!(pack.pack.todo.len(), 21);

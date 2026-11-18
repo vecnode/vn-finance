@@ -466,6 +466,14 @@ pub struct DeadlineRule {
     /// 1–12: the due month for annual rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub month: Option<i64>,
+    /// Every month an annual rule falls due in, when it has instalments.
+    ///
+    /// Pagamentos por conta are due in July, September and December. Without this the
+    /// engine knew the three only because the calendar published three dates — so a
+    /// year whose calendar is not published yet, or a pack scaffolded from the last
+    /// one, would schedule one payment instead of three.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub months: Vec<i64>,
     /// Window start month, for a range.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub month_from: Option<i64>,

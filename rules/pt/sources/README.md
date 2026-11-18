@@ -7,6 +7,9 @@ compiled into the application, no rate is ever derived from it, and the pack
 
 `fetch.json` is the record of how these bytes arrived: the URL each came from, the
 date it was retrieved, its size, its SHA-256, and whether the body is stored here.
+The prose record of how each figure was *found* is
+[`docs/research/2026-sources.md`](../../../docs/research/2026-sources.md); this folder
+is the bytes that record was written from.
 
 ## What is here, and what is not
 

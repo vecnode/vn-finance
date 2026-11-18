@@ -52,7 +52,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "vn-finance",
         options,
-        Box::new(move |cc| match Session::open(&version) {
+        Box::new(move |cc| match Session::open(&version, year) {
             Ok(session) => Ok(Box::new(App::new(cc, session, &today, year))),
             Err(error) => Ok(Box::new(Failure::new(cc, error.to_string(), &today))),
         }),

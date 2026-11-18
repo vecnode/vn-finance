@@ -22,6 +22,10 @@ type Problem = Box<dyn std::error::Error>;
 
 const TODAY: &str = "2026-09-20";
 
+/// The year the test vault reports on. It is `TODAY`'s year by construction: the
+/// window opens on the year it is being used in, and the pack is chosen for it.
+const YEAR: i64 = 2026;
+
 /// One egui pass over the whole window at `size`.
 ///
 /// The texture delta has to be consumed: epaint keeps a guard that panics when a
@@ -119,7 +123,7 @@ fn session(dir: &std::path::Path) -> Result<Session, Problem> {
     let env = Env::for_test(&[("HOME", &dir.display().to_string())], false);
     // The version the window is told it is, taken from the crate rather than typed
     // again: a test that pins a version is a test that fails on the release bump.
-    Ok(Session::open_in(dir, &env, env!("CARGO_PKG_VERSION"))?)
+    Ok(Session::open_in(dir, &env, env!("CARGO_PKG_VERSION"), YEAR)?)
 }
 
 /// A vault with a profile and two invoices, so the pages have something to draw.
@@ -162,7 +166,7 @@ fn seeded(dir: &std::path::Path) -> Result<(), Problem> {
 
 /// A window over a temporary folder.
 fn app_for(dir: &std::path::Path) -> Result<App, Problem> {
-    Ok(App::build(session(dir)?, TODAY, 2026))
+    Ok(App::build(session(dir)?, TODAY, YEAR))
 }
 
 #[test]
@@ -257,6 +261,40 @@ fn the_header_is_the_title_and_the_subtitle_and_nothing_else() -> Result<(), Pro
     assert!(
         texts.iter().any(|text| text == "Perfil"),
         "the rail lost its profile button: {texts:?}"
+    );
+    Ok(())
+}
+
+#[test]
+fn a_refused_rule_pack_is_reported_on_the_rules_page() -> Result<(), Problem> {
+    // A pack file the resolver finds and must refuse: the window has to open on the
+    // pack it can trust and say, in the page where the law lives, which file was
+    // dropped and why. Silence here would leave a person believing their 2027 pack is
+    // in use while the 2026 one is computing every date.
+    let dir = tempfile::tempdir()?;
+    seeded(dir.path())?;
+    let broken = dir.path().join("pacote-mau.json");
+    std::fs::write(&broken, "{\"jurisdiction\":\"PT\"")?;
+    let home = dir.path().display().to_string();
+    let pack = broken.display().to_string();
+    let env = Env::for_test(&[("HOME", &home), ("VN_FINANCE_RULES", &pack)], false);
+
+    let session = Session::open_in(dir.path(), &env, env!("CARGO_PKG_VERSION"), YEAR)?;
+    let mut app = App::build(session, TODAY, YEAR);
+    app.go(Page::Regras);
+    let texts = painted_text(&mut app);
+
+    assert!(
+        texts.iter().any(|text| text.contains("recusado")),
+        "the page must say a pack was refused: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("pacote-mau.json")),
+        "the page must name the file: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("embutido no binário")),
+        "the page must say which pack is actually in use: {texts:?}"
     );
     Ok(())
 }

@@ -13,8 +13,13 @@
 //! packs carry (`months`, `officialDates2026`), and the shipped pack must keep
 //! loading.
 //!
-//! The pack is compiled into the binary, so the application carries the law it
-//! applied and the checksum the interface shows is computed from the same bytes.
+//! The pack arrives from one of two places, and the checksum the interface shows is
+//! computed from whichever bytes were used. A `pt/<year>.json` file the binary finds
+//! on disk lets a new year ship as a file rather than as a rebuild; the copy compiled
+//! into the binary ([`EMBEDDED_PACKS`]) is the fallback the application can always run
+//! on. Both go through [`validate_rule_pack`], so a pack from a folder is held to the
+//! same standard as the shipped one, and a pack that fails is refused rather than
+//! half-used.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -32,12 +37,31 @@ use crate::types::{
     RuleSource, SourceTier, Units, Verification,
 };
 
-/// The pack compiled into the binary.
+/// One rule pack compiled into the binary.
 ///
-/// One file, at the repository root, read by both implementations: the TypeScript
-/// reference resolves the same path, so the two cannot drift onto different copies
-/// of the same year.
-pub const EMBEDDED_PACK: &str = include_str!("../../../rules/pt/2026.json");
+/// The pack is data and a year is a file, so a year is one entry in
+/// [`EMBEDDED_PACKS`] and one JSON file under `rules/pt/`. No code names a year:
+/// before this existed, `include_str!` spelled `2026` in its own path and shipping
+/// 2027 meant editing Rust.
+pub struct EmbeddedPack {
+    /// The year the pack describes, as the pack itself declares it.
+    pub year: i64,
+    /// Where it came from, for the interface to show while no file overrides it.
+    pub label: &'static str,
+    /// The bytes.
+    pub text: &'static str,
+}
+
+/// The packs compiled into the binary, newest first.
+///
+/// Newest first because the embedded pack is also the fallback: a machine whose year
+/// has no pack of its own is served the most recent one, and is told that it is not
+/// the requested year rather than being quietly given the wrong one.
+pub const EMBEDDED_PACKS: &[EmbeddedPack] = &[EmbeddedPack {
+    year: 2026,
+    label: EMBEDDED_LABEL,
+    text: include_str!("../../../rules/pt/2026.json"),
+}];
 
 /// The jurisdiction the only supported pack describes.
 pub const SUPPORTED_JURISDICTION: &str = "PT";
@@ -64,6 +88,8 @@ pub enum PackError {
     },
     /// The JSON is not an object.
     NotAnObject,
+    /// The binary carries no rule pack at all, embedded or otherwise.
+    NoEmbeddedPack,
     /// The pack parsed but failed validation.
     Invalid {
         /// The path, or the embedded label.
@@ -81,6 +107,7 @@ impl core::fmt::Display for PackError {
             Self::Unreadable { path, message } => write!(f, "could not read {path}: {message}"),
             Self::NotJson { path, message } => write!(f, "{path} is not valid JSON: {message}"),
             Self::NotAnObject => f.write_str("rule pack is not an object"),
+            Self::NoEmbeddedPack => f.write_str("o binário não tem qualquer pacote de regras embutido"),
             Self::Invalid { path, errors, detail } => {
                 write!(f, "{path} failed validation with {errors} error(s):\n{detail}")
             }
@@ -854,9 +881,42 @@ pub fn load_rule_pack(text: &str, path: &str) -> Result<LoadedPack, PackError> {
 /// # Errors
 ///
 /// [`PackError::Invalid`] when the embedded pack is broken, which is a build defect
-/// rather than a user one.
+/// rather than a user one, and [`PackError::NoEmbeddedPack`] when the binary carries
+/// no pack at all.
 pub fn load_embedded() -> Result<LoadedPack, PackError> {
-    load_rule_pack(EMBEDDED_PACK, EMBEDDED_LABEL)
+    let pack = newest_embedded().ok_or(PackError::NoEmbeddedPack)?;
+    load_rule_pack(pack.text, pack.label)
+}
+
+/// The pack compiled in for a year, when the binary carries one.
+#[must_use]
+pub fn embedded_pack_for_year(year: i64) -> Option<&'static EmbeddedPack> {
+    EMBEDDED_PACKS.iter().find(|pack| pack.year == year)
+}
+
+/// The newest pack compiled into the binary.
+fn newest_embedded() -> Option<&'static EmbeddedPack> {
+    EMBEDDED_PACKS.iter().max_by_key(|pack| pack.year)
+}
+
+/// The pack compiled in for a year, falling back to the newest one.
+///
+/// The fallback is deliberate and it is not silent: `exact` is false, so the interface
+/// can say "this is the 2026 pack and you are asking about 2027" instead of showing
+/// last year's dates as this year's.
+///
+/// # Errors
+///
+/// Whatever loading the chosen pack can return.
+pub fn load_embedded_for_year(year: i64) -> Result<PackChoice, PackError> {
+    let embedded = embedded_pack_for_year(year)
+        .or_else(newest_embedded)
+        .ok_or(PackError::NoEmbeddedPack)?;
+    let loaded = load_rule_pack(embedded.text, embedded.label)?;
+    // The truth is the year the pack declares, not the one the registry filed it
+    // under: a JSON file dropped into the wrong slot must not borrow a year.
+    let exact = loaded.pack.year == year;
+    Ok(PackChoice { loaded, exact })
 }
 
 /// Load a pack from a path.
@@ -875,9 +935,13 @@ pub fn load_file(path: &Path) -> Result<LoadedPack, PackError> {
 
 /// Choose the pack for a year: an explicit path wins, otherwise the embedded one.
 ///
-/// `exact` is false when the requested year has no pack of its own — the authority
+/// `exact` is false when the chosen pack is not the requested year's — the authority
 /// publishes next year's calendar only weeks before it starts, so a year without a
 /// pack is a normal state that the interface has to show rather than hide.
+///
+/// A path is not trusted to be the year it is asked for: `exact` is read from the
+/// year the pack declares, so pointing at `pt/2026.json` while asking about 2027
+/// answers "this is 2026", not "of course".
 ///
 /// # Errors
 ///
@@ -886,13 +950,10 @@ pub fn load_for_year(year: i64, explicit: Option<&Path>) -> Result<PackChoice, P
     match explicit {
         Some(path) => {
             let loaded = load_file(path)?;
-            Ok(PackChoice { loaded, exact: true })
-        }
-        None => {
-            let loaded = load_embedded()?;
             let exact = loaded.pack.year == year;
             Ok(PackChoice { loaded, exact })
         }
+        None => load_embedded_for_year(year),
     }
 }
 
@@ -1106,6 +1167,49 @@ mod tests {
                 .all(|problem| problem.level == ProblemLevel::Warning),
             "the shipped pack must load without a single error"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn every_embedded_pack_declares_the_year_the_registry_files_it_under() -> Result<(), PackError> {
+        // The registry's year is what the interface says the pack covers before it has
+        // read the file. If a JSON file is dropped into the wrong slot, the file wins —
+        // so the mismatch must be caught here, at build time, not by a person reading a
+        // 2026 calendar titled 2027.
+        for entry in EMBEDDED_PACKS {
+            let loaded = load_rule_pack(entry.text, entry.label)?;
+            assert_eq!(
+                loaded.pack.year, entry.year,
+                "the pack registered as {} declares {}",
+                entry.year, loaded.pack.year
+            );
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn a_year_with_its_own_pack_is_exact_and_a_year_without_one_is_not() -> Result<(), PackError> {
+        for entry in EMBEDDED_PACKS {
+            let own = load_embedded_for_year(entry.year)?;
+            assert!(own.exact, "{} is compiled in", entry.year);
+            assert_eq!(own.loaded.pack.year, entry.year);
+        }
+        let later = load_embedded_for_year(2099)?;
+        assert!(!later.exact, "a year nobody has written must never look exact");
+        assert!(!EMBEDDED_PACKS.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn the_embedded_fallback_is_the_newest_pack() -> Result<(), PackError> {
+        let newest = EMBEDDED_PACKS
+            .iter()
+            .max_by_key(|entry| entry.year)
+            .map(|entry| entry.year)
+            .unwrap_or_default();
+        let choice = load_embedded_for_year(2099)?;
+        assert_eq!(choice.loaded.pack.year, newest);
+        assert_eq!(load_embedded()?.pack.year, newest);
         Ok(())
     }
 

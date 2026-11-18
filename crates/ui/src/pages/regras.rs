@@ -1,4 +1,4 @@
-﻿//! The law: every source the pack cites, and every obligation it declares.
+//! The law: every source the pack cites, and every obligation it declares.
 //!
 //! This page exists so that no figure elsewhere in the application is unfalsifiable.
 //! A number on the IVA page traces back to a constant, the constant to a source, and
@@ -9,6 +9,7 @@ use vnf_core::money::format_bp_as_percent;
 use vnf_core::rules::FreshnessStatus;
 use vnf_core::types::{PeriodicityType, SourceTier, Verification};
 use vnf_store::model::DashboardModel;
+use vnf_store::pack::PackOrigin;
 
 use crate::pages::Action;
 use crate::theme;
@@ -34,6 +35,16 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     let sources = summary.sources.to_string();
     let obligations = summary.obligations.to_string();
     let verified = format!("{} de {}", summary.verified, summary.obligations);
+    // Where the pack came from, and whether it is this year's: a pack compiled in is
+    // the fallback, and a pack read from a folder is the one a person can update
+    // without waiting for a release. Saying which is which is the whole point of the
+    // line, so it is not a decoration.
+    let origin = origin_label(model.pack.origin);
+    let origin_foot = if model.pack.exact {
+        origin.to_owned()
+    } else {
+        format!("{origin} · não é o ano pedido")
+    };
     widgets::kpi_rows(
         ui,
         &[
@@ -41,7 +52,7 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
                 label: "Versão do pacote",
                 value: &version,
                 support: None,
-                foot: Some("embutido"),
+                foot: Some(&origin_foot),
             },
             Kpi {
                 label: "Ano",
@@ -90,6 +101,31 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
             &format!("checksum {}", &summary.checksum[..12.min(summary.checksum.len())]),
         );
     });
+
+    if !model.pack.rejected.is_empty() {
+        ui.add_space(12.0);
+        widgets::accented_card(ui, Tone::Danger, |ui| {
+            ui.label(
+                egui::RichText::new("Um pacote de regras foi encontrado e recusado")
+                    .size(theme::BODY)
+                    .strong(),
+            );
+            for entry in &model.pack.rejected {
+                widgets::caption(ui, &entry.path);
+                ui.label(
+                    egui::RichText::new(&entry.problem)
+                        .size(theme::BODY_SMALL)
+                        .color(theme::palette(ui.ctx()).text_2),
+                );
+            }
+            widgets::caption(
+                ui,
+                "A janela abriu com o pacote descrito acima. Corrige ou remove o ficheiro recusado: \
+                 um pacote inválido nunca é usado a meias, e o ano que ele devia cobrir fica \
+                 marcado como provisório.",
+            );
+        });
+    }
 
     if !model.pack.problems.is_empty() {
         ui.add_space(12.0);
@@ -222,6 +258,22 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
     action
 }
 
+/// Where the rule pack came from, in words a person reads.
+///
+/// "embutido no binário" and "pasta junto ao programa" are different promises: the
+/// first travels with the executable and cannot be edited, the second is a file the
+/// person can replace. The page must not let them look the same.
+#[must_use]
+pub fn origin_label(origin: PackOrigin) -> &'static str {
+    match origin {
+        PackOrigin::Flag => "escolhido ao abrir",
+        PackOrigin::Env => "variável de ambiente",
+        PackOrigin::Beside => "pasta junto ao programa",
+        PackOrigin::SourceTree => "pasta do código",
+        PackOrigin::Embedded => "embutido no binário",
+    }
+}
+
 /// How often a rule recurs.
 #[must_use]
 pub fn periodicity_label(kind: PeriodicityType) -> &'static str {
@@ -267,5 +319,23 @@ mod tests {
         assert_eq!(verification_label(Verification::Verified).1, Tone::Ok);
         assert_ne!(verification_label(Verification::Unverified).1, Tone::Ok);
         assert_ne!(verification_label(Verification::Stale).1, Tone::Ok);
+    }
+
+    #[test]
+    fn every_pack_origin_says_where_the_bytes_came_from() {
+        for origin in [
+            PackOrigin::Flag,
+            PackOrigin::Env,
+            PackOrigin::Beside,
+            PackOrigin::SourceTree,
+            PackOrigin::Embedded,
+        ] {
+            assert!(!origin_label(origin).is_empty());
+        }
+        // The two that are most easily confused say different things.
+        assert_ne!(
+            origin_label(PackOrigin::Embedded),
+            origin_label(PackOrigin::Beside)
+        );
     }
 }

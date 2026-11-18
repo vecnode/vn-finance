@@ -128,7 +128,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "3e9a67f927876256e418f800bea00982e7f9f91beb956e7e5b2469f717547470",
+      "digest": "fed417488bd645483efd91ee15a451e2c350f8f0f7b9d9d8611fa9417235d6e7",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -315,7 +315,7 @@
         "ss.contribuicoesMensais@2027-01-20",
         "ss.declaracaoTrimestral@2027-02-01"
       ],
-      "digest": "d2eff4d7750d05f9051b8c3dcd5471015bc3def37d747d2f1f511a6e5df88f2e",
+      "digest": "61d08db0e704dbbc96aca70b26373d66988d6a0307299bf1254033612b5da204",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -518,7 +518,7 @@
         "iva.dp.mensal@2027-02-22",
         "iva.pagamento.mensal@2027-02-25"
       ],
-      "digest": "8b009fa3269585012527716290e05ccc13e72c6c012705cb94f6d2001ae56911",
+      "digest": "d7d4847b7e9e23ffb232635e5e6e099f2f1dce97269f8929eb1d481873661a4b",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -723,7 +723,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "569b282970eb513d2b4b114bec924ae0bb1cb13b21eef082139d5ff2bcbbca5e",
+      "digest": "5653af7129e4652ef24bc1b570e43c48d82c93c4368fce2f66329e2f82cc8141",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -921,7 +921,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "09798788b3987a93c8a3c974ce8242be85b73170023fca6e021f4db6ed63b491",
+      "digest": "50a46d0d3da8b27d80b2fd95071fe9c0241bcf583417f814b9e227fe2a544674",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -1129,7 +1129,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "66aba00f183c466c053460c18cb49fd336c4972d3c825400c162e42810f94f39",
+      "digest": "e46c3874a36d0386de9bfb689418c62b3edaeb1390881bb5d806405227226bc0",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -1332,7 +1332,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "3e9a67f927876256e418f800bea00982e7f9f91beb956e7e5b2469f717547470",
+      "digest": "fed417488bd645483efd91ee15a451e2c350f8f0f7b9d9d8611fa9417235d6e7",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -1525,7 +1525,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "3e9a67f927876256e418f800bea00982e7f9f91beb956e7e5b2469f717547470",
+      "digest": "fed417488bd645483efd91ee15a451e2c350f8f0f7b9d9d8611fa9417235d6e7",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -1707,7 +1707,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "777d520d8acb5ce80639f7248f49a20250cbfe00664593749ac35e1f508fbbe7",
+      "digest": "76134f1f4baf3f2a88c6a2fc97554ebd6c4f102c326da98dfef847bf337efb93",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -1867,7 +1867,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "bed897dc72b75e6b25cead32a94c1e6b10dd98137ee1ce0868132b922dd2482b",
+      "digest": "179b61bd1bf6530d6820b4ecf0e0f809eebd010e20e56c4c5fc1a071dccc4566",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -2039,7 +2039,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "3e9a67f927876256e418f800bea00982e7f9f91beb956e7e5b2469f717547470",
+      "digest": "fed417488bd645483efd91ee15a451e2c350f8f0f7b9d9d8611fa9417235d6e7",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -2235,7 +2235,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "e30a4e0e99b07d4619c252b7aeda8fc11a5db47e416a7fe6ad2662019e383845",
+      "digest": "f0c2828da9733ba7c837addc1c81919ed259062cc8b4013889a7f67c47a90432",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -2426,7 +2426,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "bce9618e7365a85ac095ed0be59d5145a184a11dc9f7a76a584d5cd597a0043c",
+      "digest": "34377b6ad41407dfc7c3d46a01116a5ae9203bad27b67f5b2ee14676e6a19169",
       "window": {
         "horizon_days": 90,
         "actionable": [
@@ -2600,7 +2600,7 @@
         "iva.dp.trimestral@2027-02-22",
         "iva.pagamento.trimestral@2027-02-25"
       ],
-      "digest": "9f234a6c456dad234de9bd0bab682fdc56ea6d639e6cb5fee284b1bfa7b192ca",
+      "digest": "4f58b77d83f4c7b9b0e285458cab325d09cf14aae19dbb9086b406b4179b84ae",
       "window": {
         "horizon_days": 90,
         "actionable": [

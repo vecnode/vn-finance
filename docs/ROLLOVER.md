@@ -83,7 +83,7 @@ existing early.
 `cargo xtask rules scaffold --from 2026 --to 2027` on the 2026 pack, then `rules diff`:
 
 ```
-2026 2026.1.4 → 2027 2027.1.0
+2026 2026.1.5 → 2027 2027.1.0
 verificação
   ~ irs.modelo3: verificada → desatualizada
   ~ iva.dp.mensal: verificada → desatualizada

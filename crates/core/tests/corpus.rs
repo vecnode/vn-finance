@@ -140,6 +140,28 @@ fn looks_like_email(text: &str) -> bool {
     false
 }
 
+/// Whether a constant names this source among the ones its figure came from.
+///
+/// A rate is a claim the pack makes about a figure, and no obligation carries it: the
+/// 15 % of art. 31.º n.º 13 backs `irs.simplifiedRegime`, the withholding rates back
+/// `irs.withholding`, the regional rates back `iva.art53`. Walking the constants for
+/// `sourceIds` keeps those quotes load-bearing without inventing a rule to hang them on.
+fn named_by_a_constant(constants: &serde_json::Value, source_id: &str) -> bool {
+    fn walk(value: &serde_json::Value, source_id: &str) -> bool {
+        match value {
+            serde_json::Value::Object(fields) => fields.iter().any(|(key, value)| {
+                key == "sourceIds"
+                    && matches!(value, serde_json::Value::Array(items)
+                        if items.iter().any(|item| item.as_str() == Some(source_id)))
+                    || walk(value, source_id)
+            }),
+            serde_json::Value::Array(items) => items.iter().any(|item| walk(item, source_id)),
+            _ => false,
+        }
+    }
+    walk(constants, source_id)
+}
+
 #[test]
 fn the_bound_sources_are_the_ones_that_carry_quotes() -> Result<(), Box<dyn Error>> {
     let loaded = load_file(&pack_path())?;
@@ -160,8 +182,10 @@ fn the_bound_sources_are_the_ones_that_carry_quotes() -> Result<(), Box<dyn Erro
         .sum();
     assert!(passages >= 8, "the passages a reader can check, found {passages}");
 
-    // A passage that no rule cites is a quote kept for its own sake; the pack should
-    // not accumulate those, because the check would then pass while binding nothing.
+    // A passage that nothing rests on is a quote kept for its own sake; the pack should
+    // not accumulate those, because the check would then pass while binding nothing. A
+    // passage is load-bearing when a rule cites it, or when the constant it backs names
+    // its source.
     for source in &loaded.pack.sources {
         for passage in &source.passages {
             let cited = loaded.pack.obligations.iter().any(|rule| {
@@ -170,9 +194,10 @@ fn the_bound_sources_are_the_ones_that_carry_quotes() -> Result<(), Box<dyn Erro
                     .any(|citation| citation.source_id == source.id && citation.passage_id == passage.id)
             });
             assert!(
-                cited,
-                "{} / {} is declared but no rule cites it",
-                source.id, passage.id
+                cited || named_by_a_constant(&loaded.pack.constants, &source.id),
+                "{} / {} is declared but nothing rests on it",
+                source.id,
+                passage.id
             );
         }
     }

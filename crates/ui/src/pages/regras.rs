@@ -6,6 +6,7 @@
 
 use egui::Ui;
 use vnf_core::money::format_bp_as_percent;
+use vnf_core::rollover::PackDiff;
 use vnf_core::rules::FreshnessStatus;
 use vnf_core::sources::SourceState;
 use vnf_core::types::{PeriodicityType, ProblemLevel, SourceTier, Verification};
@@ -103,6 +104,11 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
             &format!("checksum {}", &summary.checksum[..12.min(summary.checksum.len())]),
         );
     });
+
+    if let Some(changes) = &model.rules.changes {
+        ui.add_space(14.0);
+        changes_section(ui, changes);
+    }
 
     if !model.pack.rejected.is_empty() {
         ui.add_space(12.0);
@@ -287,6 +293,131 @@ pub fn show(ui: &mut Ui, model: &DashboardModel) -> Option<Action> {
         ),
     );
     action
+}
+
+/// What moved between the pack in use and the one compiled in.
+///
+/// A pack that arrives from a folder is a change to the law the application applies,
+/// and the review of a change belongs next to the law, not in a terminal the person
+/// running the window does not have. The same comparison is what `cargo xtask rules
+/// diff` prints, so the two cannot disagree.
+fn changes_section(ui: &mut Ui, changes: &PackDiff) {
+    let subtitle = format!(
+        "{} {} → {} {} · {} alteração(ões)",
+        changes.from_year,
+        changes.from_version,
+        changes.to_year,
+        changes.to_version,
+        changes.total()
+    );
+    widgets::section(
+        ui,
+        "Alterações face ao pacote embutido",
+        Some(&subtitle),
+        Some(
+            "O pacote em uso não é o que esta versão do programa traz. Esta é a diferença entre os \
+             dois, para poder ser lida antes de se confiar num prazo.",
+        ),
+    );
+
+    if changes.is_empty() {
+        widgets::caption(
+            ui,
+            "O conteúdo é o mesmo; mudaram o ano, a versão ou a data de geração.",
+        );
+        return;
+    }
+
+    widgets::card(ui, |ui| {
+        change_group(
+            ui,
+            "constantes",
+            changes
+                .constants
+                .iter()
+                .map(|change| {
+                    format!(
+                        "{}: {} → {}",
+                        change.path,
+                        change.from.as_deref().unwrap_or("—"),
+                        change.to.as_deref().unwrap_or("—")
+                    )
+                })
+                .collect(),
+        );
+        change_group(
+            ui,
+            "obrigações",
+            changes
+                .obligations_added
+                .iter()
+                .map(|id| format!("+ {id}"))
+                .chain(changes.obligations_removed.iter().map(|id| format!("− {id}")))
+                .collect(),
+        );
+        change_group(
+            ui,
+            "verificação",
+            changes
+                .verification
+                .iter()
+                .map(|change| {
+                    format!(
+                        "{}: {} → {}",
+                        change.id,
+                        vnf_core::rollover::verification_label(change.from),
+                        vnf_core::rollover::verification_label(change.to)
+                    )
+                })
+                .collect(),
+        );
+        change_group(
+            ui,
+            "datas publicadas",
+            changes
+                .dates
+                .iter()
+                .map(|change| format!("{}: {} → {}", change.id, change.from, change.to))
+                .collect(),
+        );
+        change_group(
+            ui,
+            "fontes",
+            changes
+                .sources_added
+                .iter()
+                .map(|id| format!("+ {id}"))
+                .chain(changes.sources_removed.iter().map(|id| format!("− {id}")))
+                .chain(changes.sources_changed.iter().map(|change| {
+                    format!(
+                        "{} · {}: {} → {}",
+                        change.id, change.field, change.from, change.to
+                    )
+                }))
+                .collect(),
+        );
+    });
+}
+
+/// How many lines of one group the card shows before it stops counting.
+const CHANGES_SHOWN: usize = 6;
+
+/// One labelled group of changes, capped so the card stays a card.
+fn change_group(ui: &mut Ui, title: &str, lines: Vec<String>) {
+    if lines.is_empty() {
+        return;
+    }
+    widgets::micro_label(ui, title, theme::palette(ui.ctx()).text_3);
+    for line in lines.iter().take(CHANGES_SHOWN) {
+        ui.label(
+            egui::RichText::new(line)
+                .size(theme::BODY_SMALL)
+                .color(theme::palette(ui.ctx()).text_2),
+        );
+    }
+    if lines.len() > CHANGES_SHOWN {
+        widgets::caption(ui, &format!("e mais {}", lines.len() - CHANGES_SHOWN));
+    }
 }
 
 /// The evidence: what was read, how it held up, and what is wrong with it.

@@ -7,6 +7,7 @@
 
 use std::path::PathBuf;
 
+use vnf_core::rollover::PackDiff;
 use vnf_core::rules::PackError;
 use vnf_core::types::LoadedPack;
 use vnf_store::location::{Env, VaultLocationSource, resolve_vault_location, vault_pointer_path};
@@ -45,6 +46,8 @@ pub struct Session {
     pack: PackResolution,
     /// The documents the pack's citations are checked against.
     corpus: CorpusLoad,
+    /// What moved between the pack in use and the one compiled in.
+    changes: Option<PackDiff>,
     env: Env,
     /// Held for the lifetime of the window; dropping it releases the vault.
     _lock: VaultLock,
@@ -115,10 +118,20 @@ impl Session {
             }),
             None => CorpusLoad::none(),
         };
+        // A pack the application was given is compared with the one it was built with,
+        // so the Regras page can say what moved. The comparison is the domain's own
+        // function, the one `cargo xtask rules diff` prints.
+        let changes = match vnf_core::rules::load_embedded() {
+            Ok(embedded) if embedded.checksum != pack.loaded.checksum => {
+                Some(vnf_core::rollover::diff(&embedded.pack, &pack.loaded.pack))
+            }
+            _ => None,
+        };
         Ok(Self {
             vault,
             pack,
             corpus,
+            changes,
             env: env.clone(),
             _lock: lock,
             version: version.to_owned(),
@@ -180,6 +193,7 @@ impl Session {
                 pack_exact: self.pack.exact,
                 pack_rejected: &self.pack.rejected,
                 corpus: &self.corpus,
+                changes: self.changes.as_ref(),
                 data_dir_source: self.data_dir_source(),
                 pointer_path: self.pointer_path(),
             },
